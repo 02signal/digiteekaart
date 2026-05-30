@@ -383,6 +383,203 @@ section {
   font-size: 0.92rem;
 }
 
+.report-preview-link {
+  display: block;
+  color: inherit;
+}
+
+.report-preview-link:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 4px;
+}
+
+.report-page {
+  background: var(--paper);
+}
+
+.report-hero {
+  padding: 108px 0 74px;
+  color: var(--white);
+  background:
+    linear-gradient(90deg, rgba(16, 35, 63, 0.98) 0%, rgba(16, 35, 63, 0.88) 54%, rgba(15, 139, 122, 0.7) 100%),
+    url("/hero-digiteekaart.png") center right / cover no-repeat;
+}
+
+.report-hero h1 {
+  max-width: 880px;
+}
+
+.report-hero p {
+  max-width: 720px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.15rem;
+}
+
+.report-date {
+  margin-top: 22px;
+  font-weight: 800;
+}
+
+.summary-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.34fr);
+  gap: 20px;
+  align-items: stretch;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.summary-panel h3 {
+  margin-top: 12px;
+  color: var(--navy);
+  font-size: 1.5rem;
+}
+
+.summary-panel p {
+  color: var(--muted);
+}
+
+.score-box {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--ice);
+}
+
+.score-box strong {
+  color: var(--teal);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.score-box span {
+  color: var(--navy);
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.status-tag {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 12px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.status-green {
+  background: #dff6ef;
+  color: #086552;
+}
+
+.status-blue {
+  background: #e2eef8;
+  color: #174d75;
+}
+
+.status-amber {
+  background: #fff1cc;
+  color: #815900;
+}
+
+.measure-list {
+  display: grid;
+  gap: 16px;
+}
+
+.measure-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.42fr) auto;
+  gap: 22px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.measure-card h3 {
+  color: var(--navy);
+  font-size: 1.32rem;
+}
+
+.measure-card p,
+.measure-card dd {
+  color: var(--muted);
+}
+
+.measure-card dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.measure-card dl div {
+  border-left: 3px solid var(--teal);
+  padding-left: 12px;
+}
+
+.measure-card dt {
+  color: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.measure-card dd {
+  margin: 2px 0 0;
+}
+
+.measure-card > a {
+  color: var(--teal);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.recommendation-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.recommendation-flow article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.recommendation-flow strong {
+  color: var(--teal);
+  font-size: 1.1rem;
+}
+
+.recommendation-flow h3 {
+  margin-top: 10px;
+  color: var(--navy);
+  font-size: 1.18rem;
+}
+
+.recommendation-flow p {
+  color: var(--muted);
+}
+
 .lead-section {
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(360px, 1.18fr);
@@ -517,6 +714,10 @@ textarea {
   .proof,
   .grid-3,
   .grid-2,
+  .summary-panel,
+  .assessment-grid,
+  .measure-card,
+  .recommendation-flow,
   .report-sample,
   .lead-section,
   .form-grid,

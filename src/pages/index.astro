@@ -207,10 +207,15 @@ const schema = {
               <li>puuduv info ja võimalikud riskid</li>
               <li>järgmine soovitatud samm</li>
             </ul>
-            <a class="btn btn-primary" href="#eelhindamine">Soovin sellist eelhinnangut</a>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href="#eelhindamine">Soovin sellist eelhinnangut</a>
+              <a class="btn btn-light" href="/naidisaruanne/">Ava näidisaruanne</a>
+            </div>
           </div>
           <figure class="report-preview-card">
-            <img src="/naidisaruande-eelvaade.svg" alt="Digiteekaardi eelhinnangu näidisaruanne" loading="lazy" />
+            <a class="report-preview-link" href="/naidisaruanne/" aria-label="Ava Ettevõtluskeskus OÜ näidisaruanne">
+              <img src="/naidisaruande-eelvaade.svg" alt="Digiteekaardi eelhinnangu näidisaruanne" loading="lazy" />
+            </a>
             <figcaption>Näidis. Teie aruandes kasutame teie ettevõtte andmeid ja täpsustame soovituse.</figcaption>
           </figure>
         </div>
