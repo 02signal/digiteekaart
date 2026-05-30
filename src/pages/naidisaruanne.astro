@@ -60,17 +60,17 @@ const schema = {
       </nav>
     </header>
 
-    <main class="report-page">
-      <section class="report-hero">
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
         <div class="section-inner">
           <span class="eyebrow">Näidisaruanne ettevõtte omanikule</span>
-          <h1>Ettevõtluskeskus OÜ: kas digiteekaardi toetus võiks sobida?</h1>
+          <h1>Ettevõtluskeskus OÜ: tasub edasi kontrollida.</h1>
           <p>
-            See on näidis sellest, mida anname pärast esmast kontrolli. See ei ole EIS-i otsus
-            ega toetusgarantii. See aitab omanikul näha, kas edasi liikumine on mõistlik.
+            Lühike vastus: avalike andmete põhjal on digiteekaardi toetus realistlik esimene
+            samm. Enne otsust tuleb kontrollida VTA jääk, maksuvõlg ja varasemad toetused.
           </p>
           <div class="actions">
-            <a class="btn btn-primary" href="/#eelhindamine">Soovin oma ettevõtte eelhinnangut</a>
+            <a class="btn btn-primary" href="/#eelhindamine">Soovin sama kontrolli</a>
             <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
           </div>
           <p class="report-date">Allikad kontrollitud: {checkedAt}</p>
@@ -79,216 +79,146 @@ const schema = {
 
       <section class="white">
         <div class="section-inner">
-          <div class="section-head">
-            <span class="kicker">Kiire otsus</span>
-            <h2>Esimene vaade: teekaardi toetus on realistlik esimene samm.</h2>
-            <p>
-              Avalike andmete ja näidise sisendi põhjal ületab Ettevõtluskeskus OÜ peamise
-              müügitulu kontrolli. Enne päris taotlust tuleb üle kontrollida VTA jääk,
-              maksuvõlg, varasem digidiagnostika toetus ja lõplik tegevusala sobivus.
-            </p>
-          </div>
-
-          <div class="summary-panel">
+          <div class="owner-verdict">
             <div>
-              <span class="status-tag status-green">Tõenäoline esimene samm</span>
-              <h3>Digitaliseerimise teekaardi toetus</h3>
+              <span class="status-tag status-green">Esialgne otsus</span>
+              <h2>Jah, siin on mõtet edasi minna.</h2>
               <p>
-                EIS-i lehel on meede avatud, suurim toetus on kuni 10 000 eurot ja
-                omafinantseering 30-50%. Meie soovitus oleks alustada sellest, sest see loob
-                ametliku 3 aasta plaani ja annab aluse järgmisteks arendusteks.
+                Ettevõtte müügitulu on piisav. Tegevusala ei paista esimesel vaatamisel välistatud.
+                Kõige mõistlikum on teha lühike ametlik kontroll ja siis otsustada, kas koostada
+                digiteekaart või minna väiksema tarkvara/liidestuse toetusega otse edasi.
               </p>
             </div>
-            <div class="score-box">
-              <strong>Esialgne hinnang</strong>
-              <span>Jah, tasub kontroll lõpuni teha</span>
-            </div>
+            <aside class="owner-callout">
+              <strong>Järgmine samm</strong>
+              <span>15 minuti kõne + 4 kontrolli</span>
+              <a href="tel:+37258180435">Helista kohe</a>
+            </aside>
           </div>
         </div>
       </section>
 
       <section class="ice">
         <div class="section-inner">
-          <div class="section-head">
-            <span class="kicker">Ettevõtte andmed</span>
-            <h2>Mida näidises kontrollisime.</h2>
+          <div class="section-head compact-head">
+            <span class="kicker">Mida omanik peab teadma</span>
+            <h2>Kolm asja, mitte pikk raport.</h2>
           </div>
 
-          <div class="assessment-grid">
-            <article class="card">
-              <span class="status-tag status-blue">Avalik register</span>
-              <h3>Ettevõte</h3>
-              <p><strong>Ettevõtluskeskus OÜ</strong></p>
-              <p>Registrikood: 14127891</p>
-              <p>Põhitegevusala: 85599 - muu mujal liigitamata õpe.</p>
+          <div class="simple-cards">
+            <article>
+              <strong>1</strong>
+              <h3>Ettevõte ületab müügitulu piiri.</h3>
+              <p>Kahe viimase aasta keskmine müügitulu on umbes 440 201 eurot.</p>
             </article>
-            <article class="card">
-              <span class="status-tag status-green">Müügitulu kontroll läbitud</span>
-              <h3>Kahe aasta müügitulu</h3>
-              <p>2023: 548 861 eurot</p>
-              <p>2024: 331 542 eurot</p>
-              <p>Keskmine: umbes 440 201 eurot. See on üle EIS-i 200 000 euro piiri.</p>
+            <article>
+              <strong>2</strong>
+              <h3>VTA tuleb ametlikult üle kontrollida.</h3>
+              <p>Näidise sisend on 0 eurot kasutatud VTA-d, aga enne päris otsust kontrollime selle RAR-is.</p>
             </article>
-            <article class="card">
-              <span class="status-tag status-amber">Vajab ametlikku ülevaatust</span>
-              <h3>VTA jääk</h3>
-              <p>
-                Näidise sisend: VTA-d ei ole kasutatud. Kui see kinnitub RAR-is, on ruumi
-                kuni 300 000 euro piirmäärani.
-              </p>
-              <p>Enne päris pakkumist kontrollime VTA jäägi üle.</p>
+            <article>
+              <strong>3</strong>
+              <h3>Väike tarkvara/liidestuse toetus võib sobida ka otse.</h3>
+              <p>Digiteekaart ei ole RTE tarkvara toetuse eeltingimus, kui projekt on konkreetne.</p>
             </article>
           </div>
-
-          <p class="notice">
-            Kasutatud avalik info: <a href={businessRegisterUrl} target="_blank" rel="noreferrer">e-äriregister</a>
-            ja <a href={vtaUrl} target="_blank" rel="noreferrer">Rahandusministeeriumi VTA selgitus</a>.
-          </p>
         </div>
       </section>
 
       <section class="white">
         <div class="section-inner">
-          <div class="section-head">
-            <span class="kicker">Avatud võimalused</span>
-            <h2>Milliseid EIS meetmeid näidise põhjal vaataksime.</h2>
+          <div class="section-head compact-head">
+            <span class="kicker">Soovitus</span>
+            <h2>Kuidas me edasi liiguksime.</h2>
+          </div>
+
+          <div class="owner-next-steps">
+            <article>
+              <span>01</span>
+              <h3>Kontrollime 4 asja</h3>
+              <p>VTA jääk, maksuvõlg, varasem digidiagnostika toetus ja tegevusala välistused.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Valime õige tee</h3>
+              <p>Kas teha digiteekaart või alustada väikse tarkvara/liidestuse toetusega.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Paneme hinnaga plaani lauale</h3>
+              <p>Mida teha, mis see maksab, mis osa võib olla toetatav ja mis osa jääb omafinantseeringuks.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner narrow">
+          <div class="section-head compact-head">
+            <span class="kicker">Lisainfo</span>
+            <h2>Täpsed andmed neile, kes tahavad kontrollida.</h2>
+            <p>Alguses ei pea neid läbi lugema. Need on siin läbipaistvuse ja hilisema otsuse jaoks.</p>
+          </div>
+
+          <div class="report-details">
+            <details>
+              <summary>Milliseid ettevõtte andmeid vaatasime?</summary>
+              <div class="detail-body">
+                <p><strong>Ettevõtluskeskus OÜ</strong>, registrikood 14127891.</p>
+                <p>Põhitegevusala: 85599 - muu mujal liigitamata õpe.</p>
+                <p>2023 müügitulu: 548 861 eurot. 2024 müügitulu: 331 542 eurot.</p>
+                <p>Kahe aasta keskmine: umbes 440 201 eurot.</p>
+                <p><a href={businessRegisterUrl} target="_blank" rel="noreferrer">Vaata allikat e-äriregistris</a></p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Millised toetused võivad olla asjakohased?</summary>
+              <div class="detail-body">
+                <ul class="check">
+                  <li><strong>Digitaliseerimise teekaart:</strong> kuni 10 000 eurot, omafinantseering 30-50%, eeldab vähemalt 200 000 eurot kahe aasta keskmist müügitulu.</li>
+                  <li><strong>Teekaardi arendustegevused:</strong> kuni 35 000 eurot, loogiline pärast ajakohast digiteekaarti.</li>
+                  <li><strong>RTE tarkvara või liidestus:</strong> 2 000-5 000 eurot, omafinantseering 50%, digiteekaart ei ole eeltingimus.</li>
+                  <li><strong>RTE automatiseerimine:</strong> kuni 150 000 eurot, suurem projekt, vajab selget partnerit ja andmevahetuse/automatiseerimise sisu.</li>
+                </ul>
+              </div>
+            </details>
+
+            <details>
+              <summary>Mis võib otsust veel muuta?</summary>
+              <div class="detail-body">
+                <ul class="check">
+                  <li>VTA jääk peab mahtuma 300 000 euro piiri sisse.</li>
+                  <li>Maksuvõlg ei tohi olla takistuseks.</li>
+                  <li>Varasem digidiagnostika või sama sisuga toetus võib välistada uue toetuse.</li>
+                  <li>Lõplik tegevusala ja projekt peab sobima EIS tingimustega.</li>
+                </ul>
+                <p><a href={vtaUrl} target="_blank" rel="noreferrer">Vaata VTA selgitust</a></p>
+              </div>
+            </details>
+
+            <details>
+              <summary>Ametlikud EIS allikad</summary>
+              <div class="detail-body source-list">
+                <a href={roadmapUrl} target="_blank" rel="noreferrer">Digitaliseerimise teekaardi toetus</a>
+                <a href={roadmapDevelopmentUrl} target="_blank" rel="noreferrer">Digiteekaardi nõustamis- ja arendustegevused</a>
+                <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">RTE tarkvara kasutusele võtmise või liidestamise toetus</a>
+                <a href={rteAutomationUrl} target="_blank" rel="noreferrer">RTE äriprotsesside automatiseerimise ja andmevahetuse toetus</a>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner narrow">
+          <div class="plain-warning">
+            <h2>Mida see näidis ei tähenda?</h2>
             <p>
-              Siin on ainult need rajad, mille puhul EIS-i lehel oli kontrolli hetkel staatus
-              "Avatud" ja mille seos ettevõtte digitaliseerimisega on piisavalt selge.
+              See ei ole EIS-i otsus ega lubadus, et toetus tuleb. See on omaniku tööriist:
+              kas tasub edasi kontrollida või mitte. Lõpliku otsuse teeb EIS/RTK ametliku
+              taotluse ja dokumentide põhjal.
             </p>
-          </div>
-
-          <div class="measure-list">
-            <article class="measure-card">
-              <div>
-                <span class="status-tag status-green">1. samm</span>
-                <h3>Digitaliseerimise teekaardi toetus</h3>
-                <p>
-                  Sobib selleks, et kaardistada tööprotsessid, andmed, süsteemid,
-                  küberturvalisuse esmane tase ja koostada 3 aasta tegevusplaan.
-                </p>
-              </div>
-              <dl>
-                <div><dt>Suurim toetus</dt><dd>10 000 eurot</dd></div>
-                <div><dt>Omafinantseering</dt><dd>30-50%</dd></div>
-                <div><dt>Peamine kontroll</dt><dd>keskmine müügitulu vähemalt 200 000 eurot</dd></div>
-              </dl>
-              <a href={roadmapUrl} target="_blank" rel="noreferrer">EIS allikas</a>
-            </article>
-
-            <article class="measure-card">
-              <div>
-                <span class="status-tag status-blue">Pärast teekaarti</span>
-                <h3>Teekaardi nõustamis- ja arendustegevuste toetus</h3>
-                <p>
-                  Sobib siis, kui teekaart on olemas ja selles kirjeldatud arendused tuleb
-                  päriselt ellu viia. Ilma teekaardita ei oleks see esimene samm.
-                </p>
-              </div>
-              <dl>
-                <div><dt>Suurim toetus</dt><dd>35 000 eurot</dd></div>
-                <div><dt>Omafinantseering</dt><dd>30-50%</dd></div>
-                <div><dt>Peamine kontroll</dt><dd>teekaart peab olema olemas ja ajakohane</dd></div>
-              </dl>
-              <a href={roadmapDevelopmentUrl} target="_blank" rel="noreferrer">EIS allikas</a>
-            </article>
-
-            <article class="measure-card">
-              <div>
-                <span class="status-tag status-blue">Saab vaadata ka otse</span>
-                <h3>RTE tarkvara kasutusele võtmise või liidestamise toetus</h3>
-                <p>
-                  Võib sobida lihtsaks tööks: uue tarkvara kasutuselevõtt või olemasolevate
-                  süsteemide liidestamine, näiteks CRM, vorm, andmebaas ja automaatne teavitus.
-                  EIS-i lehe järgi ei ole digiteekaart selle toetuse eeltingimus.
-                </p>
-              </div>
-              <dl>
-                <div><dt>Toetus</dt><dd>2 000-5 000 eurot</dd></div>
-                <div><dt>Omafinantseering</dt><dd>50%</dd></div>
-                <div><dt>Peamine kontroll</dt><dd>keskmine müügitulu vähemalt 50 000 eurot</dd></div>
-              </dl>
-              <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">EIS allikas</a>
-            </article>
-
-            <article class="measure-card">
-              <div>
-                <span class="status-tag status-amber">Suurem järgmine projekt</span>
-                <h3>RTE äriprotsesside automatiseerimise ja andmevahetuse toetus</h3>
-                <p>
-                  Võib sobida hiljem, kui teekaart või samaväärne strateegia on olemas ja
-                  projekt paneb süsteemid päriselt andmeid automaatselt vahetama.
-                </p>
-              </div>
-              <dl>
-                <div><dt>Suurim toetus</dt><dd>150 000 eurot</dd></div>
-                <div><dt>Omafinantseering</dt><dd>50%</dd></div>
-                <div><dt>Peamine kontroll</dt><dd>partner või koostööpartner peab olema kaasatud</dd></div>
-              </dl>
-              <a href={rteAutomationUrl} target="_blank" rel="noreferrer">EIS allikas</a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="ice">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="kicker">Soovitus Ettevõtluskeskus OÜ-le</span>
-            <h2>Mida selle näidise põhjal praktiliselt teha.</h2>
-          </div>
-
-          <div class="recommendation-flow">
-            <article>
-              <strong>01</strong>
-              <h3>Tee ametlik sobivuse kontroll lõpuni</h3>
-              <p>
-                Kontrollida VTA jääk, maksuvõlg, varasem digidiagnostika toetus ja tegevusala
-                välistused. Kui need on korras, on teekaardi töö mõistlik järgmine samm.
-              </p>
-            </article>
-            <article>
-              <strong>02</strong>
-              <h3>Koosta teekaart ühe konkreetse väärtusahela ümber</h3>
-              <p>
-                Näiteks: päring tuleb veebist, ettevõtte andmed leitakse registrist, sobivus
-                hinnatakse, kokkuvõte läheb omanikule ja meeskond näeb järgmisi samme.
-              </p>
-            </article>
-            <article>
-              <strong>03</strong>
-              <h3>Vali õige rahastus eraldi otsusena</h3>
-              <p>
-                Kui vaja on väike tarkvara või liidestus, saab RTE tarkvara toetust vaadata ka
-                otse. Kui tekib suurem andmevahetuse ja automatiseerimise projekt, vaadata
-                RTE automatiseerimise toetust.
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="white">
-        <div class="section-inner">
-          <div class="section-head">
-            <span class="kicker">Aus piir</span>
-            <h2>Mida see näidis ei väida.</h2>
-          </div>
-          <div class="grid-2">
-            <article class="card">
-              <h3>See ei ole EIS-i otsus</h3>
-              <p>
-                Lõpliku otsuse teeb EIS/RTK ametliku taotluse, dokumentide ja hindamise põhjal.
-                Meie roll on aidata omanikul enne kulutamist aru saada, kas tee on mõistlik.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Me ei näita ebakindlaid meetmeid sobivana</h3>
-              <p>
-                Kui meede on liiga eritingimuslik või sobivus ei ole näidise põhjal selge,
-                jätame selle soovitusest välja. Nii väldime müügilubadusi, mis hiljem aega raiskavad.
-              </p>
-            </article>
           </div>
         </div>
       </section>
