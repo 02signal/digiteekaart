@@ -402,11 +402,15 @@ const schema = {
           const data = new FormData(currentForm);
           if (data.get("website")) return;
 
+          const attribution = (window as any).digiteekaartGetAttribution?.() || {};
+          const lastCta = (window as any).digiteekaartGetLastCta?.() || {};
           const leadId = crypto.randomUUID ? crypto.randomUUID() : `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
           const payload = {
             leadId,
             sourceSite: currentForm.dataset.sourceSite,
             sourcePath: window.location.pathname,
+            attribution,
+            lastCta,
             company: String(data.get("company") || ""),
             registryCode: String(data.get("registryCode") || ""),
             person: String(data.get("person") || ""),
@@ -430,6 +434,10 @@ const schema = {
             `Suurus: ${payload.companySize || "-"}`,
             `Teema: ${payload.topic}`,
             `Soovin toetuste teateid: ${payload.consentFundingUpdates ? "jah" : "ei"}`,
+            `Kanal: ${attribution.utm_source || attribution.referrerHost || "-"}`,
+            `Kampaania: ${attribution.utm_campaign || "-"}`,
+            `Maandumisleht: ${attribution.landingPath || "-"}`,
+            `Viimane nupp: ${lastCta.cta_label || "-"}`,
             "",
             "Sõnum:",
             payload.message || "-"

@@ -20,9 +20,105 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
 
 <script is:inline>
   (() => {
+    const attributionKey = "digiteekaart:attribution";
+    const lastCtaKey = "digiteekaart:last_cta";
+    const campaignKeys = [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_term",
+      "utm_content",
+      "gclid",
+      "gbraid",
+      "wbraid",
+      "msclkid",
+      "fbclid",
+      "li_fat_id"
+    ];
+
+    const safeJsonRead = (key) => {
+      try {
+        return JSON.parse(sessionStorage.getItem(key) || "{}") || {};
+      } catch {
+        return {};
+      }
+    };
+
+    const safeJsonWrite = (key, value) => {
+      try {
+        sessionStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // If storage is unavailable, events still work without attribution context.
+      }
+    };
+
+    const referrerHost = (referrer) => {
+      if (!referrer) return "";
+      try {
+        return new URL(referrer).hostname;
+      } catch {
+        return "";
+      }
+    };
+
+    const captureAttribution = () => {
+      const params = new URLSearchParams(window.location.search);
+      const current = safeJsonRead(attributionKey);
+      const now = new Date().toISOString();
+
+      if (!current.landingPage) {
+        current.landingPage = window.location.href;
+        current.landingPath = `${window.location.pathname}${window.location.search}`;
+        current.firstReferrer = document.referrer || "";
+        current.referrerHost = referrerHost(document.referrer);
+        current.firstSeenAt = now;
+      }
+
+      current.currentPage = window.location.href;
+      current.currentPath = `${window.location.pathname}${window.location.search}`;
+      current.lastSeenAt = now;
+
+      let hasCampaignValue = false;
+      campaignKeys.forEach((key) => {
+        const value = params.get(key);
+        if (!value) return;
+        hasCampaignValue = true;
+        current[key] = value;
+      });
+
+      if (hasCampaignValue) {
+        current.campaignCapturedAt = now;
+      }
+
+      safeJsonWrite(attributionKey, current);
+      return current;
+    };
+
+    const getAttribution = () => captureAttribution();
+    const getLastCta = () => safeJsonRead(lastCtaKey);
+    const compactAttribution = () => {
+      const attribution = getAttribution();
+      const lastCta = getLastCta();
+      return {
+        landing_path: attribution.landingPath || "",
+        referrer_host: attribution.referrerHost || "",
+        utm_source: attribution.utm_source || "",
+        utm_medium: attribution.utm_medium || "",
+        utm_campaign: attribution.utm_campaign || "",
+        utm_content: attribution.utm_content || "",
+        utm_term: attribution.utm_term || "",
+        click_id_type: attribution.gclid ? "gclid" : attribution.msclkid ? "msclkid" : attribution.fbclid ? "fbclid" : attribution.li_fat_id ? "li_fat_id" : "",
+        last_cta_label: lastCta.cta_label || "",
+        last_cta_event: lastCta.event_name || ""
+      };
+    };
+
+    captureAttribution();
+
     const track = (eventName, params = {}) => {
       const detail = {
         source_path: window.location.pathname,
+        ...compactAttribution(),
         ...params
       };
       if (typeof window.gtag === "function") {
@@ -34,15 +130,26 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
     };
 
     window.digiteekaartTrack = track;
+    window.digiteekaartGetAttribution = getAttribution;
+    window.digiteekaartGetLastCta = getLastCta;
 
     document.addEventListener("click", (event) => {
       const target = event.target instanceof Element
         ? event.target.closest("[data-track-event]")
         : null;
       if (!target) return;
-      track(target.getAttribute("data-track-event") || "cta_click", {
+      const eventName = target.getAttribute("data-track-event") || "cta_click";
+      const cta = {
+        event_name: eventName,
         cta_label: target.getAttribute("data-track-label") || target.textContent?.trim() || "",
         cta_href: target instanceof HTMLAnchorElement ? target.href : "",
+        cta_path: target instanceof HTMLAnchorElement ? `${target.pathname}${target.search}${target.hash}` : "",
+        clicked_at: new Date().toISOString()
+      };
+      safeJsonWrite(lastCtaKey, cta);
+      track(eventName, {
+        cta_label: cta.cta_label,
+        cta_href: cta.cta_href,
         page_title: document.title
       });
     });
