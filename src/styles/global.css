@@ -483,6 +483,63 @@ section {
   font-weight: 900;
 }
 
+.funding-snapshot {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1fr);
+  gap: 22px;
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 28px;
+  background: #fff9ea;
+  box-shadow: var(--shadow);
+}
+
+.funding-snapshot h2 {
+  margin-top: 10px;
+  color: var(--navy);
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+}
+
+.funding-snapshot p {
+  color: var(--muted);
+}
+
+.funding-numbers {
+  display: grid;
+  gap: 12px;
+}
+
+.funding-numbers article {
+  border: 1px solid rgba(214, 166, 66, 0.42);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--white);
+}
+
+.funding-numbers strong,
+.funding-numbers span,
+.funding-numbers small {
+  display: block;
+}
+
+.funding-numbers strong {
+  color: var(--navy);
+}
+
+.funding-numbers span {
+  margin-top: 6px;
+  color: var(--teal);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.funding-numbers small {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .simple-cards,
 .owner-next-steps {
   display: grid;
@@ -751,6 +808,60 @@ section {
   align-items: start;
 }
 
+.lead-promise h2 {
+  margin-top: 10px;
+  color: var(--navy);
+  font-size: clamp(1.9rem, 4vw, 3.2rem);
+}
+
+.lead-promise > p {
+  color: var(--muted);
+  font-size: 1.08rem;
+}
+
+.promise-card,
+.funding-teaser {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.promise-card {
+  margin-top: 22px;
+}
+
+.promise-card strong,
+.funding-teaser span {
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.promise-card a {
+  display: inline-flex;
+  margin-top: 16px;
+  color: var(--teal);
+  font-weight: 900;
+}
+
+.funding-teaser {
+  margin-top: 14px;
+  background: #fff9ea;
+}
+
+.funding-teaser strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--navy);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.funding-teaser p {
+  color: var(--muted);
+}
+
 .lead-form {
   background: var(--white);
   border: 1px solid var(--line);
@@ -990,6 +1101,44 @@ textarea {
   color: rgba(255, 255, 255, 0.84);
 }
 
+.pdf-money-band {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.pdf-money-band div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff9ea;
+}
+
+.pdf-money-band span,
+.pdf-money-band strong,
+.pdf-money-band p {
+  display: block;
+}
+
+.pdf-money-band span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.pdf-money-band strong {
+  margin-top: 4px;
+  color: var(--navy);
+  font-size: 1.5rem;
+}
+
+.pdf-money-band p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .pdf-two-col,
 .pdf-check-grid,
 .pdf-plan {
@@ -1170,6 +1319,7 @@ textarea {
   .grid-3,
   .grid-2,
   .owner-verdict,
+  .funding-snapshot,
   .simple-cards,
   .owner-next-steps,
   .summary-panel,
@@ -1199,6 +1349,7 @@ textarea {
   .pdf-header,
   .pdf-company-strip,
   .pdf-two-col,
+  .pdf-money-band,
   .pdf-check-grid,
   .pdf-option-row,
   .pdf-plan,
