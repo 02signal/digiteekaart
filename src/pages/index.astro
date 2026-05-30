@@ -1,0 +1,225 @@
+---
+import "../styles/global.css";
+
+const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
+const eisDevelopmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
+const quickCheckUrl =
+  "https://02signal.ai/et/kiirkontroll/?utm_source=digiteekaart.ee&utm_medium=microsite&utm_campaign=digiteekaart";
+const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20EIS%20teekaardi%20eelhindamine";
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "Service",
+      "@id": "https://digiteekaart.ee/#service",
+      name: "Digitaliseerimise teekaardi ettevalmistus ja eelhindamine",
+      serviceType: "Digitaliseerimise teekaart, EIS toetuse ettevalmistus, ettevõtte digiplaan",
+      provider: { "@id": "https://digiteekaart.ee/#organization" },
+      areaServed: "EE",
+      audience: {
+        "@type": "Audience",
+        audienceType: "Eesti väike- ja keskmise ettevõtte omanikud"
+      }
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digiteekaart.ee | EIS digitaliseerimise teekaardi eelhindamine</title>
+    <meta
+      name="description"
+      content="Aitame Eesti ettevõtte omanikul aru saada, kas EIS digitaliseerimise teekaardi toetus võiks sobida ja mida teekaart peab sisaldama."
+    />
+    <link rel="canonical" href="https://digiteekaart.ee/" />
+    <meta property="og:title" content="Digiteekaart.ee | Digitaliseerimise teekaardi eelhindamine" />
+    <meta
+      property="og:description"
+      content="Selge esimene kontroll: kas ettevõte võiks EIS digitaliseerimise teekaardi toetuseks sobida ja milline töö on vaja ette valmistada."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://digiteekaart.ee/" />
+    <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="#toetus">Toetus</a>
+          <a href="#sobivus">Sobivus</a>
+          <a href="#kuidas">Kuidas käib</a>
+          <a href="#kontakt">Kontakt</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <span class="eyebrow">Digitaliseerimise teekaart ettevõtte omanikule</span>
+          <h1>Kas EIS-i digiteekaardi toetus võiks teile sobida?</h1>
+          <p>
+            Enne taotlemist tasub rahulikult üle vaadata: kas ettevõte vastab tingimustele,
+            mida teekaart peab sisaldama ja kas sellest oleks päriselt kasu.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href={quickCheckUrl}>Tee esmane kontroll</a>
+            <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
+          </div>
+          <div class="proof">
+            <div><strong>kuni 10 000 €</strong><span>EIS teekaardi toetus</span></div>
+            <div><strong>3 aasta plaan</strong><span>kitsaskohad, prioriteedid, maksumus</span></div>
+            <div><strong>järgmine samm</strong><span>arendustegevuste toetus võib järgneda</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="toetus" class="white">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="kicker">EIS meede lihtsas keeles</span>
+            <h2>Digiteekaart ei ole lihtsalt dokument. See on otsuse alus: mida teha, miks teha ja mis see maksab.</h2>
+            <p>
+              EIS-i avaliku info järgi on digitaliseerimise teekaardi toetuse eesmärk aidata ettevõttel
+              koostada 3 aasta vaade digitaliseerimise kitsaskohtadele, prioriteetidele, maksumusele,
+              tasuvusele ja mõjule. Enne tööd kontrollime alati kehtivad tingimused EIS-i lehelt üle.
+            </p>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <span class="stat">10 000 €</span>
+              <h3>Teekaardi toetus</h3>
+              <p>EIS-i lehel on välja toodud toetuse suurimaks summaks kuni 10 000 eurot.</p>
+            </article>
+            <article class="card">
+              <span class="stat">30-50%</span>
+              <h3>Omafinantseering</h3>
+              <p>Oma panus sõltub ettevõttest ja tingimustest. Kontrollime selle enne pakkumist üle.</p>
+            </article>
+            <article class="card">
+              <span class="stat">200 000 €</span>
+              <h3>Müügitulu piir</h3>
+              <p>EIS-i info järgi peab kahe eelmise majandusaasta keskmine põhitegevusala müügitulu olema vähemalt 200 000 eurot.</p>
+            </article>
+          </div>
+          <p class="notice">
+            Ametlik info: <a href={eisRoadmapUrl}>EIS digitaliseerimise teekaardi toetus</a>.
+            Kui teekaart on olemas, võib järgmiseks teemaks olla
+            <a href={eisDevelopmentUrl}>digitaliseerimise teekaardi nõustamis- ja arendustegevuste toetus</a>.
+          </p>
+        </div>
+      </section>
+
+      <section id="sobivus" class="ice">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="kicker">Mida omanik tavaliselt tahab teada</span>
+            <h2>Kolm küsimust enne, kui hakkate taotlust või dokumenti tegema.</h2>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <h3>Kas me üldse sobime?</h3>
+              <p>Vaatame läbi ettevõtte suuruse, müügitulu, tegevusala ja senise olukorra.</p>
+            </article>
+            <article class="card">
+              <h3>Mis peab teekaardis olema?</h3>
+              <p>Kirja tuleb panna hetkeolukord, kitsaskohad, prioriteedid, maksumus, tasuvus ja riskid.</p>
+            </article>
+            <article class="card">
+              <h3>Mis kasu sellest tuleb?</h3>
+              <p>Hea teekaart aitab otsustada, mida arendada esimesena ja mida mitte rahastada.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="kuidas" class="navy">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="kicker">Meie tööviis</span>
+            <h2>Teeme enne pildi selgeks, siis otsustame mahu.</h2>
+            <p>See sobib omanikule, kes ei taha alustada pika konsultatsiooniga enne, kui sobivus on arusaadav.</p>
+          </div>
+          <div class="roadmap">
+            <div class="roadmap-item"><strong>01</strong><div><h3>Esmane kontroll</h3><p>Kas EIS meede ja ettevõtte olukord sobivad kokku?</p></div></div>
+            <div class="roadmap-item"><strong>02</strong><div><h3>Kitsaskohtade kaart</h3><p>Millised tööd, andmed ja süsteemid praegu ettevõtet pidurdavad?</p></div></div>
+            <div class="roadmap-item"><strong>03</strong><div><h3>Teekaardi koostamine</h3><p>Paneme prioriteedid, maksumuse, riskid ja järgmised sammud omaniku keeles kirja.</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="section-head">
+            <span class="kicker">Mida saate</span>
+            <h2>Selge otsus: kas minna toetusega edasi või mitte.</h2>
+          </div>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Esimene kõne / eelhindamine</h3>
+              <ul class="check">
+                <li>kontrollime peamised sobivuse punktid</li>
+                <li>ütleme, mis info tuleb kokku koguda</li>
+                <li>anname hinnangu, kas tasub edasi minna</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Teekaardi töö</h3>
+              <ul class="check">
+                <li>hetkeolukord ja kitsaskohad</li>
+                <li>prioriteedid ja 3 aasta tegevuskava</li>
+                <li>maksumus, tasuvus, riskid ja küberturvalisus</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="kontakt" class="navy">
+        <div class="section-inner contact">
+          <div>
+            <span class="kicker">Järgmine samm</span>
+            <h2>Räägime 15 minutiga läbi, kas digiteekaart on teile mõistlik.</h2>
+            <p>
+              Kui ettevõte ei sobi või teekaardist ei ole praegu kasu, ütleme seda kohe.
+              Kui sobib, lepime kokku, millist infot on vaja ja mis töö maht võiks olla.
+            </p>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href={quickCheckUrl}>Tee esmane kontroll</a>
+              <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
+            </div>
+          </div>
+          <aside class="contact-card">
+            <h3>Kirjutage otse</h3>
+            <p>Ettevõtluskeskus OÜ / 02Signal</p>
+            <p><a href={emailHref}>info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435">+372 5818 0435</a></p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <strong>Digiteekaart.ee</strong>
+        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus</span>
+      </div>
+    </footer>
+  </body>
+</html>

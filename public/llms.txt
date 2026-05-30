@@ -1,0 +1,16 @@
+# Digiteekaart.ee
+
+Digiteekaart.ee is an Estonian-language site by Ettevõtluskeskus OÜ for Estonian SME owners who want to understand whether the EIS digitalisation roadmap grant could fit their company.
+
+Primary audience: older or non-technical SME owners who need a clear, practical explanation before starting a grant or digitalisation project.
+
+Main promise: pre-check whether the EIS digitalisation roadmap measure is worth pursuing, what information is needed, and what the roadmap should contain.
+
+Current public EIS references:
+- Digitalisation roadmap grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/
+- Digitalisation roadmap advisory and development activities grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/
+
+Useful links:
+- Homepage: https://digiteekaart.ee/
+- Quick check: https://02signal.ai/et/kiirkontroll/?utm_source=digiteekaart.ee&utm_medium=microsite&utm_campaign=digiteekaart
+- Contact: info@02signal.ai, +372 5818 0435
