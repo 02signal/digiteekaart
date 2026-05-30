@@ -6,11 +6,14 @@ Primary audience: older or non-technical SME owners who need a clear, practical 
 
 Main promise: pre-check whether the EIS digitalisation roadmap measure is worth pursuing, what information is needed, and what the roadmap should contain.
 
+Lead flow: the homepage includes a short Estonian pre-assessment form. It asks for company/contact details, optional registry code, the owner’s current need, required contact consent, and optional consent to receive funding and grant updates by email.
+
 Current public EIS references:
 - Digitalisation roadmap grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/
 - Digitalisation roadmap advisory and development activities grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/
 
 Useful links:
 - Homepage: https://digiteekaart.ee/
-- Quick check: https://02signal.ai/et/kiirkontroll/?utm_source=digiteekaart.ee&utm_medium=microsite&utm_campaign=digiteekaart
+- Pre-assessment: https://digiteekaart.ee/#eelhindamine
+- Privacy: https://digiteekaart.ee/privaatsus/
 - Contact: info@02signal.ai, +372 5818 0435

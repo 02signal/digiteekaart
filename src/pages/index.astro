@@ -3,9 +3,8 @@ import "../styles/global.css";
 
 const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
 const eisDevelopmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
-const quickCheckUrl =
-  "https://02signal.ai/et/kiirkontroll/?utm_source=digiteekaart.ee&utm_medium=microsite&utm_campaign=digiteekaart";
 const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20EIS%20teekaardi%20eelhindamine";
+const leadWebhookUrl = import.meta.env.PUBLIC_SITE_LEAD_WEBHOOK_URL ?? "";
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -63,6 +62,7 @@ const schema = {
         <div class="navlinks">
           <a href="#toetus">Toetus</a>
           <a href="#sobivus">Sobivus</a>
+          <a href="#eelhindamine">Eelhindamine</a>
           <a href="#kuidas">Kuidas käib</a>
           <a href="#kontakt">Kontakt</a>
         </div>
@@ -79,7 +79,7 @@ const schema = {
             mida teekaart peab sisaldama ja kas sellest oleks päriselt kasu.
           </p>
           <div class="actions">
-            <a class="btn btn-primary" href={quickCheckUrl}>Tee esmane kontroll</a>
+            <a class="btn btn-primary" href="#eelhindamine">Tee eelhindamine</a>
             <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
           </div>
           <div class="proof">
@@ -191,6 +191,93 @@ const schema = {
         </div>
       </section>
 
+      <section id="eelhindamine" class="ice">
+        <div class="section-inner lead-section">
+          <div class="section-head">
+            <span class="kicker">Tasuta eelhindamine</span>
+            <h2>Jätke andmed. Vaatame, kas digiteekaardi toetusega on mõtet edasi minna.</h2>
+            <p>
+              Küsime ainult seda, mida on vaja esimese hinnangu jaoks. Kui sobivus tundub nõrk,
+              ütleme seda ausalt. Kui sobib, lepime kokku järgmise kõne ja vajaliku info nimekirja.
+            </p>
+          </div>
+
+          <form
+            class="lead-form"
+            data-site-lead-form
+            data-webhook-url={leadWebhookUrl}
+            data-source-site="digiteekaart.ee"
+            data-mail-subject="Digiteekaart.ee - eelhindamine"
+          >
+            <input class="hidden-field" type="text" name="website" tabindex="-1" autocomplete="off" />
+            <div class="form-grid">
+              <div class="field">
+                <label for="company">Ettevõtte nimi *</label>
+                <input id="company" name="company" required autocomplete="organization" />
+              </div>
+              <div class="field">
+                <label for="registryCode">Registrikood</label>
+                <input id="registryCode" name="registryCode" inputmode="numeric" pattern="[0-9]{8}" title="Registrikoodis on 8 numbrit" autocomplete="off" />
+              </div>
+              <div class="field">
+                <label for="person">Teie nimi *</label>
+                <input id="person" name="person" required autocomplete="name" />
+              </div>
+              <div class="field">
+                <label for="role">Roll ettevõttes</label>
+                <input id="role" name="role" placeholder="Omanik / juhatuse liige / juht" />
+              </div>
+              <div class="field">
+                <label for="email">E-mail *</label>
+                <input id="email" name="email" type="email" required autocomplete="email" />
+              </div>
+              <div class="field">
+                <label for="phone">Telefon</label>
+                <input id="phone" name="phone" autocomplete="tel" />
+              </div>
+              <div class="field">
+                <label for="companySize">Ettevõtte suurus</label>
+                <select id="companySize" name="companySize">
+                  <option value="">Valige, kui teate</option>
+                  <option>1-4 inimest</option>
+                  <option>5-9 inimest</option>
+                  <option>10-49 inimest</option>
+                  <option>50+ inimest</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="topic">Mis teid praegu huvitab? *</label>
+                <select id="topic" name="topic" required>
+                  <option>Kas EIS digiteekaardi toetus sobib?</option>
+                  <option>Soovin teekaardi koostamise pakkumist</option>
+                  <option>Soovin teada, mis infot on vaja</option>
+                  <option>Soovin rääkida toetustest ja rahastusest</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="message">Kirjutage 2-3 lauset olukorra kohta</label>
+                <textarea id="message" name="message" placeholder="Näiteks: tahame tootmise/tellimuste/lao/CRM-i tööd lihtsamaks teha, aga ei tea, kas toetus sobib."></textarea>
+              </div>
+            </div>
+
+            <label class="checkbox">
+              <input type="checkbox" name="consentContact" required />
+              <span>
+                Nõustun, et Ettevõtluskeskus OÜ kasutab minu andmeid eelhindamiseks ja ühenduse võtmiseks.
+                <a href="/privaatsus/">Privaatsus</a>
+              </span>
+            </label>
+            <label class="checkbox">
+              <input type="checkbox" name="consentFundingUpdates" />
+              <span>Soovin saada e-mailiga infot avanevate toetuste ja uute rahastusvõimaluste kohta.</span>
+            </label>
+
+            <button class="btn btn-primary" type="submit">Saada eelhindamiseks</button>
+            <p class="form-note" data-form-note>Vastame üldjuhul ühe tööpäeva jooksul. Kui süsteem ei saada, avaneb e-kirja varuvariant.</p>
+          </form>
+        </div>
+      </section>
+
       <section id="kontakt" class="navy">
         <div class="section-inner contact">
           <div>
@@ -201,7 +288,7 @@ const schema = {
               Kui sobib, lepime kokku, millist infot on vaja ja mis töö maht võiks olla.
             </p>
             <div class="inline-actions">
-              <a class="btn btn-primary" href={quickCheckUrl}>Tee esmane kontroll</a>
+              <a class="btn btn-primary" href="#eelhindamine">Tee eelhindamine</a>
               <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
             </div>
           </div>
@@ -218,8 +305,86 @@ const schema = {
     <footer class="footer">
       <div class="footer-inner">
         <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus</span>
+        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus · <a href="/privaatsus/">Privaatsus</a></span>
       </div>
     </footer>
+    <script>
+      document.querySelectorAll("[data-site-lead-form]").forEach((form) => {
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const currentForm = event.currentTarget;
+          if (!(currentForm instanceof HTMLFormElement)) return;
+          if (!currentForm.checkValidity()) {
+            currentForm.reportValidity();
+            return;
+          }
+
+          const note = currentForm.querySelector("[data-form-note]");
+          const submitButton = currentForm.querySelector("button[type='submit']");
+          const data = new FormData(currentForm);
+          if (data.get("website")) return;
+
+          const leadId = crypto.randomUUID ? crypto.randomUUID() : `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+          const payload = {
+            leadId,
+            sourceSite: currentForm.dataset.sourceSite,
+            sourcePath: window.location.pathname,
+            company: String(data.get("company") || ""),
+            registryCode: String(data.get("registryCode") || ""),
+            person: String(data.get("person") || ""),
+            role: String(data.get("role") || ""),
+            email: String(data.get("email") || ""),
+            phone: String(data.get("phone") || ""),
+            companySize: String(data.get("companySize") || ""),
+            topic: String(data.get("topic") || ""),
+            message: String(data.get("message") || ""),
+            consentContact: data.get("consentContact") === "on",
+            consentFundingUpdates: data.get("consentFundingUpdates") === "on",
+            consentVersion: "2026-05-30"
+          };
+          const fallbackText = [
+            `Ettevõte: ${payload.company}`,
+            `Registrikood: ${payload.registryCode || "-"}`,
+            `Nimi: ${payload.person}`,
+            `Roll: ${payload.role || "-"}`,
+            `Email: ${payload.email}`,
+            `Telefon: ${payload.phone || "-"}`,
+            `Suurus: ${payload.companySize || "-"}`,
+            `Teema: ${payload.topic}`,
+            `Soovin toetuste teateid: ${payload.consentFundingUpdates ? "jah" : "ei"}`,
+            "",
+            "Sõnum:",
+            payload.message || "-"
+          ].join("\n");
+          const fallbackHref = `mailto:info@02signal.ai?subject=${encodeURIComponent(currentForm.dataset.mailSubject || "Digiteekaart.ee päring")}&body=${encodeURIComponent(fallbackText)}`;
+
+          submitButton?.setAttribute("disabled", "true");
+          if (note) note.textContent = "Saadan andmed turvaliselt...";
+
+          const webhookUrl = currentForm.dataset.webhookUrl?.trim();
+          if (webhookUrl) {
+            try {
+              const response = await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+              if (response.ok) {
+                currentForm.reset();
+                if (note) note.textContent = "Aitäh. Päring on salvestatud ja jõudis meieni. Võtame ühendust ühe tööpäeva jooksul.";
+                submitButton?.removeAttribute("disabled");
+                return;
+              }
+            } catch {
+              // Fallback opens the prepared e-mail below.
+            }
+          }
+
+          window.location.href = fallbackHref;
+          if (note) note.textContent = "Kui e-kiri ei avanenud, kirjutage info@02signal.ai või helistage +372 5818 0435.";
+          submitButton?.removeAttribute("disabled");
+        });
+      });
+    </script>
   </body>
 </html>

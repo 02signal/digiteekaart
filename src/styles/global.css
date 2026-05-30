@@ -32,6 +32,13 @@ a {
   color: inherit;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -336,6 +343,113 @@ section {
   padding: 24px;
 }
 
+.lead-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(360px, 1.18fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.lead-form {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+label {
+  color: var(--navy);
+  font-size: 0.92rem;
+  font-weight: 850;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 12px;
+  color: var(--ink);
+  background: var(--white);
+}
+
+textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.checkbox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.checkbox input {
+  width: 18px;
+  min-height: 18px;
+  margin-top: 3px;
+}
+
+.lead-form .btn {
+  margin-top: 20px;
+}
+
+.form-note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hidden-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.legal-page {
+  padding-top: 96px;
+}
+
+.legal-copy {
+  max-width: 840px;
+  display: grid;
+  gap: 22px;
+  margin-top: 30px;
+}
+
+.legal-copy h2 {
+  color: var(--navy);
+  font-size: 1.35rem;
+}
+
+.legal-copy p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
 .footer {
   padding: 30px 0;
   background: #071325;
@@ -363,6 +477,8 @@ section {
   .proof,
   .grid-3,
   .grid-2,
+  .lead-section,
+  .form-grid,
   .contact {
     grid-template-columns: 1fr;
   }
