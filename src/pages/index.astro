@@ -195,29 +195,46 @@ const schema = {
       <section id="naidis" class="white">
         <div class="section-inner report-sample">
           <div>
-            <span class="kicker">Mida vastu saate</span>
-            <h2>Näidis: ühe lehe eelhinnang, mitte pikk konsultatsiooniraport.</h2>
+            <span class="kicker">Mida saate pärast vormi</span>
+            <h2>Näidis: selge eelhinnang ja võimalikud teed edasi.</h2>
             <p>
-              Pärast vormi vaatame andmed üle ja anname lihtsa pildi: kas toetusega tasub edasi minna,
-              mis info on puudu ja milline on järgmine praktiline samm. See ei ole EIS-i ametlik otsus,
-              vaid omaniku otsuse abivahend enne aja ja raha kulutamist.
+              Saate lühikese otsuse lehe: kas tasub edasi kontrollida, millised toetusvariandid
+              võivad sobida, mida saate ise edasi teha ja millise töö saame meie teie eest ära teha.
+              See ei ole EIS-i ametlik otsus, vaid omaniku praktiline otsuse abivahend.
             </p>
             <ul class="check">
-              <li>esmane sobivuse hinnang</li>
-              <li>puuduv info ja võimalikud riskid</li>
-              <li>järgmine soovitatud samm</li>
+              <li>eelhinnang sobivusele ja riskidele</li>
+              <li>2-3 võimalikku teed: ise edasi, digiteekaart või väiksem tarkvara/liidestus</li>
+              <li>meie ettepanek: mida teha, kui kaua see võtab ja mis hinnaraamis liikuda</li>
             </ul>
             <div class="inline-actions">
-              <a class="btn btn-primary" href="#eelhindamine">Soovin sellist eelhinnangut</a>
+              <a class="btn btn-primary" href="#eelhindamine">Soovin eelhinnangut</a>
               <a class="btn btn-light" href="/naidisaruanne/">Ava näidisaruanne</a>
               <a class="btn btn-light" href="/pdf-vorm/">Vaata PDF vormi</a>
             </div>
           </div>
-          <figure class="report-preview-card">
-            <a class="report-preview-link" href="/naidisaruanne/" aria-label="Ava Ettevõtluskeskus OÜ näidisaruanne">
-              <img src="/naidisaruande-eelvaade.svg" alt="Digiteekaardi eelhinnangu näidisaruanne" loading="lazy" />
+          <figure class="report-preview-card report-preview-window">
+            <a class="report-window-link" href="/pdf-vorm/" aria-label="Ava PDF vormi näidis">
+              <div class="report-window-top">
+                <strong>PDF eelhinnangu näidis</strong>
+                <span>1 tööpäev</span>
+              </div>
+              <div class="report-window-body">
+                <span class="status-tag status-green">Esialgne otsus</span>
+                <h3>Tasub edasi kontrollida.</h3>
+                <p>Võimalik esimene toetus: kuni 10 000 €, kui tingimused sobivad.</p>
+                <div class="report-window-options">
+                  <div><strong>1</strong><span>Ise edasi</span></div>
+                  <div><strong>2</strong><span>Digiteekaart</span></div>
+                  <div><strong>3</strong><span>RTE liidestus</span></div>
+                </div>
+                <div class="report-window-offer">
+                  <strong>Meie ettepanek</strong>
+                  <span>15 minuti kõne, seejärel töömaht ja hind.</span>
+                </div>
+              </div>
             </a>
-            <figcaption>Näidis. Teie aruandes kasutame teie ettevõtte andmeid ja täpsustame soovituse.</figcaption>
+            <figcaption>Näidis sellest, mida saab omanik pärast eelhindamist e-mailiga.</figcaption>
           </figure>
         </div>
       </section>
@@ -226,18 +243,18 @@ const schema = {
         <div class="section-inner lead-section">
           <div class="lead-promise">
             <span class="kicker">Tasuta eelhindamine</span>
-            <h2>1 tööpäeva jooksul saate lühikese omaniku vastuse.</h2>
+            <h2>Saate ühe tööpäeva jooksul selge eelhinnangu.</h2>
             <p>
-              Mitte pikk konsultatsioon. Ütleme lihtsalt, kas tasub edasi kontrollida,
-              milline toetus võib sobida ja mis võib asja peatada.
+              Mitte pikk konsultatsioon. Ütleme, kas tasub edasi kontrollida, milline toetus
+              võib sobida, mida saate ise teha ja millise töö saame meie teie eest ära teha.
             </p>
             <div class="promise-card">
-              <strong>Mida vastu saate?</strong>
+              <strong>Mida te pärast vormi saate?</strong>
               <ul class="check">
                 <li>kas ettevõttel paistab olevat mõistlik võimalus edasi minna</li>
                 <li>milline toetus on esmapilgul kõige loogilisem</li>
-                <li>ligikaudne võimalik toetuse summa ja omafinantseering</li>
-                <li>mis 3-4 asja tuleb enne pakkumist üle kontrollida</li>
+                <li>mida saate ise edasi teha ja millised riskid tuleb üle kontrollida</li>
+                <li>meie ettepanek järgmise töö teostamiseks koos hinnaraamiga</li>
               </ul>
               <a href="/pdf-vorm/">Vaadake PDF vastuse näidist</a>
             </div>
