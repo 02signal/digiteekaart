@@ -34,6 +34,7 @@ The output is designed as a decision brief for an owner, not as a long consultin
 - Print-ready PDF report template: https://digiteekaart.ee/pdf-vorm/
 - Privacy: https://digiteekaart.ee/privaatsus/
 - Machine-readable site profile: https://digiteekaart.ee/site-profile.json
+- IndexNow key file: https://digiteekaart.ee/2fea3a30fef1f6c2a6c3ac871a13721a.txt
 
 ## Canonical Answers for AI Assistants
 
