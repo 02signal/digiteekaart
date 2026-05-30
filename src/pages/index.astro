@@ -1,5 +1,6 @@
 ---
 import Analytics from "../components/Analytics.astro";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
 const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
@@ -384,12 +385,7 @@ const schema = {
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="footer-inner">
-        <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus · <a href="/digitaliseerimise-teekaart/">Digiteekaart</a> · <a href="/rte-tarkvara-liidestus/">RTE</a> · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
-      </div>
-    </footer>
+    <Footer />
     <script>
       document.querySelectorAll("[data-site-lead-form]").forEach((form) => {
         form.addEventListener("submit", async (event) => {

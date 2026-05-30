@@ -1,5 +1,6 @@
 ---
 import Analytics from "../components/Analytics.astro";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 
 const checkedAt = "30.05.2026";
@@ -278,11 +279,6 @@ const schema = {
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="footer-inner">
-        <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · näidisaruanne · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
-      </div>
-    </footer>
+    <Footer label="näidisaruanne ja omaniku eelhinnang" />
   </body>
 </html>

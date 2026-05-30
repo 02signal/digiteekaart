@@ -1109,6 +1109,32 @@ textarea {
   flex-wrap: wrap;
 }
 
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.footer-links span {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 850;
+}
+
+.source-note {
+  margin-top: 16px;
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff9ea;
+  color: var(--ink) !important;
+  font-size: 0.94rem;
+}
+
 .pdf-template-body {
   background: #dfe7ec;
 }

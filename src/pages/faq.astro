@@ -1,6 +1,13 @@
 ---
 import Analytics from "../components/Analytics.astro";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
+
+const checkedAt = "30.05.2026";
+const roadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
+const developmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
+const rteSoftwareUrl = "https://eis.ee/teenused/rte_tarkvara_toetus/";
+const rteAutomationUrl = "https://eis.ee/teenused/rte_automatiseerimise_toetus/";
 
 const faqItems = [
   {
@@ -140,6 +147,7 @@ const schema = {
               Kui vastus jääb segaseks, täitke vorm või helistage. Esmane eesmärk on
               hoida omaniku aeg kokku ja vältida valet taotlust.
             </p>
+            <p class="source-note">EIS allikad kontrollitud: {checkedAt}. Eelhinnang ei ole ametlik rahastusotsus.</p>
           </div>
           <div class="report-details faq-list">
             {faqItems.map((item, index) => (
@@ -150,6 +158,22 @@ const schema = {
                 </div>
               </details>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner narrow">
+          <div class="report-details">
+            <details>
+              <summary>Ametlikud allikad, mille järgi vastused üle kontrollida</summary>
+              <div class="detail-body source-list">
+                <a href={roadmapUrl} target="_blank" rel="noreferrer">EIS digitaliseerimise teekaardi toetus</a>
+                <a href={developmentUrl} target="_blank" rel="noreferrer">EIS digiteekaardi nõustamis- ja arendustegevused</a>
+                <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">EIS RTE tarkvara kasutusele võtmise või liidestamise toetus</a>
+                <a href={rteAutomationUrl} target="_blank" rel="noreferrer">EIS RTE äriprotsesside automatiseerimise ja andmevahetuse toetus</a>
+              </div>
+            </details>
           </div>
         </div>
       </section>
@@ -184,11 +208,6 @@ const schema = {
       </section>
     </main>
 
-    <footer class="footer">
-      <div class="footer-inner">
-        <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · <a href="/privaatsus/">Privaatsus</a> · <a href="mailto:info@02signal.ai" data-track-event="email_click" data-track-label="faq_footer_email">info@02signal.ai</a></span>
-      </div>
-    </footer>
+    <Footer label="korduma kippuvad küsimused" />
   </body>
 </html>
