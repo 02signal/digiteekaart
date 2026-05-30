@@ -8,6 +8,8 @@ Main promise: pre-check whether the EIS digitalisation roadmap measure is worth 
 
 Lead flow: the homepage includes a short Estonian pre-assessment form. It asks for company/contact details, optional registry code, the owner’s current need, required contact consent, and optional consent to receive funding and grant updates by email.
 
+The page shows a sample one-page pre-assessment report before the form, so owners can see the practical output: initial fit, missing information, risks, and next recommended step.
+
 Current public EIS references:
 - Digitalisation roadmap grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/
 - Digitalisation roadmap advisory and development activities grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/
