@@ -1,4 +1,5 @@
 ---
+import Analytics from "../components/Analytics.astro";
 import "../styles/global.css";
 
 const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
@@ -15,7 +16,23 @@ const schema = {
       legalName: "Ettevõtluskeskus OÜ",
       url: "https://digiteekaart.ee/",
       email: "info@02signal.ai",
-      telephone: "+37258180435"
+      telephone: "+37258180435",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        telephone: "+37258180435",
+        email: "info@02signal.ai",
+        areaServed: "EE",
+        availableLanguage: ["et"]
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://digiteekaart.ee/#website",
+      name: "Digiteekaart.ee",
+      url: "https://digiteekaart.ee/",
+      publisher: { "@id": "https://digiteekaart.ee/#organization" },
+      inLanguage: "et"
     },
     {
       "@type": "Service",
@@ -54,6 +71,7 @@ const schema = {
     <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
   </head>
   <body>
     <header class="topbar">
@@ -63,9 +81,10 @@ const schema = {
           <a href="#toetus">Toetus</a>
           <a href="#sobivus">Sobivus</a>
           <a href="#naidis">Näidis</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/rte-tarkvara-liidestus/">RTE</a>
+          <a href="/faq/">FAQ</a>
           <a href="#eelhindamine">Eelhindamine</a>
-          <a href="#kuidas">Kuidas käib</a>
-          <a href="#kontakt">Kontakt</a>
         </div>
       </nav>
     </header>
@@ -80,8 +99,8 @@ const schema = {
             mida teekaart peab sisaldama ja kas sellest oleks päriselt kasu.
           </p>
           <div class="actions">
-            <a class="btn btn-primary" href="#eelhindamine">Tee eelhindamine</a>
-            <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
+            <a class="btn btn-primary" href="#eelhindamine" data-track-event="cta_click" data-track-label="home_hero_eelhindamine">Tee eelhindamine</a>
+            <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="home_hero_phone">Helista +372 5818 0435</a>
           </div>
           <div class="proof">
             <div><strong>kuni 10 000 €</strong><span>EIS teekaardi toetus</span></div>
@@ -208,13 +227,13 @@ const schema = {
               <li>meie ettepanek: mida teha, kui kaua see võtab ja mis hinnaraamis liikuda</li>
             </ul>
             <div class="inline-actions">
-              <a class="btn btn-primary" href="#eelhindamine">Soovin eelhinnangut</a>
-              <a class="btn btn-light" href="/naidisaruanne/">Ava näidisaruanne</a>
-              <a class="btn btn-light" href="/pdf-vorm/">Vaata PDF vormi</a>
+              <a class="btn btn-primary" href="#eelhindamine" data-track-event="cta_click" data-track-label="sample_section_eelhindamine">Soovin eelhinnangut</a>
+              <a class="btn btn-light" href="/naidisaruanne/" data-track-event="sample_report_click" data-track-label="sample_section_report">Ava näidisaruanne</a>
+              <a class="btn btn-light" href="/pdf-vorm/" data-track-event="pdf_template_click" data-track-label="sample_section_pdf">Vaata PDF vormi</a>
             </div>
           </div>
           <figure class="report-preview-card report-preview-window">
-            <a class="report-window-link" href="/pdf-vorm/" aria-label="Ava PDF vormi näidis">
+            <a class="report-window-link" href="/pdf-vorm/" aria-label="Ava PDF vormi näidis" data-track-event="pdf_template_click" data-track-label="homepage_pdf_window">
               <div class="report-window-top">
                 <strong>PDF eelhinnangu näidis</strong>
                 <span>1 tööpäev</span>
@@ -256,7 +275,7 @@ const schema = {
                 <li>mida saate ise edasi teha ja millised riskid tuleb üle kontrollida</li>
                 <li>meie ettepanek järgmise töö teostamiseks koos hinnaraamiga</li>
               </ul>
-              <a href="/pdf-vorm/">Vaadake PDF vastuse näidist</a>
+              <a href="/pdf-vorm/" data-track-event="pdf_template_click" data-track-label="lead_section_pdf">Vaadake PDF vastuse näidist</a>
             </div>
             <div class="funding-teaser">
               <span>Esimene rahaline pilt</span>
@@ -351,15 +370,15 @@ const schema = {
               Kui sobib, lepime kokku, millist infot on vaja ja mis töö maht võiks olla.
             </p>
             <div class="inline-actions">
-              <a class="btn btn-primary" href="#eelhindamine">Tee eelhindamine</a>
-              <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
+              <a class="btn btn-primary" href="#eelhindamine" data-track-event="cta_click" data-track-label="footer_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="footer_phone">Helista +372 5818 0435</a>
             </div>
           </div>
           <aside class="contact-card">
             <h3>Kirjutage otse</h3>
             <p>Ettevõtluskeskus OÜ / 02Signal</p>
-            <p><a href={emailHref}>info@02signal.ai</a></p>
-            <p><a href="tel:+37258180435">+372 5818 0435</a></p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="contact_card_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="contact_card_phone">+372 5818 0435</a></p>
           </aside>
         </div>
       </section>
@@ -368,7 +387,7 @@ const schema = {
     <footer class="footer">
       <div class="footer-inner">
         <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus · <a href="/privaatsus/">Privaatsus</a></span>
+        <span>Ettevõtluskeskus OÜ · EIS digiteekaardi eelhindamine ja ettevalmistus · <a href="/digitaliseerimise-teekaart/">Digiteekaart</a> · <a href="/rte-tarkvara-liidestus/">RTE</a> · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
       </div>
     </footer>
     <script>
@@ -423,6 +442,10 @@ const schema = {
 
           submitButton?.setAttribute("disabled", "true");
           if (note) note.textContent = "Saadan andmed turvaliselt...";
+          (window as any).digiteekaartTrack?.("lead_form_submit_attempt", {
+            form_name: "digiteekaart_eelhindamine",
+            source_site: payload.sourceSite
+          });
 
           const webhookUrl = currentForm.dataset.webhookUrl?.trim();
           if (webhookUrl) {
@@ -435,6 +458,11 @@ const schema = {
               if (response.ok) {
                 currentForm.reset();
                 if (note) note.textContent = "Aitäh. Päring on salvestatud ja jõudis meieni. Võtame ühendust ühe tööpäeva jooksul.";
+                (window as any).digiteekaartTrack?.("lead_form_submit", {
+                  form_name: "digiteekaart_eelhindamine",
+                  status: "saved",
+                  source_site: payload.sourceSite
+                });
                 submitButton?.removeAttribute("disabled");
                 return;
               }
@@ -445,6 +473,11 @@ const schema = {
 
           window.location.href = fallbackHref;
           if (note) note.textContent = "Kui e-kiri ei avanenud, kirjutage info@02signal.ai või helistage +372 5818 0435.";
+          (window as any).digiteekaartTrack?.("lead_form_submit", {
+            form_name: "digiteekaart_eelhindamine",
+            status: "mailto_fallback",
+            source_site: payload.sourceSite
+          });
           submitButton?.removeAttribute("disabled");
         });
       });

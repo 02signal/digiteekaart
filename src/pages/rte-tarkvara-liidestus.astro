@@ -1,0 +1,250 @@
+---
+import Analytics from "../components/Analytics.astro";
+import "../styles/global.css";
+
+const checkedAt = "30.05.2026";
+const rteSoftwareUrl = "https://eis.ee/teenused/rte_tarkvara_toetus/";
+const roadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
+const emailHref = "mailto:info@02signal.ai?subject=RTE%20tarkvara%20v%C3%B5i%20liidestuse%20eelhindamine";
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Avaleht", item: "https://digiteekaart.ee/" },
+        { "@type": "ListItem", position: 2, name: "RTE tarkvara ja liidestus", item: "https://digiteekaart.ee/rte-tarkvara-liidestus/" }
+      ]
+    },
+    {
+      "@type": "Article",
+      headline: "RTE tarkvara kasutusele võtmise või liidestamise toetus",
+      description: "Lihtne selgitus, millal RTE tarkvara või liidestuse toetus võib sobida ja miks digiteekaart ei ole selle toetuse eeltingimus.",
+      inLanguage: "et",
+      dateModified: "2026-05-30",
+      author: { "@id": "https://digiteekaart.ee/#organization" },
+      publisher: { "@id": "https://digiteekaart.ee/#organization" },
+      mainEntityOfPage: "https://digiteekaart.ee/rte-tarkvara-liidestus/"
+    },
+    {
+      "@type": "Service",
+      name: "RTE tarkvara ja liidestuse toetuse eelhindamine",
+      serviceType: "Tarkvara kasutuselevõtt, süsteemide liidestamine, RTE toetus",
+      provider: { "@id": "https://digiteekaart.ee/#organization" },
+      areaServed: "EE"
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RTE tarkvara ja liidestuse toetus | Kas digiteekaart on vajalik?</title>
+    <meta
+      name="description"
+      content="RTE tarkvara kasutusele võtmise või liidestamise toetus võib sobida otse. Digiteekaart ei ole selle toetuse eeltingimus."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/rte-tarkvara-liidestus/" />
+    <meta property="og:title" content="RTE tarkvara ja liidestuse toetus lihtsas keeles" />
+    <meta
+      property="og:description"
+      content="Kui teil on konkreetne tarkvara või liidestuse töö, võib väike RTE toetus olla kiirem tee kui pikk digiteekaart."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://digiteekaart.ee/rte-tarkvara-liidestus/" />
+    <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="/">Avaleht</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/#eelhindamine">Eelhindamine</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="rte_nav_phone">+372 5818 0435</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
+        <div class="section-inner">
+          <span class="eyebrow">RTE tarkvara ja liidestus</span>
+          <h1>Kui töö on konkreetne, võib väiksem toetus olla kiirem tee.</h1>
+          <p>
+            RTE tarkvara kasutusele võtmise või liidestamise toetus võib sobida siis,
+            kui teil on selge praktiline töö: CRM, vorm, andmebaas, e-arve, liidestus
+            või automaatne teavitus.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="rte_hero_eelhindamine">Kontrolli sobivust</a>
+            <a class="btn btn-secondary" href={rteSoftwareUrl} target="_blank" rel="noreferrer" data-track-event="official_source_click" data-track-label="rte_hero_eis">Ametlik EIS leht</a>
+          </div>
+          <p class="report-date">EIS info kontrollitud: {checkedAt}</p>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner owner-verdict">
+          <div>
+            <span class="status-tag status-green">Oluline vastus</span>
+            <h2>Digiteekaart ei ole selle toetuse eeltingimus.</h2>
+            <p>
+              Kui projekt on väike ja selge, ei pea alustama suure teekaardiga. Aga kui te ei tea veel,
+              millist tööd esimesena teha, võib digiteekaart või lühike eelhindamine säästa vale projekti raha.
+            </p>
+          </div>
+          <aside class="owner-callout">
+            <strong>RTE tarkvara/liidestus</strong>
+            <span>2 000-5 000 €</span>
+            <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">Ametlik EIS leht</a>
+          </aside>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Sobib tavaliselt siis</span>
+            <h2>Kui saate ühe lausega öelda, mis töö tuleb ära teha.</h2>
+          </div>
+          <div class="simple-cards">
+            <article>
+              <strong>1</strong>
+              <h3>Uus tarkvara kasutusele</h3>
+              <p>Näiteks CRM, tellimuste haldus, tööde planeerimise tööriist või muu lihtne ärisüsteem.</p>
+            </article>
+            <article>
+              <strong>2</strong>
+              <h3>Kaks süsteemi omavahel rääkima</h3>
+              <p>Näiteks vormist andmed andmebaasi, CRM-ist teavitusse või arvestusest aruandesse.</p>
+            </article>
+            <article>
+              <strong>3</strong>
+              <h3>Korduv teavitus automaatseks</h3>
+              <p>Näiteks päring tuleb sisse, töötaja saab teate ja info jõuab õigesse kohta.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="funding-snapshot">
+            <div>
+              <span class="status-tag status-blue">Rahaline pilt</span>
+              <h2>See on väiksema töö toetus, mitte suur ümberkorraldus.</h2>
+              <p>
+                EIS lehel on välja toodud toetuse summa 2 000-5 000 eurot ja
+                omafinantseering 50%. Seega peab töö olema praktiline ja mõõdukas.
+              </p>
+            </div>
+            <div class="funding-numbers">
+              <article>
+                <strong>Võimalik toetus</strong>
+                <span>2 000-5 000 €</span>
+                <small>täpne summa sõltub projektist ja ametlikest tingimustest</small>
+              </article>
+              <article>
+                <strong>Projekti kogumaht</strong>
+                <span>umbes 4 000-10 000 €</span>
+                <small>kui omafinantseering on 50%</small>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Kumba teed valida?</span>
+            <h2>Kui projekt on selge, vaadake RTE-d. Kui valik on segane, alustage eelhindamisest.</h2>
+          </div>
+          <div class="measure-list">
+            <article class="measure-card">
+              <div>
+                <span class="status-tag status-green">Väike praktiline projekt</span>
+                <h3>RTE tarkvara või liidestus</h3>
+                <p>Sobib, kui teate juba, milline tarkvara, vorm, andmebaas või liidestus tuleb teha.</p>
+              </div>
+              <dl>
+                <div><dt>Toetus</dt><dd>2 000-5 000 €</dd></div>
+                <div><dt>Omafinantseering</dt><dd>50%</dd></div>
+              </dl>
+              <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">EIS</a>
+            </article>
+            <article class="measure-card">
+              <div>
+                <span class="status-tag status-blue">Kui valik on veel lahti</span>
+                <h3>Digitaliseerimise teekaart</h3>
+                <p>Sobib, kui ettevõttes on mitu võimalikku arendust ja vaja on omaniku otsuse alust.</p>
+              </div>
+              <dl>
+                <div><dt>Toetus</dt><dd>kuni 10 000 €</dd></div>
+                <div><dt>Omafinantseering</dt><dd>30-50%</dd></div>
+              </dl>
+              <a href={roadmapUrl} target="_blank" rel="noreferrer">EIS</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner narrow">
+          <div class="plain-warning">
+            <h2>Mida me ei luba?</h2>
+            <p>
+              Me ei luba toetuse saamist ette. Saame teha eelhinnangu, aidata tingimused läbi
+              kontrollida ja koostada praktilise tööplaani või pakkumise. Ametliku otsuse teeb EIS/RTK.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="navy">
+        <div class="section-inner contact">
+          <div>
+            <span class="kicker">Järgmine samm</span>
+            <h2>Kirjeldage ühe lausega, mis töö vajab tegemist.</h2>
+            <p>Ütleme, kas paistab pigem RTE liidestus, digiteekaart või mõni muu tee.</p>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="rte_bottom_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="rte_bottom_phone">Helista +372 5818 0435</a>
+            </div>
+          </div>
+          <aside class="contact-card">
+            <h3>Kontakt</h3>
+            <p>Ettevõtluskeskus OÜ / 02Signal</p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="rte_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="rte_contact_phone">+372 5818 0435</a></p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <strong>Digiteekaart.ee</strong>
+        <span>Ettevõtluskeskus OÜ · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

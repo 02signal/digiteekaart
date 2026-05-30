@@ -1,0 +1,235 @@
+---
+import Analytics from "../components/Analytics.astro";
+import "../styles/global.css";
+
+const checkedAt = "30.05.2026";
+const roadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
+const developmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
+const emailHref = "mailto:info@02signal.ai?subject=Digitaliseerimise%20teekaardi%20eelhindamine";
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Avaleht", item: "https://digiteekaart.ee/" },
+        { "@type": "ListItem", position: 2, name: "Digitaliseerimise teekaart", item: "https://digiteekaart.ee/digitaliseerimise-teekaart/" }
+      ]
+    },
+    {
+      "@type": "Article",
+      headline: "Digitaliseerimise teekaart ettevõtte omanikule",
+      description: "Lihtne selgitus, millal digitaliseerimise teekaart on mõistlik ja mida EIS toetuse eelhindamisel kontrollida.",
+      inLanguage: "et",
+      dateModified: "2026-05-30",
+      author: { "@id": "https://digiteekaart.ee/#organization" },
+      publisher: { "@id": "https://digiteekaart.ee/#organization" },
+      mainEntityOfPage: "https://digiteekaart.ee/digitaliseerimise-teekaart/"
+    },
+    {
+      "@type": "Service",
+      name: "Digitaliseerimise teekaardi eelhindamine ja ettevalmistus",
+      serviceType: "EIS digitaliseerimise teekaardi toetuse eelhindamine",
+      provider: { "@id": "https://digiteekaart.ee/#organization" },
+      areaServed: "EE"
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digitaliseerimise teekaart | Lihtne eelhindamine omanikule</title>
+    <meta
+      name="description"
+      content="Mis on digitaliseerimise teekaart, millal võib EIS toetus sobida ja mida ettevõtte omanik enne taotlust kontrollima peaks."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/digitaliseerimise-teekaart/" />
+    <meta property="og:title" content="Digitaliseerimise teekaart ettevõtte omanikule" />
+    <meta
+      property="og:description"
+      content="Digiteekaart.ee selgitab lihtsas keeles, kas digiteekaardi toetus võiks sobida ja mis info enne otsust puudu on."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://digiteekaart.ee/digitaliseerimise-teekaart/" />
+    <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="/">Avaleht</a>
+          <a href="/rte-tarkvara-liidestus/">RTE liidestus</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/#eelhindamine">Eelhindamine</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="roadmap_nav_phone">+372 5818 0435</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
+        <div class="section-inner">
+          <span class="eyebrow">Digitaliseerimise teekaart</span>
+          <h1>Enne taotlust peab olema selge, kas digiteekaardist on päriselt kasu.</h1>
+          <p>
+            Digiteekaart on omaniku otsuse tööriist: mis ettevõttes praegu pidurdab,
+            millises järjekorras arendada ja mis töö võib olla toetuse abil mõistlik.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="roadmap_hero_eelhindamine">Soovin eelhinnangut</a>
+            <a class="btn btn-secondary" href="/pdf-vorm/" data-track-event="pdf_template_click" data-track-label="roadmap_hero_pdf">Vaata vastuse näidist</a>
+          </div>
+          <p class="report-date">EIS info kontrollitud: {checkedAt}</p>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner owner-verdict">
+          <div>
+            <span class="status-tag status-blue">Lihtne vastus</span>
+            <h2>Digiteekaart sobib siis, kui te ei taha ehitada juhuslikku lahendust.</h2>
+            <p>
+              Kui ettevõttes on mitu võimalikku arendust, aga pole selge, mis annaks esimese
+              kasu, aitab teekaart teha valiku. See ei pea olema paks raport. Hea teekaart
+              peab aitama omanikul otsustada, kuhu raha ja aeg panna.
+            </p>
+          </div>
+          <aside class="owner-callout">
+            <strong>EIS toetus</strong>
+            <span>kuni 10 000 €</span>
+            <a href={roadmapUrl} target="_blank" rel="noreferrer">Ametlik EIS leht</a>
+          </aside>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Mida kontrollida</span>
+            <h2>Neli lihtsat küsimust enne digiteekaardi tellimist.</h2>
+          </div>
+          <div class="simple-cards">
+            <article>
+              <strong>1</strong>
+              <h3>Kas müügitulu piir on täidetud?</h3>
+              <p>EIS info järgi peab kahe eelmise majandusaasta keskmine põhitegevusala müügitulu olema vähemalt 200 000 eurot.</p>
+            </article>
+            <article>
+              <strong>2</strong>
+              <h3>Kas VTA jääk on olemas?</h3>
+              <p>Vähese tähtsusega abi ei tohi kolme aasta jooksul ületada 300 000 eurot.</p>
+            </article>
+            <article>
+              <strong>3</strong>
+              <h3>Kas varasem toetus ei sega?</h3>
+              <p>Varasem digidiagnostika või sama sisuga toetus võib otsust mõjutada.</p>
+            </article>
+            <article>
+              <strong>4</strong>
+              <h3>Kas teekaart annab praktilise otsuse?</h3>
+              <p>Kui teekaart ei vii konkreetse tegevuskava, hinna ja prioriteedini, ei ole sellest omanikule palju abi.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Mida hea teekaart sisaldab</span>
+            <h2>Omanik peab saama vastuse, mitte ainult dokumendi.</h2>
+          </div>
+          <div class="owner-next-steps">
+            <article>
+              <span>01</span>
+              <h3>Kus töö praegu venib?</h3>
+              <p>Tellimused, pakkumised, ladu, tootmine, kliendisuhtlus, aruanded või muu korduv töö.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Mida teha esimesena?</h3>
+              <p>Prioriteedid peavad olema järjekorras, koos maksumuse ja oodatava kasuga.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Mida praegu mitte teha?</h3>
+              <p>Hea otsus säästab ka vale projekti raha. Kõiki ideid ei pea kohe arendama.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner narrow">
+          <div class="report-details">
+            <details open>
+              <summary>Millal võib järgmine toetus tulla?</summary>
+              <div class="detail-body">
+                <p>
+                  Kui digiteekaart on valmis ja ajakohane, võib vaadata digitaliseerimise teekaardi
+                  nõustamis- ja arendustegevuste toetust. EIS lehel on selle suurimaks toetuseks
+                  toodud 35 000 eurot ja omafinantseeringuks 30-50%.
+                </p>
+                <p><a href={developmentUrl} target="_blank" rel="noreferrer">Vaata ametlikku EIS lehte</a></p>
+              </div>
+            </details>
+            <details>
+              <summary>Kas see on EIS-i ametlik hinnang?</summary>
+              <div class="detail-body">
+                <p>
+                  Ei ole. Digiteekaart.ee eelhinnang aitab omanikul otsustada, kas tasub edasi
+                  kontrollida ja dokumente ette valmistada. Lõpliku otsuse teeb EIS/RTK ametliku
+                  taotluse ja dokumentide põhjal.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="navy">
+        <div class="section-inner contact">
+          <div>
+            <span class="kicker">Järgmine samm</span>
+            <h2>Saate ühe tööpäeva jooksul selge eelhinnangu.</h2>
+            <p>Kirjutage ettevõtte nimi, registrikood ja lühidalt, mida soovite parandada. Vastame omaniku keeles.</p>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="roadmap_bottom_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="roadmap_bottom_phone">Helista +372 5818 0435</a>
+            </div>
+          </div>
+          <aside class="contact-card">
+            <h3>Kontakt</h3>
+            <p>Ettevõtluskeskus OÜ / 02Signal</p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="roadmap_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="roadmap_contact_phone">+372 5818 0435</a></p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <strong>Digiteekaart.ee</strong>
+        <span>Ettevõtluskeskus OÜ · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
+      </div>
+    </footer>
+  </body>
+</html>

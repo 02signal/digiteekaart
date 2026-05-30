@@ -1,0 +1,63 @@
+---
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
+---
+
+<link rel="alternate" type="text/plain" href="/llms.txt" title="Digiteekaart.ee LLM summary" />
+<link rel="alternate" type="application/json" href="/site-profile.json" title="Digiteekaart.ee machine-readable profile" />
+
+{gaMeasurementId ? (
+  <>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+    <script is:inline define:vars={{ gaMeasurementId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      window.gtag = gtag;
+      gtag("js", new Date());
+      gtag("config", gaMeasurementId);
+    </script>
+  </>
+) : null}
+
+<script is:inline>
+  (() => {
+    const track = (eventName, params = {}) => {
+      const detail = {
+        source_path: window.location.pathname,
+        ...params
+      };
+      if (typeof window.gtag === "function") {
+        window.gtag("event", eventName, detail);
+      }
+      window.dispatchEvent(new CustomEvent("digiteekaart:event", {
+        detail: { eventName, params: detail }
+      }));
+    };
+
+    window.digiteekaartTrack = track;
+
+    document.addEventListener("click", (event) => {
+      const target = event.target instanceof Element
+        ? event.target.closest("[data-track-event]")
+        : null;
+      if (!target) return;
+      track(target.getAttribute("data-track-event") || "cta_click", {
+        cta_label: target.getAttribute("data-track-label") || target.textContent?.trim() || "",
+        cta_href: target instanceof HTMLAnchorElement ? target.href : "",
+        page_title: document.title
+      });
+    });
+
+    const startedForms = new WeakSet();
+    document.addEventListener("focusin", (event) => {
+      const form = event.target instanceof Element
+        ? event.target.closest("[data-site-lead-form]")
+        : null;
+      if (!form || startedForms.has(form)) return;
+      startedForms.add(form);
+      track("lead_form_start", {
+        form_name: "digiteekaart_eelhindamine",
+        source_site: form.getAttribute("data-source-site") || "digiteekaart.ee"
+      });
+    });
+  })();
+</script>

@@ -1,4 +1,5 @@
 ---
+import Analytics from "../components/Analytics.astro";
 import "../styles/global.css";
 
 const checkedAt = "30.05.2026";
@@ -46,6 +47,7 @@ const schema = {
     <meta property="og:url" content="https://digiteekaart.ee/naidisaruanne/" />
     <meta property="og:image" content="https://digiteekaart.ee/naidisaruande-eelvaade.svg" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
   </head>
   <body>
     <header class="topbar">
@@ -53,9 +55,11 @@ const schema = {
         <a class="brand" href="/">Digiteekaart.ee</a>
         <div class="navlinks">
           <a href="/">Avaleht</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/rte-tarkvara-liidestus/">RTE</a>
+          <a href="/faq/">FAQ</a>
           <a href="/#eelhindamine">Eelhindamine</a>
-          <a href="/privaatsus/">Privaatsus</a>
-          <a href="tel:+37258180435">+372 5818 0435</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_nav_phone">+372 5818 0435</a>
         </div>
       </nav>
     </header>
@@ -70,9 +74,9 @@ const schema = {
             samm. Enne otsust tuleb kontrollida VTA jääk, maksuvõlg ja varasemad toetused.
           </p>
           <div class="actions">
-            <a class="btn btn-primary" href="/#eelhindamine">Soovin sama kontrolli</a>
-            <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
-            <a class="btn btn-secondary" href="/pdf-vorm/">Vaata PDF vormi</a>
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="sample_hero_eelhindamine">Soovin sama kontrolli</a>
+            <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_hero_phone">Helista +372 5818 0435</a>
+            <a class="btn btn-secondary" href="/pdf-vorm/" data-track-event="pdf_template_click" data-track-label="sample_hero_pdf">Vaata PDF vormi</a>
           </div>
           <p class="report-date">Allikad kontrollitud: {checkedAt}</p>
         </div>
@@ -94,7 +98,7 @@ const schema = {
             <aside class="owner-callout">
               <strong>Järgmine samm</strong>
               <span>15 minuti kõne + 4 kontrolli</span>
-              <a href="tel:+37258180435">Helista kohe</a>
+              <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_verdict_phone">Helista kohe</a>
             </aside>
           </div>
 
@@ -259,16 +263,16 @@ const schema = {
               kas digiteekaardiga tasub edasi liikuda.
             </p>
             <div class="inline-actions">
-              <a class="btn btn-primary" href="/#eelhindamine">Tee eelhindamine</a>
-              <a class="btn btn-secondary" href="tel:+37258180435">Helista +372 5818 0435</a>
-              <a class="btn btn-secondary" href="/pdf-vorm/">PDF vormi näidis</a>
+              <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="sample_bottom_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_bottom_phone">Helista +372 5818 0435</a>
+              <a class="btn btn-secondary" href="/pdf-vorm/" data-track-event="pdf_template_click" data-track-label="sample_bottom_pdf">PDF vormi näidis</a>
             </div>
           </div>
           <aside class="contact-card">
             <h3>Kontakt</h3>
             <p>Ettevõtluskeskus OÜ / 02Signal</p>
-            <p><a href={emailHref}>info@02signal.ai</a></p>
-            <p><a href="tel:+37258180435">+372 5818 0435</a></p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="sample_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_contact_phone">+372 5818 0435</a></p>
           </aside>
         </div>
       </section>
@@ -277,7 +281,7 @@ const schema = {
     <footer class="footer">
       <div class="footer-inner">
         <strong>Digiteekaart.ee</strong>
-        <span>Ettevõtluskeskus OÜ · näidisaruanne · <a href="/privaatsus/">Privaatsus</a></span>
+        <span>Ettevõtluskeskus OÜ · näidisaruanne · <a href="/faq/">FAQ</a> · <a href="/privaatsus/">Privaatsus</a></span>
       </div>
     </footer>
   </body>

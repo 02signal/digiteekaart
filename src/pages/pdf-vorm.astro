@@ -1,4 +1,5 @@
 ---
+import Analytics from "../components/Analytics.astro";
 import "../styles/global.css";
 
 const generatedAt = "30.05.2026";
@@ -30,13 +31,14 @@ const schema = {
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://digiteekaart.ee/pdf-vorm/" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
   </head>
   <body class="pdf-template-body">
     <div class="pdf-toolbar">
       <a class="brand" href="/">Digiteekaart.ee</a>
       <div class="inline-actions">
-        <button class="btn btn-primary" type="button" onclick="window.print()">Prindi / salvesta PDF</button>
-        <a class="btn btn-light" href="/naidisaruanne/">Tagasi näidisele</a>
+        <button class="btn btn-primary" type="button" onclick="window.print()" data-track-event="pdf_print_click" data-track-label="pdf_toolbar_print">Prindi / salvesta PDF</button>
+        <a class="btn btn-light" href="/naidisaruanne/" data-track-event="sample_report_click" data-track-label="pdf_toolbar_sample">Tagasi näidisele</a>
       </div>
     </div>
 
@@ -219,7 +221,7 @@ const schema = {
             <span>Digiteekaart.ee - eelhindamine ja praktiline ettevalmistus</span>
           </div>
           <div>
-            <a href={emailHref}>info@02signal.ai</a>
+            <a href={emailHref} data-track-event="email_click" data-track-label="pdf_footer_email">info@02signal.ai</a>
             <span>+372 5818 0435</span>
           </div>
         </footer>

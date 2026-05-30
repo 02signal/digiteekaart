@@ -67,10 +67,12 @@ textarea {
 
 .navlinks {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   color: var(--muted);
   font-size: 0.92rem;
   font-weight: 750;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .navlinks a {
@@ -902,6 +904,34 @@ section {
   color: var(--muted);
 }
 
+.recommendation-flow a {
+  display: inline-flex;
+  margin-top: 10px;
+  color: var(--teal);
+  font-weight: 900;
+}
+
+.faq-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+
+.faq-layout h2 {
+  margin-top: 10px;
+  color: var(--navy);
+  font-size: clamp(1.8rem, 3.2vw, 2.7rem);
+}
+
+.faq-layout p {
+  color: var(--muted);
+}
+
+.faq-list details:first-child {
+  border-top: 4px solid var(--teal);
+}
+
 .lead-section {
   display: grid;
   grid-template-columns: minmax(0, 0.82fr) minmax(360px, 1.18fr);
@@ -1430,6 +1460,7 @@ textarea {
   .report-sample,
   .lead-section,
   .form-grid,
+  .faq-layout,
   .contact {
     grid-template-columns: 1fr;
   }

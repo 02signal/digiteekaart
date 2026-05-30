@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# AI-agentidele ja otsingumootoritele mõeldud kokkuvõtted:
+# https://digiteekaart.ee/llms.txt
+# https://digiteekaart.ee/site-profile.json
+
 Sitemap: https://digiteekaart.ee/sitemap-index.xml

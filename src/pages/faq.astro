@@ -1,0 +1,194 @@
+---
+import Analytics from "../components/Analytics.astro";
+import "../styles/global.css";
+
+const faqItems = [
+  {
+    question: "Kas Digiteekaart.ee eelhinnang on EIS-i ametlik otsus?",
+    answer: "Ei ole. See on omaniku otsuse abivahend enne taotluse või suurema töö alustamist. Lõpliku otsuse teeb EIS/RTK ametliku taotluse ja dokumentide põhjal."
+  },
+  {
+    question: "Kui kiiresti vastuse saab?",
+    answer: "Üldjuhul ühe tööpäeva jooksul. Kui info on puudulik, ütleme, mida on vaja juurde kontrollida."
+  },
+  {
+    question: "Mida ma pärast vormi saan?",
+    answer: "Saate lühikese eelhinnangu: kas tasub edasi liikuda, milline toetus võib sobida, mis riskid vajavad kontrolli ja millise töö saame vajadusel teie eest ära teha."
+  },
+  {
+    question: "Kas RTE tarkvara/liidestuse toetuseks on vaja digiteekaarti?",
+    answer: "Ei. RTE tarkvara kasutusele võtmise või liidestamise toetust saab vaadata ka otse, kui projekt on konkreetne. Digiteekaart on mõistlik siis, kui pole veel selge, millist arendust esimesena teha."
+  },
+  {
+    question: "Kui palju toetust võib olla?",
+    answer: "EIS info järgi on digitaliseerimise teekaardi toetuse lagi kuni 10 000 eurot. RTE tarkvara või liidestuse toetus on 2 000-5 000 eurot. Need ei ole lubadused, vaid ametlikel lehtedel toodud piirid."
+  },
+  {
+    question: "Mis andmeid te küsite?",
+    answer: "Küsime ettevõtte nime, soovi korral registrikoodi, teie nime, e-maili, telefoni ja lühikest kirjeldust, millist tööd või probleemi soovite lahendada."
+  },
+  {
+    question: "Kas ma pean kohe teenuse tellima?",
+    answer: "Ei. Esmase eelhinnangu mõte ongi aru saada, kas edasi minemine on mõistlik. Kui ei ole, ütleme selle välja."
+  },
+  {
+    question: "Mida Ettevõtluskeskus OÜ teeb?",
+    answer: "Aitame hinnata sobivust, koguda vajalikku infot, koostada omaniku jaoks selge tööplaani ja vajadusel teha ettepaneku digiteekaardi või väiksema tarkvara/liidestuse tööks."
+  },
+  {
+    question: "Kas kontrollite VTA-d ja maksuvõlga?",
+    answer: "Eelhinnangus ütleme, kas need vajavad kontrolli. Lõpliku töö või pakkumise eel vaatame vajalikud ametlikud kontrollid üle."
+  },
+  {
+    question: "Kui ettevõte ei sobi toetusele, kas sellest on ikka kasu?",
+    answer: "Jah, kui vastus on selge. Omanik säästab aega ja saab teada, kas mõistlikum on toetust mitte taotleda, teha väiksem arendus oma rahaga või oodata sobivamat meedet."
+  }
+];
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Avaleht", item: "https://digiteekaart.ee/" },
+        { "@type": "ListItem", position: 2, name: "FAQ", item: "https://digiteekaart.ee/faq/" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: faqItems.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer
+        }
+      }))
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Korduma kippuvad küsimused | Digiteekaart.ee</title>
+    <meta
+      name="description"
+      content="Lihtsad vastused digiteekaardi, EIS toetuse, RTE tarkvara/liidestuse toetuse ja Digiteekaart.ee eelhindamise kohta."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/faq/" />
+    <meta property="og:title" content="Digiteekaart.ee FAQ" />
+    <meta
+      property="og:description"
+      content="Omaniku keeles vastused: kas toetus sobib, kui kiiresti vastuse saab, mis andmeid küsime ja kas RTE toetuseks on digiteekaarti vaja."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://digiteekaart.ee/faq/" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="/">Avaleht</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/rte-tarkvara-liidestus/">RTE liidestus</a>
+          <a href="/#eelhindamine">Eelhindamine</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="faq_nav_phone">+372 5818 0435</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
+        <div class="section-inner">
+          <span class="eyebrow">FAQ</span>
+          <h1>Korduma kippuvad küsimused digiteekaardi ja toetuste kohta.</h1>
+          <p>
+            Vastused on kirjutatud ettevõtte omanikule, kes tahab kiiresti aru saada,
+            kas toetusega tasub aega kulutada.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="faq_hero_eelhindamine">Tee eelhindamine</a>
+            <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="faq_hero_phone">Helista +372 5818 0435</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner faq-layout">
+          <div>
+            <span class="kicker">Lühidalt</span>
+            <h2>Kui teil on üks konkreetne küsimus, alustage siit.</h2>
+            <p>
+              Kui vastus jääb segaseks, täitke vorm või helistage. Esmane eesmärk on
+              hoida omaniku aeg kokku ja vältida valet taotlust.
+            </p>
+          </div>
+          <div class="report-details faq-list">
+            {faqItems.map((item, index) => (
+              <details open={index < 3}>
+                <summary>{item.question}</summary>
+                <div class="detail-body">
+                  <p>{item.answer}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Järgmine otsus</span>
+            <h2>Kolm praktilist teed.</h2>
+          </div>
+          <div class="recommendation-flow">
+            <article>
+              <strong>Kui tahate ise edasi uurida</strong>
+              <h3>Vaadake näidisaruanne läbi.</h3>
+              <p>Saate aru, millist vastust me pärast eelhindamist anname.</p>
+              <a href="/naidisaruanne/" data-track-event="sample_report_click" data-track-label="faq_sample_report">Ava näidisaruanne</a>
+            </article>
+            <article>
+              <strong>Kui projekt on konkreetne</strong>
+              <h3>Vaadake RTE liidestust.</h3>
+              <p>See võib olla kiirem tee väikse tarkvara või liidestuse jaoks.</p>
+              <a href="/rte-tarkvara-liidestus/" data-track-event="content_page_click" data-track-label="faq_rte_page">Loe RTE lehte</a>
+            </article>
+            <article>
+              <strong>Kui valik on segane</strong>
+              <h3>Täitke eelhindamine.</h3>
+              <p>Ütleme, kas pigem digiteekaart, RTE töö või mõni muu tee.</p>
+              <a href="/#eelhindamine" data-track-event="cta_click" data-track-label="faq_bottom_eelhindamine">Tee eelhindamine</a>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <strong>Digiteekaart.ee</strong>
+        <span>Ettevõtluskeskus OÜ · <a href="/privaatsus/">Privaatsus</a> · <a href="mailto:info@02signal.ai" data-track-event="email_click" data-track-label="faq_footer_email">info@02signal.ai</a></span>
+      </div>
+    </footer>
+  </body>
+</html>
