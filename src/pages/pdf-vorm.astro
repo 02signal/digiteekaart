@@ -1,0 +1,216 @@
+---
+import "../styles/global.css";
+
+const generatedAt = "30.05.2026";
+const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20eelhinnangu%20PDF";
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Report",
+  name: "Digiteekaardi eelhinnangu PDF vormi näidis",
+  inLanguage: "et",
+  provider: {
+    "@type": "Organization",
+    name: "Ettevõtluskeskus OÜ",
+    url: "https://digiteekaart.ee/"
+  },
+  dateModified: "2026-05-30"
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF vormi näidis | Digiteekaardi eelhinnang</title>
+    <meta
+      name="description"
+      content="Prinditav PDF vormi näidis, mida saab saata ettevõtte omanikule pärast digiteekaardi või RTE toetuse eelhindamist."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/pdf-vorm/" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </head>
+  <body class="pdf-template-body">
+    <div class="pdf-toolbar">
+      <a class="brand" href="/">Digiteekaart.ee</a>
+      <div class="inline-actions">
+        <button class="btn btn-primary" type="button" onclick="window.print()">Prindi / salvesta PDF</button>
+        <a class="btn btn-light" href="/naidisaruanne/">Tagasi näidisele</a>
+      </div>
+    </div>
+
+    <main class="pdf-document" aria-label="Digiteekaardi eelhinnangu PDF vorm">
+      <section class="pdf-page">
+        <header class="pdf-header">
+          <div>
+            <span class="pdf-kicker">Digiteekaart.ee</span>
+            <h1>Ettevõtte digitoetuse eelhinnang</h1>
+            <p>Lihtne otsuse leht ettevõtte omanikule. Mitte EIS-i otsus ega toetusgarantii.</p>
+          </div>
+          <aside>
+            <strong>Näidis</strong>
+            <span>{generatedAt}</span>
+          </aside>
+        </header>
+
+        <div class="pdf-company-strip">
+          <div>
+            <span>Ettevõte</span>
+            <strong>Ettevõtluskeskus OÜ</strong>
+          </div>
+          <div>
+            <span>Registrikood</span>
+            <strong>14127891</strong>
+          </div>
+          <div>
+            <span>Kontakt</span>
+            <strong>omanik / juht</strong>
+          </div>
+        </div>
+
+        <section class="pdf-verdict">
+          <span class="status-tag status-green">Esialgne otsus</span>
+          <h2>Tasub edasi kontrollida.</h2>
+          <p>
+            Esmase info põhjal on ettevõttel mõistlik liikuda edasi lühikese ametliku kontrolliga.
+            Kui takistusi ei tule, saab valida, kas teha digiteekaart või alustada väiksema
+            tarkvara/liidestuse toetusega.
+          </p>
+        </section>
+
+        <div class="pdf-two-col">
+          <section class="pdf-box">
+            <h3>Miks see võib sobida?</h3>
+            <ul>
+              <li>Müügitulu kontroll on esialgu korras.</li>
+              <li>Digiteekaart võib anda selge 3 aasta plaani.</li>
+              <li>Väike RTE tarkvara/liidestuse toetus võib sobida ka otse.</li>
+            </ul>
+          </section>
+          <section class="pdf-box pdf-risk">
+            <h3>Mis võib peatada?</h3>
+            <ul>
+              <li>VTA jääk ei mahu piiri sisse.</li>
+              <li>Maksuvõlg või muu ametlik piirang.</li>
+              <li>Varasem sama sisuga toetus.</li>
+              <li>Projekt ei vasta EIS tingimustele.</li>
+            </ul>
+          </section>
+        </div>
+
+        <section class="pdf-next">
+          <h3>Soovitatud järgmine samm</h3>
+          <p>
+            Lepime kokku 15 minuti kõne. Kõne järel ütleme, kas tasub teha digiteekaardi
+            pakkumine, RTE tarkvara/liidestuse pakkumine või mitte edasi minna.
+          </p>
+          <div class="pdf-contact-line">
+            <strong>+372 5818 0435</strong>
+            <span>info@02signal.ai</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="pdf-page">
+        <header class="pdf-page-title">
+          <span class="pdf-kicker">Kontrollid</span>
+          <h2>Mida enne pakkumist üle vaatame?</h2>
+        </header>
+
+        <div class="pdf-check-grid">
+          <article>
+            <strong>01</strong>
+            <h3>VTA jääk</h3>
+            <p>Kas ettevõttel on veel piisavalt vähese tähtsusega abi ruumi?</p>
+            <span>Staatus: vajab kontrolli</span>
+          </article>
+          <article>
+            <strong>02</strong>
+            <h3>Maksuvõlg</h3>
+            <p>Kas puudub takistus, mis võib taotluse peatada?</p>
+            <span>Staatus: vajab kontrolli</span>
+          </article>
+          <article>
+            <strong>03</strong>
+            <h3>Varasem toetus</h3>
+            <p>Kas sama töö või digidiagnostika on juba toetust saanud?</p>
+            <span>Staatus: vajab kontrolli</span>
+          </article>
+          <article>
+            <strong>04</strong>
+            <h3>Tegevusala ja projekt</h3>
+            <p>Kas ettevõtte tegevusala ja plaanitav töö sobivad meetme reeglitega?</p>
+            <span>Staatus: vajab kontrolli</span>
+          </article>
+        </div>
+
+        <section class="pdf-options">
+          <h2>Milline tee võib olla mõistlik?</h2>
+          <div class="pdf-option-row">
+            <strong>Digiteekaart</strong>
+            <span>Kuni 10 000 eurot toetust. Sobib siis, kui vaja on tervikplaani.</span>
+            <em>Soovitus: esimene valik, kui omanik ei tea veel täpset arendusprojekti.</em>
+          </div>
+          <div class="pdf-option-row">
+            <strong>RTE tarkvara või liidestus</strong>
+            <span>2 000-5 000 eurot toetust. Digiteekaart ei ole eeltingimus.</span>
+            <em>Soovitus: sobib, kui projekt on väga konkreetne.</em>
+          </div>
+          <div class="pdf-option-row">
+            <strong>RTE automatiseerimine</strong>
+            <span>Kuni 150 000 eurot toetust. Suurem projekt andmevahetuse ja automaatika jaoks.</span>
+            <em>Soovitus: alles siis, kui töömaht ja partner on selged.</em>
+          </div>
+        </section>
+      </section>
+
+      <section class="pdf-page">
+        <header class="pdf-page-title">
+          <span class="pdf-kicker">Tööplaan</span>
+          <h2>Mida omanik saab pärast eelhinnangut?</h2>
+        </header>
+
+        <div class="pdf-plan">
+          <article>
+            <span>1 tööpäev</span>
+            <h3>Esimene vastus</h3>
+            <p>Kas on mõtet edasi minna, mis on peamine risk ja mida tuleb enne pakkumist kontrollida.</p>
+          </article>
+          <article>
+            <span>15 minutit</span>
+            <h3>Lühike kõne</h3>
+            <p>Vaatame läbi ettevõtte olukorra, eesmärgi ja selle, milline toetus võiks sobida.</p>
+          </article>
+          <article>
+            <span>Selge hind</span>
+            <h3>Pakkumine</h3>
+            <p>Mida me teeme, kui kaua see võtab, mis see maksab ja mis osa võib olla toetatav.</p>
+          </article>
+        </div>
+
+        <section class="pdf-info-needed">
+          <h2>Info, mida omanikult küsime</h2>
+          <ul>
+            <li>Ettevõtte nimi ja registrikood.</li>
+            <li>Mis töö või süsteem praegu takistab kasvu?</li>
+            <li>Kas ettevõttes kasutatakse e-arvet?</li>
+            <li>Kas mõni sarnane digitoetus on varem saadud?</li>
+            <li>Kes saab olla omaniku poolt vastutaja?</li>
+          </ul>
+        </section>
+
+        <footer class="pdf-footer-box">
+          <div>
+            <strong>Ettevõtluskeskus OÜ / 02Signal</strong>
+            <span>Digiteekaart.ee - eelhindamine ja praktiline ettevalmistus</span>
+          </div>
+          <div>
+            <a href={emailHref}>info@02signal.ai</a>
+            <span>+372 5818 0435</span>
+          </div>
+        </footer>
+      </section>
+    </main>
+  </body>
+</html>

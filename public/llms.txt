@@ -12,6 +12,8 @@ The page shows a sample one-page pre-assessment report before the form, so owner
 
 There is a clickable sample report page using Ettevõtluskeskus OÜ as an example. It separates official public facts from assumptions, shows only currently open EIS measures that are clearly relevant, and explains that the output is not an EIS decision.
 
+There is also a print-ready PDF form template for post-analysis owner reports. It is designed as a short A4 owner decision brief with clear verdict, risks, next action, funding options, and contact details.
+
 Current public EIS references:
 - Digitalisation roadmap grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/
 - Digitalisation roadmap advisory and development activities grant: https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/
@@ -19,6 +21,7 @@ Current public EIS references:
 Useful links:
 - Homepage: https://digiteekaart.ee/
 - Sample report: https://digiteekaart.ee/naidisaruanne/
+- PDF report template: https://digiteekaart.ee/pdf-vorm/
 - Pre-assessment: https://digiteekaart.ee/#eelhindamine
 - Privacy: https://digiteekaart.ee/privaatsus/
 - Contact: info@02signal.ai, +372 5818 0435
