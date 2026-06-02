@@ -17,7 +17,8 @@ Build one shared operating memory for Estonian company pre-assessments:
 Use two RIK data paths for different jobs:
 
 - **Bulk dataset path:** daily public/open data files are the right source for loading the whole company dataset into our database.
-- **API path:** after the RIK contract is active, use API calls for exact company lookup, autocomplete, and refreshing a specific registry code before a lead result is shown.
+- **Autocomplete path:** RIK public autocomplete helps an owner find the right company by name before they know or type the registry code.
+- **API path:** after the RIK contract is active, use API calls for exact company lookup and refreshing a specific registry code before a lead result is shown.
 
 Do not use the API as a full-dataset crawler. RIK documents the XML API as real-time access with a contract, a 50,000-request daily limit, and one concurrent request per contract partner. Large initial loads should use downloadable open-data files.
 
@@ -71,7 +72,8 @@ Raw public source records may be stored in the source archive for internal analy
 3. Store VTA/RAR and public tax-debt checks as dated snapshots when queried.
 4. Refresh `company_support_snapshots`.
 5. The `rik-company-lookup` Supabase Edge Function can refresh one registry code through the RIK simple-data API without exposing credentials or raw payloads.
-6. The web tool can query by registry code:
+6. The same Edge Function also proxies bounded company-name autocomplete so the browser does not depend on raw RIK payload shape.
+7. The web tool can query by registry code:
    - company found / not found;
    - active / risky status;
    - average revenue;
@@ -79,7 +81,7 @@ Raw public source records may be stored in the source archive for internal analy
    - latest tax-debt snapshot and check date;
    - likely support programs;
    - missing checks.
-7. User confirms e-mail and consent before detailed report is generated or saved as a lead.
+8. User confirms e-mail and consent before detailed report is generated or saved as a lead.
 
 ## Next Implementation Steps
 

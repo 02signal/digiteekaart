@@ -28,7 +28,7 @@
 - Done: warehouse foundation now separates raw public source archive from owner-facing product views and stores dated VTA/tax-debt snapshots.
 - Done: Supabase Edge Function `rik-company-lookup` deployed and smoke-tested against RIK simple data API for Ettevõtluskeskus OÜ.
 - Done: homepage registry-code field now runs live RIK lookup, shows company status on-page and sends bounded RIK facts with the lead.
-- Next: add company-name autocomplete before registry-code selection, so owners can start by typing the company name.
+- Done: homepage company-name autocomplete lets owners start by typing the company name, select the right company and auto-fill the registry code before the RIK check.
 - Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: add email verification before showing a more detailed generated report.

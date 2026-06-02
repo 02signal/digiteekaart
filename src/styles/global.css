@@ -1163,8 +1163,73 @@ section {
   gap: 7px;
 }
 
+.company-field {
+  position: relative;
+}
+
 .field.full {
   grid-column: 1 / -1;
+}
+
+.field-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.company-suggestions {
+  position: absolute;
+  top: calc(100% - 1px);
+  right: 0;
+  left: 0;
+  z-index: 9;
+  display: grid;
+  gap: 0;
+  max-height: 320px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.company-suggestions[hidden] {
+  display: none;
+}
+
+.company-suggestion {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: auto;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  padding: 12px;
+  color: var(--ink);
+  background: var(--white);
+  text-align: left;
+  cursor: pointer;
+}
+
+.company-suggestion:last-child {
+  border-bottom: 0;
+}
+
+.company-suggestion:hover,
+.company-suggestion:focus-visible {
+  background: var(--ice);
+  outline: none;
+}
+
+.company-suggestion strong {
+  color: var(--navy);
+  font-size: 0.96rem;
+}
+
+.company-suggestion span {
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 label {

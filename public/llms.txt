@@ -13,7 +13,7 @@ Important limitation: Digiteekaart.ee does not make official EIS/RTK funding dec
 ## Main Offer
 
 The homepage contains a short pre-assessment form and a 10-minute rule-based funding filter. A business owner submits:
-- company name and registry code, with on-page RIK/Business Register lookup when an 8-digit registry code is entered;
+- company name and registry code, with on-page RIK/Business Register autocomplete when the owner starts typing the company name and exact lookup when an 8-digit registry code is entered;
 - contact person, role, email and optional phone;
 - company size;
 - approximate revenue for the two latest years if known;
@@ -63,7 +63,7 @@ Q: Does the site give an immediate answer before contacting a consultant?
 A: Yes. The homepage funding filter can immediately show a likely first route, possible support amount and missing checks based on the user's own inputs. The result is a pre-assessment, not an official funding decision.
 
 Q: Can Digiteekaart.ee automatically read RIK/Business Register data now?
-A: Yes for a bounded public-facing lookup by registry code. When an owner enters an 8-digit registry code, the site can show the company name, registry status, legal form and address summary from RIK. Revenue, VTA/de minimis and final funding eligibility still require user input or later manual/official checks.
+A: Yes for a bounded public-facing lookup. The owner can start typing the company name, choose the right company from RIK autocomplete, and the registry code is filled automatically. When an 8-digit registry code is checked, the site can show the company name, registry status, legal form and address summary from RIK. Revenue, VTA/de minimis and final funding eligibility still require user input or later manual/official checks.
 
 Q: Does RTE software/integration support require a digitalisation roadmap first?
 A: No. Based on the RTE software/integration support page, a digitalisation roadmap is not presented as a prerequisite. It may be possible to check this support directly when the project is concrete.

@@ -330,9 +330,20 @@ const schema = {
               </div>
             </div>
             <div class="form-grid">
-              <div class="field">
+              <div class="field company-field">
                 <label for="company">Ettevõtte nimi *</label>
-                <input id="company" name="company" required autocomplete="organization" />
+                <input
+                  id="company"
+                  name="company"
+                  required
+                  autocomplete="organization"
+                  data-company-search-input
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="companySuggestions"
+                />
+                <div class="company-suggestions" id="companySuggestions" data-company-suggestions hidden role="listbox"></div>
+                <p class="field-help" data-company-search-note>Alustage nime kirjutamist. Kui ettevõte ilmub nimekirja, valige see ja registrikood täitub ise.</p>
               </div>
               <div class="field">
                 <label for="registryCode">Registrikood</label>
@@ -528,6 +539,21 @@ const schema = {
 
       type RikLookupResponse = {
         result?: RikLookupResult;
+        error?: string;
+      };
+
+      type CompanySuggestion = {
+        registryCode: string;
+        companyName: string | null;
+        statusCode: string | null;
+        legalFormCode: string | null;
+        addressSummary: string | null;
+        sourceUrl: string | null;
+        source: "RIK_AUTOCOMPLETE";
+      };
+
+      type CompanySearchResponse = {
+        results?: CompanySuggestion[];
         error?: string;
       };
 
@@ -782,14 +808,56 @@ const schema = {
         return body.result || null;
       };
 
+      const searchRikCompanies = async (form: HTMLFormElement, query: string, signal?: AbortSignal): Promise<CompanySuggestion[]> => {
+        const lookupUrl = form.dataset.rikLookupUrl?.trim();
+        const lookupKey = form.dataset.rikLookupKey?.trim();
+        if (!lookupUrl || !lookupKey) return [];
+
+        const response = await fetch(lookupUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${lookupKey}`,
+            "apikey": lookupKey
+          },
+          body: JSON.stringify({ query }),
+          signal
+        });
+
+        const body = await response.json() as CompanySearchResponse;
+        if (!response.ok || body.error) {
+          throw new Error(body.error || "company_search_failed");
+        }
+        return body.results || [];
+      };
+
       document.querySelectorAll("[data-site-lead-form]").forEach((form) => {
         if (!(form instanceof HTMLFormElement)) return;
 
         const registryInput = form.querySelector("#registryCode");
         const companyInput = form.querySelector("#company");
+        const companySuggestions = form.querySelector("[data-company-suggestions]");
+        const companySearchNote = form.querySelector("[data-company-search-note]");
         let rikLookupTimer = 0;
         let rikAbortController: AbortController | null = null;
         let lastRikLookupCode = "";
+        let companySearchTimer = 0;
+        let companySearchAbortController: AbortController | null = null;
+        let lastCompanySearch = "";
+
+        const closeCompanySuggestions = (): void => {
+          if (companySuggestions instanceof HTMLElement) {
+            companySuggestions.hidden = true;
+            companySuggestions.innerHTML = "";
+          }
+          if (companyInput instanceof HTMLInputElement) {
+            companyInput.setAttribute("aria-expanded", "false");
+          }
+        };
+
+        const setCompanySearchNote = (text: string): void => {
+          if (companySearchNote) companySearchNote.textContent = text;
+        };
 
         const runRikLookup = async (registryCode: string): Promise<void> => {
           const normalizedCode = normalizeRegistryCode(registryCode);
@@ -837,6 +905,102 @@ const schema = {
           }
         };
 
+        const selectCompanySuggestion = (suggestion: CompanySuggestion): void => {
+          if (companyInput instanceof HTMLInputElement) {
+            companyInput.value = suggestion.companyName || "";
+          }
+          if (registryInput instanceof HTMLInputElement) {
+            registryInput.value = normalizeRegistryCode(suggestion.registryCode);
+          }
+          closeCompanySuggestions();
+          setCompanySearchNote("Ettevõte valitud. Kontrollin nüüd põhiandmed Äriregistrist üle.");
+          (window as any).digiteekaartTrack?.("company_autocomplete_select", {
+            form_name: "digiteekaart_eelhindamine",
+            result_status: suggestion.statusCode || "",
+            registry_code_present: suggestion.registryCode ? "yes" : "no"
+          });
+          void runRikLookup(suggestion.registryCode);
+        };
+
+        const renderCompanySuggestions = (suggestions: CompanySuggestion[]): void => {
+          if (!(companySuggestions instanceof HTMLElement)) return;
+          companySuggestions.innerHTML = "";
+
+          if (!suggestions.length) {
+            closeCompanySuggestions();
+            setCompanySearchNote("Ei leidnud sobivat ettevõtet. Võite nime ja registrikoodi ise sisestada.");
+            return;
+          }
+
+          suggestions.slice(0, 6).forEach((suggestion, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "company-suggestion";
+            button.setAttribute("role", "option");
+            button.setAttribute("aria-selected", "false");
+            button.dataset.index = String(index);
+
+            const name = document.createElement("strong");
+            name.textContent = suggestion.companyName || "Nimi puudub";
+            const meta = document.createElement("span");
+            const parts = [suggestion.registryCode, suggestion.addressSummary].filter(Boolean);
+            meta.textContent = parts.join(" · ");
+
+            button.append(name, meta);
+            button.addEventListener("mousedown", (event) => event.preventDefault());
+            button.addEventListener("click", () => selectCompanySuggestion(suggestion));
+            companySuggestions.appendChild(button);
+          });
+
+          companySuggestions.hidden = false;
+          if (companyInput instanceof HTMLInputElement) {
+            companyInput.setAttribute("aria-expanded", "true");
+          }
+          setCompanySearchNote("Valige õige ettevõte nimekirjast. See täidab registrikoodi automaatselt.");
+        };
+
+        const runCompanySearch = async (query: string): Promise<void> => {
+          const normalizedQuery = query.replace(/\s+/g, " ").trim();
+          if (normalizedQuery.length < 2) {
+            closeCompanySuggestions();
+            setCompanySearchNote("Alustage nime kirjutamist. Kui ettevõte ilmub nimekirja, valige see ja registrikood täitub ise.");
+            return;
+          }
+          if (lastCompanySearch === normalizedQuery && companySuggestions instanceof HTMLElement && !companySuggestions.hidden) return;
+
+          companySearchAbortController?.abort();
+          companySearchAbortController = new AbortController();
+          lastCompanySearch = normalizedQuery;
+          setCompanySearchNote("Otsin Äriregistrist...");
+
+          try {
+            const suggestions = await searchRikCompanies(form, normalizedQuery, companySearchAbortController.signal);
+            renderCompanySuggestions(suggestions);
+            (window as any).digiteekaartTrack?.("company_autocomplete_result", {
+              form_name: "digiteekaart_eelhindamine",
+              result_count: suggestions.length,
+              query_length: normalizedQuery.length
+            });
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+            closeCompanySuggestions();
+            setCompanySearchNote("Automaatne otsing ei õnnestunud. Võite nime ja registrikoodi ise sisestada.");
+            (window as any).digiteekaartTrack?.("company_autocomplete_result", {
+              form_name: "digiteekaart_eelhindamine",
+              result_count: 0,
+              result_status: "error"
+            });
+          }
+        };
+
+        const scheduleCompanySearch = (): void => {
+          if (!(companyInput instanceof HTMLInputElement)) return;
+          window.clearTimeout(companySearchTimer);
+          companySearchTimer = window.setTimeout(() => {
+            void runCompanySearch(companyInput.value);
+          }, 350);
+        };
+
         const scheduleRikLookup = (): void => {
           if (!(registryInput instanceof HTMLInputElement)) return;
           const normalizedCode = normalizeRegistryCode(registryInput.value);
@@ -869,6 +1033,24 @@ const schema = {
           registryInput.addEventListener("blur", () => {
             window.clearTimeout(rikLookupTimer);
             void ensureRikLookup();
+          });
+        }
+
+        if (companyInput instanceof HTMLInputElement) {
+          companyInput.addEventListener("input", () => {
+            const knownCompany = form.querySelector("[data-rik-field='companyName']");
+            if (knownCompany instanceof HTMLInputElement && knownCompany.value && companyInput.value.trim() !== knownCompany.value) {
+              setRikStatus(form, "idle");
+            }
+            lastRikLookupCode = "";
+            scheduleCompanySearch();
+          });
+          companyInput.addEventListener("focus", scheduleCompanySearch);
+          companyInput.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeCompanySuggestions();
+          });
+          companyInput.addEventListener("blur", () => {
+            window.setTimeout(closeCompanySuggestions, 180);
           });
         }
 

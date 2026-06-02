@@ -9,7 +9,7 @@
   },
   "audience": "Eesti väike- ja keskmise ettevõtte omanik, kes soovib lihtsat eelhinnangut enne EIS digitoetuse või arendustööga alustamist.",
   "primaryOffer": "Tasuta eelhindamine: kas digiteekaardi toetus, RTE tarkvara/liidestus või muu praktiline tee võiks olla mõistlik.",
-  "responsePromise": "Leht kontrollib registrikoodi sisestamisel ettevõtte põhiandmed RIK-ist, annab kohe esmase reeglipõhise vastuse ning üldjuhul ühe tööpäeva jooksul lühikese kontrollitud omaniku otsuse abivahendi: sobivus, riskid, võimalikud teed ja järgmine samm.",
+  "responsePromise": "Leht aitab ettevõtte nime kirjutamisel valida õige ettevõtte RIK-ist, täidab registrikoodi, kontrollib põhiandmed, annab kohe esmase reeglipõhise vastuse ning üldjuhul ühe tööpäeva jooksul lühikese kontrollitud omaniku otsuse abivahendi: sobivus, riskid, võimalikud teed ja järgmine samm.",
   "importantCaveat": "Digiteekaart.ee ei ole EIS ega RTK. Eelhinnang ei ole ametlik rahastusotsus.",
   "indexNowKeyLocation": "https://digiteekaart.ee/2fea3a30fef1f6c2a6c3ac871a13721a.txt",
   "machineReadableFundingRules": "https://digiteekaart.ee/funding-programs.json",
@@ -17,8 +17,10 @@
     {
       "name": "10 minuti toetuse eelhindamine",
       "url": "https://digiteekaart.ee/#eelhindamine",
-      "purpose": "Küsib ettevõtte nime ja registrikoodi, kontrollib ettevõtte põhiandmeid RIK-ist, küsib müügitulu suurusjärku, VTA infot ja plaani tüüpi ning näitab kohe, milline toetus võib esimesena sobida.",
+      "purpose": "Aitab ettevõtte nime järgi RIK-ist õige ettevõtte valida, täidab registrikoodi, kontrollib ettevõtte põhiandmeid, küsib müügitulu suurusjärku, VTA infot ja plaani tüüpi ning näitab kohe, milline toetus võib esimesena sobida.",
       "trackedEvents": [
+        "company_autocomplete_result",
+        "company_autocomplete_select",
         "rik_lookup_result",
         "funding_assessment_result",
         "lead_form_submit_attempt",

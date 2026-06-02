@@ -10,8 +10,8 @@
     },
     {
       "name": "RIK Äriregistri avaandmed",
-      "status": "kasutusel registrikoodi põhikontrolliks",
-      "note": "Leht saab registrikoodi põhjal kuvada ettevõtte nime, staatuse, õigusliku vormi ja aadressi kokkuvõtte. Müügitulu küsime esimeses versioonis kasutajalt ja kontrollime hiljem eraldi."
+      "status": "kasutusel ettevõtte nimevaliku ja registrikoodi põhikontrolliks",
+      "note": "Leht saab ettevõtte nime kirjutamisel näidata RIK autocomplete tulemusi, täita registrikoodi ning registrikoodi põhjal kuvada ettevõtte nime, staatuse, õigusliku vormi ja aadressi kokkuvõtte. Müügitulu küsime esimeses versioonis kasutajalt ja kontrollime hiljem eraldi."
     },
     {
       "name": "VTA/RAR kontroll",

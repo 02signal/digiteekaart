@@ -1,5 +1,6 @@
 type CompanyLookupRequest = {
   registryCode?: string;
+  query?: string;
 };
 
 type CompanyLookupResult = {
@@ -13,6 +14,30 @@ type CompanyLookupResult = {
   foundCount: number | null;
   checkedAt: string;
   source: "RIK";
+};
+
+type CompanySearchResult = {
+  registryCode: string;
+  companyName: string | null;
+  statusCode: string | null;
+  legalFormCode: string | null;
+  addressSummary: string | null;
+  sourceUrl: string | null;
+  source: "RIK_AUTOCOMPLETE";
+};
+
+type RikAutocompleteItem = {
+  reg_code?: number | string;
+  name?: string;
+  status?: string;
+  legal_form?: number | string;
+  legal_address?: string;
+  url?: string;
+};
+
+type RikAutocompleteResponse = {
+  status?: string;
+  data?: RikAutocompleteItem[];
 };
 
 const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "")
@@ -78,6 +103,12 @@ const normalizeRegistryCode = (value: unknown) =>
     .replace(/\D/g, "")
     .slice(0, 8);
 
+const normalizeCompanyQuery = (value: unknown) =>
+  String(value || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+
 const buildEnvelope = (username: string, password: string, registryCode: string) => `<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:prod="http://arireg.x-road.eu/producer/">
   <soapenv:Body>
@@ -92,6 +123,56 @@ const buildEnvelope = (username: string, password: string, registryCode: string)
   </soapenv:Body>
 </soapenv:Envelope>`;
 
+const autocompleteUrl = (query: string) =>
+  `https://ariregister.rik.ee/est/api/autocomplete?q=${encodeURIComponent(query)}&deleted_companies=0&historical_names=0`;
+
+const searchCompanies = async (request: Request, query: string) => {
+  const normalizedQuery = normalizeCompanyQuery(query);
+  if (normalizedQuery.length < 2) {
+    return jsonResponse(request, 400, { error: "query_too_short" });
+  }
+
+  const startedAt = Date.now();
+  const response = await fetch(autocompleteUrl(normalizedQuery), {
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  const checkedAt = new Date().toISOString();
+
+  if (!response.ok) {
+    return jsonResponse(request, 502, {
+      error: "rik_autocomplete_http_error",
+      status: response.status,
+      checkedAt,
+    });
+  }
+
+  const body = await response.json() as RikAutocompleteResponse;
+  const results: CompanySearchResult[] = (body.data || [])
+    .slice(0, 8)
+    .map((item) => ({
+      registryCode: normalizeRegistryCode(item.reg_code),
+      companyName: item.name || null,
+      statusCode: item.status || null,
+      legalFormCode: item.legal_form ? String(item.legal_form) : null,
+      addressSummary: item.legal_address || null,
+      sourceUrl: item.url || null,
+      source: "RIK_AUTOCOMPLETE",
+    }))
+    .filter((item) => item.registryCode && item.companyName);
+
+  return jsonResponse(request, 200, {
+    query: normalizedQuery,
+    results,
+    meta: {
+      durationMs: Date.now() - startedAt,
+      checkedAt,
+      rawPayloadReturned: false,
+    },
+  });
+};
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders(request) });
@@ -101,14 +182,6 @@ Deno.serve(async (request) => {
     return jsonResponse(request, 405, { error: "method_not_allowed" });
   }
 
-  const username = Deno.env.get("RIK_API_USERNAME");
-  const password = Deno.env.get("RIK_API_PASSWORD");
-  const endpoint = Deno.env.get("RIK_API_ENDPOINT") || "https://ariregxmlv6.rik.ee/";
-
-  if (!username || !password) {
-    return jsonResponse(request, 500, { error: "rik_credentials_missing" });
-  }
-
   let payload: CompanyLookupRequest;
   try {
     payload = await request.json();
@@ -116,9 +189,22 @@ Deno.serve(async (request) => {
     return jsonResponse(request, 400, { error: "invalid_json" });
   }
 
+  const query = normalizeCompanyQuery(payload.query);
+  if (query) {
+    return searchCompanies(request, query);
+  }
+
   const registryCode = normalizeRegistryCode(payload.registryCode);
   if (!/^[0-9]{8}$/.test(registryCode)) {
     return jsonResponse(request, 400, { error: "invalid_registry_code" });
+  }
+
+  const username = Deno.env.get("RIK_API_USERNAME");
+  const password = Deno.env.get("RIK_API_PASSWORD");
+  const endpoint = Deno.env.get("RIK_API_ENDPOINT") || "https://ariregxmlv6.rik.ee/";
+
+  if (!username || !password) {
+    return jsonResponse(request, 500, { error: "rik_credentials_missing" });
   }
 
   const startedAt = Date.now();
