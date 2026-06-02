@@ -1,12 +1,14 @@
 ---
 import Analytics from "../components/Analytics.astro";
 import Footer from "../components/Footer.astro";
+import { fundingRulesReviewedAt, supportPrograms } from "../data/supportPrograms";
 import "../styles/global.css";
 
 const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
 const eisDevelopmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
 const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20EIS%20teekaardi%20eelhindamine";
 const leadWebhookUrl = import.meta.env.PUBLIC_SITE_LEAD_WEBHOOK_URL ?? "";
+const supportProgramJsonUrl = "https://digiteekaart.ee/funding-programs.json";
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -46,6 +48,17 @@ const schema = {
         "@type": "Audience",
         audienceType: "Eesti väike- ja keskmise ettevõtte omanikud"
       }
+    },
+    {
+      "@type": "Dataset",
+      "@id": "https://digiteekaart.ee/funding-programs.json#dataset",
+      name: "Digiteekaart.ee toetuste eelhindamise reeglid",
+      description: "Masinloetav reeglite register EIS digiteekaardi, RTE tarkvara/liidestuse ja seotud meetmete esmaseks eelhindamiseks.",
+      url: supportProgramJsonUrl,
+      inLanguage: "et",
+      dateModified: fundingRulesReviewedAt,
+      creator: { "@id": "https://digiteekaart.ee/#organization" },
+      isBasedOn: supportPrograms.map((program) => program.sourceUrl)
     }
   ]
 };
@@ -263,10 +276,11 @@ const schema = {
         <div class="section-inner lead-section">
           <div class="lead-promise">
             <span class="kicker">Tasuta eelhindamine</span>
-            <h2>Saate ühe tööpäeva jooksul selge eelhinnangu.</h2>
+            <h2>Saate kohe esmase vastuse ja ühe tööpäeva jooksul kontrollitud vastuse.</h2>
             <p>
-              Mitte pikk konsultatsioon. Ütleme, kas tasub edasi kontrollida, milline toetus
-              võib sobida, mida saate ise teha ja millise töö saame meie teie eest ära teha.
+              Sisestage ettevõtte nimi, müügitulu suurusjärk ja mida tahate korda teha.
+              Leht näitab kohe, milline toetus võib sobida. Meie vaatame seejärel andmed üle
+              ja saadame lihtsa omaniku vastuse.
             </p>
             <div class="promise-card">
               <strong>Mida te pärast vormi saate?</strong>
@@ -291,8 +305,21 @@ const schema = {
             data-webhook-url={leadWebhookUrl}
             data-source-site="digiteekaart.ee"
             data-mail-subject="Digiteekaart.ee - eelhindamine"
+            data-support-programs={JSON.stringify(supportPrograms)}
           >
             <input class="hidden-field" type="text" name="website" tabindex="-1" autocomplete="off" />
+            <input type="hidden" name="assessmentSummary" data-assessment-field="summary" />
+            <input type="hidden" name="recommendedProgram" data-assessment-field="program" />
+            <input type="hidden" name="possibleSupport" data-assessment-field="support" />
+            <input type="hidden" name="missingChecks" data-assessment-field="missing" />
+
+            <div class="form-step">
+              <span>1</span>
+              <div>
+                <h3>Ettevõte ja kontakt</h3>
+                <p>Kontakt on vajalik, sest toetuse vastus peab minema päris inimesele, mitte anonüümseks testiks.</p>
+              </div>
+            </div>
             <div class="form-grid">
               <div class="field">
                 <label for="company">Ettevõtte nimi *</label>
@@ -337,9 +364,70 @@ const schema = {
                   <option>Soovin rääkida toetustest ja rahastusest</option>
                 </select>
               </div>
-              <div class="field full">
-                <label for="message">Kirjutage 2-3 lauset olukorra kohta</label>
-                <textarea id="message" name="message" placeholder="Näiteks: tahame tootmise/tellimuste/lao/CRM-i tööd lihtsamaks teha, aga ei tea, kas toetus sobib."></textarea>
+            </div>
+
+            <div class="assessment-tool" data-funding-assessment>
+              <div class="form-step">
+                <span>2</span>
+                <div>
+                  <h3>10 minuti toetusfilter</h3>
+                  <p>Kui täpseid numbreid ei tea, pange ligikaudne suurusjärk. Hiljem kontrollime üle.</p>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="revenueYear1">Müügitulu eelmisel aastal</label>
+                  <input id="revenueYear1" name="revenueYear1" inputmode="numeric" placeholder="Näiteks 180000" data-assessment-input />
+                </div>
+                <div class="field">
+                  <label for="revenueYear2">Müügitulu üle-eelmisel aastal</label>
+                  <input id="revenueYear2" name="revenueYear2" inputmode="numeric" placeholder="Näiteks 240000" data-assessment-input />
+                </div>
+                <div class="field">
+                  <label for="deMinimisUsed">VTA kasutatud summa, kui teate</label>
+                  <input id="deMinimisUsed" name="deMinimisUsed" inputmode="numeric" placeholder="Kui ei tea, jätke tühjaks" data-assessment-input />
+                </div>
+                <div class="field">
+                  <label for="hasRoadmap">Kas ajakohane digiteekaart on olemas?</label>
+                  <select id="hasRoadmap" name="hasRoadmap" data-assessment-input>
+                    <option value="unknown">Ei tea / ei ole kindel</option>
+                    <option value="yes">Jah</option>
+                    <option value="no">Ei</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="fundingNeed">Mida soovite kõige rohkem teada?</label>
+                  <select id="fundingNeed" name="fundingNeed" data-assessment-input>
+                    <option value="unknown">Ma ei tea veel, millest alustada</option>
+                    <option value="software">Mul on selge väike tarkvara või liidestuse töö</option>
+                    <option value="roadmap">Meil on mitu ideed ja vaja on järjekorda</option>
+                    <option value="development">Digiteekaart on olemas ja nüüd tahame arendada</option>
+                    <option value="automation">Tahan suuremat andmevahetust või automatiseerimist</option>
+                  </select>
+                </div>
+                <div class="field full">
+                  <label for="message">Kirjutage 2-3 lauset olukorra kohta</label>
+                  <textarea id="message" name="message" placeholder="Näiteks: tellimused liiguvad Excelis, tahame CRM-i või andmed automaatselt õigesse kohta."></textarea>
+                </div>
+              </div>
+
+              <button class="btn btn-light assessment-button" type="button" data-assessment-button>Näita esmast vastust</button>
+              <div class="assessment-result" data-assessment-result hidden>
+                <div>
+                  <span class="status-tag status-blue" data-assessment-status>Esialgne vastus</span>
+                  <h3 data-assessment-title>Vastus tekib siin.</h3>
+                  <p data-assessment-copy></p>
+                </div>
+                <div class="assessment-money">
+                  <strong>Rahaline pilt</strong>
+                  <span data-assessment-money></span>
+                  <small data-assessment-detail></small>
+                </div>
+                <div class="assessment-checks">
+                  <strong>Enne päris otsust kontrollime</strong>
+                  <ul data-assessment-checks></ul>
+                </div>
               </div>
             </div>
 
@@ -387,7 +475,209 @@ const schema = {
 
     <Footer />
     <script>
+      type SupportProgram = {
+        id: string;
+        shortName: string;
+        supportText: string;
+        supportMax: number;
+        ownContributionText: string;
+        projectRangeText: string;
+        minAverageRevenue: number;
+        roadmapRequired: boolean;
+        ownerAnswer: string;
+      };
+
+      type FundingAssessment = {
+        status: string;
+        program?: SupportProgram;
+        title: string;
+        copy: string;
+        money: string;
+        detail: string;
+        missing: string[];
+        averageRevenue: number;
+        deMinimisLeft: number;
+      };
+
+      const parseMoney = (value: FormDataEntryValue | string | null): number => {
+        const normalized = String(value || "")
+          .replace(/\s/g, "")
+          .replace(/€/g, "")
+          .replace(",", ".")
+          .replace(/[^\d.]/g, "");
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : 0;
+      };
+
+      const formatEuro = (value: number): string => new Intl.NumberFormat("et-EE", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+      }).format(value);
+
+      const readPrograms = (form: HTMLFormElement): SupportProgram[] => {
+        try {
+          return JSON.parse(form.dataset.supportPrograms || "[]");
+        } catch {
+          return [];
+        }
+      };
+
+      const getProgram = (programs: SupportProgram[], id: string): SupportProgram | undefined => programs.find((program: SupportProgram) => program.id === id);
+
+      const makeAssessment = (form: HTMLFormElement): FundingAssessment => {
+        const programs = readPrograms(form);
+        const data = new FormData(form);
+        const revenueYear1 = parseMoney(data.get("revenueYear1"));
+        const revenueYear2 = parseMoney(data.get("revenueYear2"));
+        const knownRevenueCount = [revenueYear1, revenueYear2].filter((value) => value > 0).length;
+        const averageRevenue = knownRevenueCount
+          ? Math.round((revenueYear1 + revenueYear2) / knownRevenueCount)
+          : 0;
+        const deMinimisUsed = parseMoney(data.get("deMinimisUsed"));
+        const deMinimisLeft = Math.max(0, 300000 - deMinimisUsed);
+        const fundingNeed = String(data.get("fundingNeed") || "unknown");
+        const hasRoadmap = String(data.get("hasRoadmap") || "unknown");
+
+        const missing = [];
+        if (!averageRevenue) missing.push("kahe viimase aasta müügitulu");
+        if (!deMinimisUsed) missing.push("VTA jääk / vähese tähtsusega abi kasutus");
+        missing.push("maksuvõla ja varasemate toetuste kontroll");
+
+        let programId = "digital_roadmap";
+        if (fundingNeed === "software") programId = "rte_software";
+        if (fundingNeed === "development") programId = hasRoadmap === "yes" ? "roadmap_development" : "digital_roadmap";
+        if (fundingNeed === "automation") programId = "rte_automation";
+        if (fundingNeed === "unknown") {
+          if (averageRevenue && averageRevenue < 50000) programId = "rte_software";
+          else if (averageRevenue && averageRevenue < 200000) programId = "rte_software";
+          else programId = "digital_roadmap";
+        }
+
+        const program = getProgram(programs, programId) || programs[0];
+        const minRevenue = Number(program?.minAverageRevenue || 0);
+        const revenueOk = !minRevenue || averageRevenue >= minRevenue;
+        const revenueMissing = !averageRevenue && minRevenue > 0;
+        const roadmapMissing = program?.roadmapRequired && hasRoadmap !== "yes";
+        const vtaRisk = deMinimisUsed > 0 && deMinimisLeft < Number(program?.supportMax || 0);
+
+        let status = "võib_sobida";
+        let title = `${program?.shortName || "Toetus"} võib olla kõige loogilisem esimene tee.`;
+        let copy = program?.ownerAnswer || "See vajab lisakontrolli.";
+
+        if (programId === "rte_automation") {
+          title = "Suurem RTE automatiseerimine vajab enne kõnet täpsemat kontrolli.";
+          copy = "See võib olla hea tee ainult siis, kui andmevahetus, partner või süsteemide ühendus on selgelt kirjeldatud.";
+          status = "lisakontroll";
+        } else if (roadmapMissing) {
+          title = "Kõigepealt tuleb digiteekaart või selle ajakohasus üle vaadata.";
+          copy = "Arendustegevuste toetus on tavaliselt järgmine samm pärast ajakohast digiteekaarti.";
+          status = "puudub_info";
+          missing.unshift("ajakohane digiteekaart");
+        } else if (revenueMissing) {
+          title = `${program?.shortName || "Toetus"} võib sobida, aga müügitulu on veel puudu.`;
+          copy = "Ilma müügitulu suurusjärguta ei saa abikõlblikkust rahulikult hinnata.";
+          status = "puudub_info";
+        } else if (!revenueOk) {
+          title = `Müügitulu järgi ei paista ${program?.shortName || "see toetus"} praegu kindel.`;
+          copy = `Sisestatud keskmine müügitulu on umbes ${formatEuro(averageRevenue)}. Selle toetuse esmane piir on ${formatEuro(minRevenue)}. Võib olla mõistlik vaadata väiksemat tööd või rääkida läbi muu tee.`;
+          status = "risk";
+          if (programId !== "rte_software" && averageRevenue >= 50000) {
+            const fallback = getProgram(programs, "rte_software");
+            if (fallback) {
+              return {
+                status: "võib_sobida",
+                program: fallback,
+                title: "Digiteekaardi asemel võib esimesena sobida väiksem RTE tarkvara või liidestuse toetus.",
+                copy: `Sisestatud keskmine müügitulu on umbes ${formatEuro(averageRevenue)}. See ei pruugi digiteekaardi piiri täita, aga võib sobida väiksemale konkreetsele tarkvara või liidestuse tööle.`,
+                money: fallback.supportText,
+                detail: `${fallback.ownContributionText} omafinantseering, ${fallback.projectRangeText}.`,
+                missing,
+                averageRevenue,
+                deMinimisLeft
+              };
+            }
+          }
+        } else if (vtaRisk) {
+          title = "VTA jääk võib piirata toetuse summat.";
+          copy = "Sisestatud VTA kasutuse järgi võib jääk olla väike. See tuleb enne edasiminekut ametlikult üle kontrollida.";
+          status = "risk";
+          missing.unshift("VTA jääk ametlikus registris");
+        }
+
+        return {
+          status,
+          program,
+          title,
+          copy,
+          money: program?.supportText || "",
+          detail: `${program?.ownContributionText || ""} omafinantseering, ${program?.projectRangeText || ""}.`,
+          missing,
+          averageRevenue,
+          deMinimisLeft
+        };
+      };
+
+      const writeAssessment = (form: HTMLFormElement, assessment: FundingAssessment): void => {
+        const result = form.querySelector("[data-assessment-result]");
+        if (!(result instanceof HTMLElement)) return;
+        result.hidden = false;
+
+        const status = result.querySelector("[data-assessment-status]");
+        const title = result.querySelector("[data-assessment-title]");
+        const copy = result.querySelector("[data-assessment-copy]");
+        const money = result.querySelector("[data-assessment-money]");
+        const detail = result.querySelector("[data-assessment-detail]");
+        const checks = result.querySelector("[data-assessment-checks]");
+
+        if (status) {
+          status.textContent = assessment.status === "risk" ? "Vajab kontrolli" : assessment.status === "puudub_info" ? "Info puudu" : "Võib sobida";
+          status.className = `status-tag ${assessment.status === "risk" ? "status-amber" : assessment.status === "puudub_info" ? "status-amber" : "status-green"}`;
+        }
+        if (title) title.textContent = assessment.title;
+        if (copy) copy.textContent = assessment.copy;
+        if (money) money.textContent = assessment.money;
+        if (detail) detail.textContent = assessment.detail;
+        if (checks) {
+          checks.innerHTML = "";
+          assessment.missing.slice(0, 5).forEach((item: string) => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            checks.appendChild(li);
+          });
+        }
+
+        const summary = `${assessment.title} ${assessment.copy}`.trim();
+        form.querySelector("[data-assessment-field='summary']")?.setAttribute("value", summary);
+        form.querySelector("[data-assessment-field='program']")?.setAttribute("value", assessment.program?.shortName || "");
+        form.querySelector("[data-assessment-field='support']")?.setAttribute("value", assessment.money || "");
+        form.querySelector("[data-assessment-field='missing']")?.setAttribute("value", assessment.missing.join("; "));
+
+        (window as any).digiteekaartTrack?.("funding_assessment_result", {
+          form_name: "digiteekaart_eelhindamine",
+          result_status: assessment.status,
+          recommended_program: assessment.program?.id || "",
+          possible_support: assessment.money || "",
+          average_revenue: assessment.averageRevenue || 0
+        });
+      };
+
       document.querySelectorAll("[data-site-lead-form]").forEach((form) => {
+        const assessmentButton = form.querySelector("[data-assessment-button]");
+        assessmentButton?.addEventListener("click", () => {
+          if (!(form instanceof HTMLFormElement)) return;
+          writeAssessment(form, makeAssessment(form));
+        });
+
+        form.querySelectorAll("[data-assessment-input]").forEach((input) => {
+          input.addEventListener("change", () => {
+            if (!(form instanceof HTMLFormElement)) return;
+            if (form.querySelector("[data-assessment-result]:not([hidden])")) {
+              writeAssessment(form, makeAssessment(form));
+            }
+          });
+        });
+
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
           const currentForm = event.currentTarget;
@@ -404,6 +694,8 @@ const schema = {
 
           const attribution = (window as any).digiteekaartGetAttribution?.() || {};
           const lastCta = (window as any).digiteekaartGetLastCta?.() || {};
+          const assessment = makeAssessment(currentForm);
+          writeAssessment(currentForm, assessment);
           const leadId = crypto.randomUUID ? crypto.randomUUID() : `lead-${Date.now()}-${Math.random().toString(16).slice(2)}`;
           const payload = {
             leadId,
@@ -419,6 +711,17 @@ const schema = {
             phone: String(data.get("phone") || ""),
             companySize: String(data.get("companySize") || ""),
             topic: String(data.get("topic") || ""),
+            revenueYear1: String(data.get("revenueYear1") || ""),
+            revenueYear2: String(data.get("revenueYear2") || ""),
+            averageRevenue: assessment.averageRevenue || 0,
+            deMinimisUsed: String(data.get("deMinimisUsed") || ""),
+            deMinimisLeft: assessment.deMinimisLeft || 0,
+            hasRoadmap: String(data.get("hasRoadmap") || ""),
+            fundingNeed: String(data.get("fundingNeed") || ""),
+            recommendedProgram: assessment.program?.shortName || "",
+            possibleSupport: assessment.money || "",
+            assessmentSummary: `${assessment.title} ${assessment.copy}`.trim(),
+            missingChecks: assessment.missing.join("; "),
             message: String(data.get("message") || ""),
             consentContact: data.get("consentContact") === "on",
             consentFundingUpdates: data.get("consentFundingUpdates") === "on",
@@ -433,6 +736,16 @@ const schema = {
             `Telefon: ${payload.phone || "-"}`,
             `Suurus: ${payload.companySize || "-"}`,
             `Teema: ${payload.topic}`,
+            `Müügitulu 1: ${payload.revenueYear1 || "-"}`,
+            `Müügitulu 2: ${payload.revenueYear2 || "-"}`,
+            `Keskmine müügitulu: ${payload.averageRevenue || "-"}`,
+            `VTA kasutatud: ${payload.deMinimisUsed || "-"}`,
+            `Digiteekaart olemas: ${payload.hasRoadmap || "-"}`,
+            `Soov: ${payload.fundingNeed || "-"}`,
+            `Soovitatud tee: ${payload.recommendedProgram || "-"}`,
+            `Võimalik toetus: ${payload.possibleSupport || "-"}`,
+            `Esialgne vastus: ${payload.assessmentSummary || "-"}`,
+            `Puuduvad kontrollid: ${payload.missingChecks || "-"}`,
             `Soovin toetuste teateid: ${payload.consentFundingUpdates ? "jah" : "ei"}`,
             `Kanal: ${attribution.utm_source || attribution.referrerHost || "-"}`,
             `Kampaania: ${attribution.utm_campaign || "-"}`,

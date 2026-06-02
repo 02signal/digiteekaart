@@ -1001,6 +1001,118 @@ section {
   box-shadow: var(--shadow);
 }
 
+.form-step {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.form-step span {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--teal);
+  color: var(--white);
+  font-weight: 900;
+}
+
+.form-step h3 {
+  color: var(--navy);
+  font-size: 1.18rem;
+}
+
+.form-step p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.assessment-tool {
+  margin: 22px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 20px;
+  background: var(--ice);
+}
+
+.assessment-button {
+  margin-top: 16px;
+}
+
+.assessment-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(220px, 0.45fr);
+  gap: 14px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  background: var(--white);
+}
+
+.assessment-result[hidden] {
+  display: none;
+}
+
+.assessment-result h3 {
+  color: var(--navy);
+  font-size: 1.35rem;
+}
+
+.assessment-result p {
+  color: var(--muted);
+}
+
+.assessment-money,
+.assessment-checks {
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff9ea;
+}
+
+.assessment-money strong,
+.assessment-money span,
+.assessment-money small,
+.assessment-checks strong {
+  display: block;
+}
+
+.assessment-money strong,
+.assessment-checks strong {
+  color: var(--navy);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+}
+
+.assessment-money span {
+  margin-top: 6px;
+  color: var(--teal);
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.assessment-money small {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.assessment-checks {
+  grid-column: 1 / -1;
+  background: var(--paper);
+}
+
+.assessment-checks ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1480,6 +1592,7 @@ textarea {
   .simple-cards,
   .owner-next-steps,
   .summary-panel,
+  .assessment-result,
   .assessment-grid,
   .measure-card,
   .recommendation-flow,

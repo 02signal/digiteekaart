@@ -21,8 +21,11 @@
 
 ## Digiteekaart.ee
 
+- Done: first on-page funding filter shows likely route, possible support, own contribution logic and missing checks before consultant contact.
+- Done: `funding-programs.json` exposes the bounded support-rule register for agents and future integrations.
+- Next: wire RIK/Business Register data lookup so registry code can pre-fill company data and revenue checks.
+- Next: add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.
-- Add stronger examples of possible support amount, own contribution and missing information.
 - Keep official funding facts checked against official sources before publishing.
 
 ## Teekaart.ee

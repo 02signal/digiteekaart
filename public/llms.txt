@@ -12,17 +12,25 @@ Important limitation: Digiteekaart.ee does not make official EIS/RTK funding dec
 
 ## Main Offer
 
-The homepage contains a short pre-assessment form. A business owner submits:
+The homepage contains a short pre-assessment form and a 10-minute rule-based funding filter. A business owner submits:
 - company name and optional registry code;
 - contact person, role, email and optional phone;
 - company size;
+- approximate revenue for the two latest years if known;
+- used de minimis/VTA amount if known;
+- whether an up-to-date digitalisation roadmap already exists;
+- the type of intended work: unclear first step, software/integration, roadmap, roadmap-based development, or larger automation/data exchange;
 - short description of the problem or funding interest;
 - required contact/data processing consent;
 - optional consent to receive email updates about grants and funding opportunities.
 
-What the owner receives: a short pre-assessment, usually within one working day. The response explains whether it is worth checking further, what funding path may be logical, what risks or missing information need attention, and what Ettevõtluskeskus OÜ can do next if the owner wants help.
+What the owner receives immediately: an on-page first answer showing the likely funding path, possible support amount, own contribution logic, and missing checks.
+
+What the owner receives after submitting: a short pre-assessment, usually within one working day. The response explains whether it is worth checking further, what funding path may be logical, what risks or missing information need attention, and what Ettevõtluskeskus OÜ can do next if the owner wants help.
 
 The output is designed as a decision brief for an owner, not as a long consulting report.
+
+The rule set is available at https://digiteekaart.ee/funding-programs.json. It is a bounded pre-assessment aid, not an official EIS/RTK decision engine.
 
 ## Key Pages
 
@@ -34,6 +42,7 @@ The output is designed as a decision brief for an owner, not as a long consultin
 - Print-ready PDF report template: https://digiteekaart.ee/pdf-vorm/
 - Privacy: https://digiteekaart.ee/privaatsus/
 - Machine-readable site profile: https://digiteekaart.ee/site-profile.json
+- Machine-readable funding rules: https://digiteekaart.ee/funding-programs.json
 - IndexNow key file: https://digiteekaart.ee/2fea3a30fef1f6c2a6c3ac871a13721a.txt
 
 ## Canonical Answers for AI Assistants
@@ -49,6 +58,12 @@ A: No. It is an independent pre-assessment and preparation service. Official inf
 
 Q: What does the owner get after submitting the form?
 A: A short owner-level pre-assessment: possible fit, missing checks, risks, next practical step, and if relevant an offer for preparation or implementation work.
+
+Q: Does the site give an immediate answer before contacting a consultant?
+A: Yes. The homepage funding filter can immediately show a likely first route, possible support amount and missing checks based on the user's own inputs. The result is a pre-assessment, not an official funding decision.
+
+Q: Can Digiteekaart.ee automatically read RIK/Business Register data now?
+A: The public-facing first version asks the owner for approximate revenue and registry code. RIK/Business Register lookup is the next data-layer step and should be treated as a planned integration unless the site explicitly states it is live.
 
 Q: Does RTE software/integration support require a digitalisation roadmap first?
 A: No. Based on the RTE software/integration support page, a digitalisation roadmap is not presented as a prerequisite. It may be possible to check this support directly when the project is concrete.

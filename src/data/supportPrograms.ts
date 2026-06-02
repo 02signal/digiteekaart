@@ -1,0 +1,68 @@
+export const fundingRulesReviewedAt = "2026-06-01";
+
+export const supportPrograms = [
+  {
+    id: "rte_software",
+    name: "RTE tarkvara kasutusele võtmise või liidestamise toetus",
+    shortName: "RTE tarkvara või liidestus",
+    plainUse: "Kui teil on selge väike töö: tarkvara kasutusele, vorm, andmebaas, CRM või kahe süsteemi ühendamine.",
+    supportText: "2 000-5 000 €",
+    supportMin: 2000,
+    supportMax: 5000,
+    ownContributionText: "50%",
+    projectRangeText: "umbes 4 000-10 000 € abikõlblikku projekti",
+    minAverageRevenue: 50000,
+    roadmapRequired: false,
+    ownerAnswer: "Digiteekaart ei ole eeltingimus, kui töö on konkreetne.",
+    sourceUrl: "https://eis.ee/teenused/rte_tarkvara_toetus/",
+    sourceCheckedAt: fundingRulesReviewedAt
+  },
+  {
+    id: "digital_roadmap",
+    name: "Digitaliseerimise teekaardi toetus",
+    shortName: "Digiteekaart",
+    plainUse: "Kui ettevõttes on mitu võimalikku arendust ja omanik vajab selget järjekorda.",
+    supportText: "kuni 10 000 €",
+    supportMin: 0,
+    supportMax: 10000,
+    ownContributionText: "30-50%",
+    projectRangeText: "umbes 14 300-20 000 € abikõlblikku teekaardi tööd",
+    minAverageRevenue: 200000,
+    roadmapRequired: false,
+    ownerAnswer: "Sobib siis, kui enne arendust on vaja otsustada, mida teha esimesena.",
+    sourceUrl: "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/",
+    sourceCheckedAt: fundingRulesReviewedAt
+  },
+  {
+    id: "roadmap_development",
+    name: "Digitaliseerimise teekaardi nõustamis- ja arendustegevuste toetus",
+    shortName: "Teekaardi arendustegevused",
+    plainUse: "Kui ajakohane digiteekaart on olemas ja nüüd on vaja hakata plaani ellu viima.",
+    supportText: "kuni 35 000 €",
+    supportMin: 0,
+    supportMax: 35000,
+    ownContributionText: "30-50%",
+    projectRangeText: "arendustöö maht sõltub EIS tingimustest ja teekaardi sisust",
+    minAverageRevenue: 200000,
+    roadmapRequired: true,
+    ownerAnswer: "See on tavaliselt järgmine samm pärast ajakohast digiteekaarti.",
+    sourceUrl: "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/",
+    sourceCheckedAt: fundingRulesReviewedAt
+  },
+  {
+    id: "rte_automation",
+    name: "RTE äriprotsesside automatiseerimise ja andmevahetuse toetus",
+    shortName: "RTE suurem automatiseerimine",
+    plainUse: "Kui töö puudutab andmevahetust või automatiseerimist koos partneri või teise süsteemiga.",
+    supportText: "kuni 150 000 €",
+    supportMin: 0,
+    supportMax: 150000,
+    ownContributionText: "50%",
+    projectRangeText: "suurem projekt, vajab eraldi sisulist kontrolli",
+    minAverageRevenue: 0,
+    roadmapRequired: false,
+    ownerAnswer: "Võib sobida suuremale liidestusele, aga seda ei tohi lubada ilma lisakontrollita.",
+    sourceUrl: "https://eis.ee/teenused/rte_automatiseerimise_toetus/",
+    sourceCheckedAt: fundingRulesReviewedAt
+  }
+] as const;
