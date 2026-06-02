@@ -70,7 +70,8 @@ Raw public source records may be stored in the source archive for internal analy
 2. Upsert support rules from `public/funding-programs.json`.
 3. Store VTA/RAR and public tax-debt checks as dated snapshots when queried.
 4. Refresh `company_support_snapshots`.
-5. The web tool can query by registry code:
+5. The `rik-company-lookup` Supabase Edge Function can refresh one registry code through the RIK simple-data API without exposing credentials or raw payloads.
+6. The web tool can query by registry code:
    - company found / not found;
    - active / risky status;
    - average revenue;
@@ -78,7 +79,7 @@ Raw public source records may be stored in the source archive for internal analy
    - latest tax-debt snapshot and check date;
    - likely support programs;
    - missing checks.
-6. User confirms e-mail and consent before detailed report is generated or saved as a lead.
+7. User confirms e-mail and consent before detailed report is generated or saved as a lead.
 
 ## Next Implementation Steps
 
@@ -87,9 +88,9 @@ Raw public source records may be stored in the source archive for internal analy
    - `RIK_API_USERNAME`
    - `RIK_API_PASSWORD`
    - optional `RIK_API_ENDPOINT` for test/prod switching.
-3. Run the RIK simple-data smoke test with one registry code.
-4. Build a batch loader for the RIK bulk files once the exact file format is selected.
-5. Add a server endpoint:
+3. Build a batch loader for the RIK bulk files once the exact file format is selected.
+4. Extend `rik-company-lookup` to store a source archive record and normalized company snapshot.
+5. Add a public-safe server endpoint:
    - input: registry code;
    - output: bounded company support snapshot;
    - no raw RIK payload.

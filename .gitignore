@@ -2,6 +2,7 @@ node_modules/
 dist/
 .astro/
 .vercel/
+supabase/.temp/
 .DS_Store
 *.log
 .vercel

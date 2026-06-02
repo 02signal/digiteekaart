@@ -26,6 +26,7 @@
 - Done: RIK warehouse foundation added under `infra/rik-warehouse/` with PostgreSQL schema, fixture and smoke test.
 - Done: privacy wording now covers public registry/RAR/MTA data use for support pre-assessment.
 - Done: warehouse foundation now separates raw public source archive from owner-facing product views and stores dated VTA/tax-debt snapshots.
+- Done: Supabase Edge Function `rik-company-lookup` deployed and smoke-tested against RIK simple data API for Ettevõtluskeskus OÜ.
 - Next: wire RIK/Business Register data lookup so registry code can pre-fill company data and revenue checks.
 - Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
