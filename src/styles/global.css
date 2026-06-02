@@ -643,6 +643,14 @@ section {
   font-size: 0.92rem;
 }
 
+.roadmap-money-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roadmap-warning {
+  margin-top: 18px;
+}
+
 .simple-cards,
 .owner-next-steps {
   display: grid;
@@ -1691,6 +1699,7 @@ textarea {
   .proof,
   .grid-3,
   .grid-2,
+  .roadmap-money-grid,
   .owner-verdict,
   .funding-snapshot,
   .simple-cards,

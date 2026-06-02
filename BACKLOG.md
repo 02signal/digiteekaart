@@ -29,6 +29,7 @@
 - Done: Supabase Edge Function `rik-company-lookup` deployed and smoke-tested against RIK simple data API for Ettevõtluskeskus OÜ.
 - Done: homepage registry-code field now runs live RIK lookup, shows company status on-page and sends bounded RIK facts with the lead.
 - Done: homepage company-name autocomplete lets owners start by typing the company name, select the right company and auto-fill the registry code before the RIK check.
+- Done: sample digitalisation roadmap page added to show owners what a practical roadmap should contain and why it can be useful.
 - Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: add email verification before showing a more detailed generated report.

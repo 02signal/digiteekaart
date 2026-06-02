@@ -1,0 +1,330 @@
+---
+import Analytics from "../components/Analytics.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+
+const checkedAt = "02.06.2026";
+const roadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
+const developmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
+const rteSoftwareUrl = "https://eis.ee/teenused/rte_tarkvara_toetus/";
+const emailHref = "mailto:info@02signal.ai?subject=Soovin%20musterteekaardi%20j%C3%A4rgi%20eelhinnangut";
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Avaleht", item: "https://digiteekaart.ee/" },
+        { "@type": "ListItem", position: 2, name: "Musterteekaart", item: "https://digiteekaart.ee/musterteekaart/" }
+      ]
+    },
+    {
+      "@type": "Article",
+      headline: "Musterteekaart: omaniku näidis digitaliseerimise teekaardist",
+      description: "Lihtsas keeles näidis, milline praktiline digitaliseerimise teekaart aitab omanikul otsustada, mida teha esimesena ja mis võib ära tasuda.",
+      inLanguage: "et",
+      dateModified: "2026-06-02",
+      author: { "@id": "https://digiteekaart.ee/#organization" },
+      publisher: { "@id": "https://digiteekaart.ee/#organization" },
+      mainEntityOfPage: "https://digiteekaart.ee/musterteekaart/"
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Musterteekaart | Näidis digiplaanist ettevõtte omanikule</title>
+    <meta
+      name="description"
+      content="Vaadake lihtsat musternäidist, milline digitaliseerimise teekaart aitab omanikul näha kitsaskohti, raha, prioriteete ja järgmisi samme."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/musterteekaart/" />
+    <meta property="og:title" content="Musterteekaart ettevõtte omanikule" />
+    <meta
+      property="og:description"
+      content="Praktiline näidis: kus töö venib, mis maksab raha, mida teha esimesena ja millist toetust võib kontrollida."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://digiteekaart.ee/musterteekaart/" />
+    <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="/">Avaleht</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/rte-tarkvara-liidestus/">RTE liidestus</a>
+          <a href="/naidisaruanne/">Näidisaruanne</a>
+          <a href="/#eelhindamine">Eelhindamine</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_roadmap_nav_phone">+372 5818 0435</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
+        <div class="section-inner">
+          <span class="eyebrow">Musterteekaart</span>
+          <h1>Selline peab hea digiteekaart omaniku jaoks välja nägema.</h1>
+          <p>
+            Mitte paks raport sahtlisse, vaid otsuse tööriist: kus raha kaob,
+            mida teha esimesena, mida mitte puutuda ja milline arendus võib ennast ära tasuda.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="sample_roadmap_hero_eelhindamine">Soovin oma ettevõttele sama pilti</a>
+            <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_roadmap_hero_phone">Helista +372 5818 0435</a>
+          </div>
+          <p class="report-date">Näidis. EIS allikad kontrollitud: {checkedAt}</p>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner owner-verdict">
+          <div>
+            <span class="status-tag status-green">Omaniku kokkuvõte</span>
+            <h2>Näidisettevõtte esimene samm: pakkumised ja tööde järjekord korda.</h2>
+            <p>
+              Näidisettevõte on 30 aastat tegutsenud tootmis- ja teenindusettevõte.
+              Töö käib, kliendid on olemas, aga info liigub paberil, Excelis ja inimeste peas.
+              Suurim võit ei tule uue suure süsteemi ostmisest, vaid kahe kõige valusama töö
+              korrastamisest.
+            </p>
+          </div>
+          <aside class="owner-callout">
+            <strong>Esimene otsus</strong>
+            <span>alustada väikestest mõõdetavatest töödest</span>
+            <a href="/#eelhindamine" data-track-event="cta_click" data-track-label="sample_roadmap_verdict_eelhindamine">Kontrolli oma ettevõtet</a>
+          </aside>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Näidisettevõte</span>
+            <h2>Olukord, mida paljud omanikud tunnevad.</h2>
+          </div>
+          <div class="simple-cards">
+            <article>
+              <strong>1</strong>
+              <h3>Info on laiali.</h3>
+              <p>Pakkumised on e-mailis, töökäsud paberil, laoseis Excelis ja tähtsad teadmised kogenud töötaja peas.</p>
+            </article>
+            <article>
+              <strong>2</strong>
+              <h3>Omanik küsib iga päev üle.</h3>
+              <p>Mis tööd on tegemata, mis kliendile lubati, kas materjal on olemas ja millal saab arve teha.</p>
+            </article>
+            <article>
+              <strong>3</strong>
+              <h3>Kasv pidurdub käsitöö taga.</h3>
+              <p>Uusi kliente võiks võtta, aga sama meeskond ei jõua rohkem käsitsi koordineerida.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Raha ja aeg</span>
+            <h2>Hea teekaart paneb tüütud tööd rahasse.</h2>
+            <p>Näidisarvud ei ole lubadus. Need näitavad, kuidas omanik saab otsustada, kas arendus on üldse mõistlik.</p>
+          </div>
+          <div class="funding-numbers roadmap-money-grid">
+            <article>
+              <strong>Pakkumiste koostamine</strong>
+              <span>u 16 tundi nädalas</span>
+              <small>Kui ühe tunni sisekulu on 25 €, on käsitöö kulu umbes 1 600 € kuus.</small>
+            </article>
+            <article>
+              <strong>Tööde järjekorra koordineerimine</strong>
+              <span>u 10 tundi nädalas</span>
+              <small>Umbes 1 000 € kuus juhtimise ja üle küsimise aega.</small>
+            </article>
+            <article>
+              <strong>Laoseisu vead</strong>
+              <span>500-1 500 € kuus</span>
+              <small>Kiirtellimused, ootamine ja valed lubadused kliendile.</small>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Prioriteedid</span>
+            <h2>Mida teha esimesena ja mida mitte teha.</h2>
+          </div>
+          <div class="owner-next-steps">
+            <article>
+              <span>01</span>
+              <h3>Pakkumise ja tellimuse ühine vaade</h3>
+              <p>Üks koht, kus on klient, lubadus, hind, tähtaeg ja järgmine tegevus.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Tööde järjekord nähtavaks</h3>
+              <p>Kes teeb mida, millal materjal peab olemas olema ja mis töö ootab kliendi vastust.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Laoseisu lihtne kontroll</h3>
+              <p>Kõige kallimad ja kõige tihedamini kasutatavad materjalid enne, mitte kogu ladu korraga.</p>
+            </article>
+          </div>
+          <div class="plain-warning roadmap-warning">
+            <h2>Mida mitte teha esimesena?</h2>
+            <p>
+              Mitte alustada suure ERP väljavahetusega, kui tööde tegelik järjekord pole veel selge.
+              Mitte tellida “AI lahendust”, kui andmed on laiali. Mitte automatiseerida halba töökorraldust.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="navy">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">3 aasta plaan</span>
+            <h2>Teekaart peab näitama järjekorda, mitte ainult ideid.</h2>
+          </div>
+          <div class="roadmap">
+            <div class="roadmap-item">
+              <strong>0-3</strong>
+              <div>
+                <h3>Esimene väike töö</h3>
+                <p>Pakkumised ja tellimused ühte vaatesse. Mõõdik: mitu tundi nädalas hoitakse kokku ja mitu pakkumist jääb hiljaks.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <strong>4-12</strong>
+              <div>
+                <h3>Tööde järjekord ja ladu</h3>
+                <p>Lihtne tööde planeerimine, materjali kontroll ja kliendile lubatud tähtaja nähtavus.</p>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <strong>13-36</strong>
+              <div>
+                <h3>Süsteemide ühendamine</h3>
+                <p>Kui esimeste tööde kasu on tõestatud, ühendada raamatupidamine, CRM, ladu ja aruandlus.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Toetuse vaade</span>
+            <h2>Millist toetust sellise plaani puhul kontrollida?</h2>
+          </div>
+          <div class="grid-3">
+            <article class="card">
+              <span class="stat">kuni 10 000 €</span>
+              <h3>Digiteekaardi koostamine</h3>
+              <p>Kui ettevõte sobib tingimustega, võib teekaardi koostamine olla esimene toetatav samm.</p>
+              <a href={roadmapUrl} target="_blank" rel="noreferrer">EIS ametlik leht</a>
+            </article>
+            <article class="card">
+              <span class="stat">2 000-5 000 €</span>
+              <h3>RTE tarkvara/liidestus</h3>
+              <p>Kui esimene töö on juba väga konkreetne, võib väike tarkvara või liidestuse toetus olla kiirem tee.</p>
+              <a href={rteSoftwareUrl} target="_blank" rel="noreferrer">EIS ametlik leht</a>
+            </article>
+            <article class="card">
+              <span class="stat">kuni 35 000 €</span>
+              <h3>Teekaardi arendused</h3>
+              <p>Kui ajakohane teekaart on olemas, võib järgmine samm olla nõustamis- või arendustegevus.</p>
+              <a href={developmentUrl} target="_blank" rel="noreferrer">EIS ametlik leht</a>
+            </article>
+          </div>
+          <p class="notice">
+            Need summad ei ole lubadus. Enne päris otsust tuleb kontrollida müügitulu, VTA jääk,
+            maksuvõlg, varasemad toetused ja EIS-i kehtivad tingimused.
+          </p>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner narrow">
+          <div class="section-head compact-head">
+            <span class="kicker">Mida omanik lõpuks saab</span>
+            <h2>Hea teekaart teeb otsuse lihtsamaks.</h2>
+          </div>
+          <div class="report-details">
+            <details open>
+              <summary>Mis peab ühe korraliku teekaardi lõpus selge olema?</summary>
+              <div class="detail-body">
+                <ul class="check">
+                  <li>mis töö ettevõttes kõige rohkem aega või raha sööb;</li>
+                  <li>milline arendus teha esimesena;</li>
+                  <li>mis maksab ligikaudu kui palju;</li>
+                  <li>mis võib toetusega sobida ja mis mitte;</li>
+                  <li>mille järgi otsustada, kas projekt tasus ära.</li>
+                </ul>
+              </div>
+            </details>
+            <details>
+              <summary>Mida see näidis ei ole?</summary>
+              <div class="detail-body">
+                <p>
+                  See ei ole EIS-i ametlik otsus ega päris kliendi dokument. See on musternäidis,
+                  mis näitab, millises keeles ja millise praktilise loogikaga teekaart peaks
+                  ettevõtte omanikule väärtust andma.
+                </p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="navy">
+        <div class="section-inner contact">
+          <div>
+            <span class="kicker">Järgmine samm</span>
+            <h2>Soovite oma ettevõtte kohta sama selget pilti?</h2>
+            <p>
+              Alustage eelhindamisest. Valige ettevõte Äriregistrist, kirjeldage muret
+              ühe-kahe lausega ja me ütleme, kas digiteekaardiga tasub edasi minna.
+            </p>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="sample_roadmap_bottom_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_roadmap_bottom_phone">Helista +372 5818 0435</a>
+            </div>
+          </div>
+          <aside class="contact-card">
+            <h3>Kontakt</h3>
+            <p>Ettevõtluskeskus OÜ / 02Signal</p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="sample_roadmap_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="sample_roadmap_contact_phone">+372 5818 0435</a></p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <Footer label="musterteekaart ja omaniku digiplaan" />
+  </body>
+</html>

@@ -40,6 +40,11 @@
       "purpose": "Selgitab, millal digiteekaart on mõistlik ja mida kontrollida."
     },
     {
+      "name": "Musterteekaart",
+      "url": "https://digiteekaart.ee/musterteekaart/",
+      "purpose": "Näitab lihtsa näite abil, milline hea digiteekaart aitab omanikul mõista käsitöö kulu, prioriteete, 3 aasta plaani ja toetuse kontrolli vajadust."
+    },
+    {
       "name": "RTE tarkvara ja liidestus",
       "url": "https://digiteekaart.ee/rte-tarkvara-liidestus/",
       "purpose": "Selgitab väikse tarkvara või liidestuse toetust ja seda, et digiteekaart ei ole selle eeltingimus."

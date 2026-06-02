@@ -30,12 +30,15 @@ What the owner receives after submitting: a short pre-assessment, usually within
 
 The output is designed as a decision brief for an owner, not as a long consulting report.
 
+The site also contains a sample digitalisation roadmap. It shows in plain Estonian how a good roadmap should help an owner see manual-work costs, choose the first project, avoid the wrong project, and understand which support path may be worth checking.
+
 The rule set is available at https://digiteekaart.ee/funding-programs.json. It is a bounded pre-assessment aid, not an official EIS/RTK decision engine.
 
 ## Key Pages
 
 - Homepage and pre-assessment form: https://digiteekaart.ee/
 - Digitalisation roadmap explanation: https://digiteekaart.ee/digitaliseerimise-teekaart/
+- Sample digitalisation roadmap: https://digiteekaart.ee/musterteekaart/
 - RTE software/integration grant explanation: https://digiteekaart.ee/rte-tarkvara-liidestus/
 - FAQ: https://digiteekaart.ee/faq/
 - Clickable sample pre-assessment report: https://digiteekaart.ee/naidisaruanne/
@@ -58,6 +61,9 @@ A: No. It is an independent pre-assessment and preparation service. Official inf
 
 Q: What does the owner get after submitting the form?
 A: A short owner-level pre-assessment: possible fit, missing checks, risks, next practical step, and if relevant an offer for preparation or implementation work.
+
+Q: Is there an example of a good digitalisation roadmap?
+A: Yes. The sample roadmap at https://digiteekaart.ee/musterteekaart/ shows a fictional but practical owner-level example: current pain, monthly cost of manual work, first priorities, what not to do first, a 3-year plan and support paths to check.
 
 Q: Does the site give an immediate answer before contacting a consultant?
 A: Yes. The homepage funding filter can immediately show a likely first route, possible support amount and missing checks based on the user's own inputs. The result is a pre-assessment, not an official funding decision.
