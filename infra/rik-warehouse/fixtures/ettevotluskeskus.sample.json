@@ -1,0 +1,30 @@
+{
+  "sourceKind": "manual_fixture",
+  "sourceCheckedAt": "2026-06-02",
+  "company": {
+    "registryCode": "14127891",
+    "name": "Ettevõtluskeskus OÜ",
+    "legalForm": "Osaühing",
+    "status": "active",
+    "registeredAt": "2016-10-04",
+    "primaryActivityCode": "85599",
+    "primaryActivityName": "Muu mujal liigitamata õpe"
+  },
+  "annualReports": [
+    {
+      "fiscalYear": 2024,
+      "revenue": 331542,
+      "employeeCount": null
+    },
+    {
+      "fiscalYear": 2023,
+      "revenue": 548861,
+      "employeeCount": null
+    }
+  ],
+  "ownerInputs": {
+    "requestedNeed": "roadmap",
+    "hasRoadmap": "unknown",
+    "deMinimisUsed": 0
+  }
+}
