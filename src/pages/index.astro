@@ -8,6 +8,8 @@ const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetu
 const eisDevelopmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
 const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20EIS%20teekaardi%20eelhindamine";
 const leadWebhookUrl = import.meta.env.PUBLIC_SITE_LEAD_WEBHOOK_URL ?? "";
+const rikLookupUrl = import.meta.env.PUBLIC_RIK_LOOKUP_URL ?? "https://miwpctshbcmkpwvdokne.supabase.co/functions/v1/rik-company-lookup";
+const rikLookupKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 const supportProgramJsonUrl = "https://digiteekaart.ee/funding-programs.json";
 const schema = {
   "@context": "https://schema.org",
@@ -306,12 +308,19 @@ const schema = {
             data-source-site="digiteekaart.ee"
             data-mail-subject="Digiteekaart.ee - eelhindamine"
             data-support-programs={JSON.stringify(supportPrograms)}
+            data-rik-lookup-url={rikLookupUrl}
+            data-rik-lookup-key={rikLookupKey}
           >
             <input class="hidden-field" type="text" name="website" tabindex="-1" autocomplete="off" />
             <input type="hidden" name="assessmentSummary" data-assessment-field="summary" />
             <input type="hidden" name="recommendedProgram" data-assessment-field="program" />
             <input type="hidden" name="possibleSupport" data-assessment-field="support" />
             <input type="hidden" name="missingChecks" data-assessment-field="missing" />
+            <input type="hidden" name="rikCompanyName" data-rik-field="companyName" />
+            <input type="hidden" name="rikCompanyStatus" data-rik-field="statusText" />
+            <input type="hidden" name="rikCompanyLegalForm" data-rik-field="legalForm" />
+            <input type="hidden" name="rikCompanyAddress" data-rik-field="addressSummary" />
+            <input type="hidden" name="rikCheckedAt" data-rik-field="checkedAt" />
 
             <div class="form-step">
               <span>1</span>
@@ -328,6 +337,11 @@ const schema = {
               <div class="field">
                 <label for="registryCode">Registrikood</label>
                 <input id="registryCode" name="registryCode" inputmode="numeric" pattern="[0-9]{8}" title="Registrikoodis on 8 numbrit" autocomplete="off" />
+              </div>
+              <div class="rik-lookup-card" data-rik-lookup-status hidden>
+                <span class="status-tag status-blue" data-rik-status-label>Kontrollin</span>
+                <strong data-rik-company-title>Kontrollin Äriregistrist...</strong>
+                <p data-rik-company-detail>Kui registrikood on õige, täidame ettevõtte andmed automaatselt.</p>
               </div>
               <div class="field">
                 <label for="person">Teie nimi *</label>
@@ -499,6 +513,24 @@ const schema = {
         deMinimisLeft: number;
       };
 
+      type RikLookupResult = {
+        registryCode: string;
+        companyName: string | null;
+        statusCode: string | null;
+        statusText: string | null;
+        legalForm: string | null;
+        firstRegisteredAt: string | null;
+        addressSummary: string | null;
+        foundCount: number | null;
+        checkedAt: string;
+        source: "RIK";
+      };
+
+      type RikLookupResponse = {
+        result?: RikLookupResult;
+        error?: string;
+      };
+
       const parseMoney = (value: FormDataEntryValue | string | null): number => {
         const normalized = String(value || "")
           .replace(/\s/g, "")
@@ -662,16 +694,191 @@ const schema = {
         });
       };
 
+      const normalizeRegistryCode = (value: string): string => value.replace(/\D/g, "").slice(0, 8);
+
+      const setHiddenValue = (form: HTMLFormElement, field: string, value: string): void => {
+        const input = form.querySelector(`[data-rik-field='${field}']`);
+        if (input instanceof HTMLInputElement) input.value = value;
+      };
+
+      const clearRikFields = (form: HTMLFormElement): void => {
+        ["companyName", "statusText", "legalForm", "addressSummary", "checkedAt"].forEach((field) => setHiddenValue(form, field, ""));
+      };
+
+      const setRikStatus = (form: HTMLFormElement, state: "idle" | "loading" | "success" | "empty" | "error", result?: RikLookupResult): void => {
+        const card = form.querySelector("[data-rik-lookup-status]");
+        if (!(card instanceof HTMLElement)) return;
+
+        const label = card.querySelector("[data-rik-status-label]");
+        const title = card.querySelector("[data-rik-company-title]");
+        const detail = card.querySelector("[data-rik-company-detail]");
+
+        card.classList.remove("is-loading", "is-success", "is-error");
+        if (state === "idle") {
+          card.hidden = true;
+          clearRikFields(form);
+          return;
+        }
+
+        card.hidden = false;
+        if (state === "loading") {
+          card.classList.add("is-loading");
+          if (label) {
+            label.textContent = "Kontrollin";
+            label.className = "status-tag status-blue";
+          }
+          if (title) title.textContent = "Kontrollin Äriregistrist...";
+          if (detail) detail.textContent = "Üks hetk. Kui kood on õige, täidame ettevõtte andmed automaatselt.";
+          return;
+        }
+
+        if (state === "success" && result?.companyName) {
+          card.classList.add("is-success");
+          if (label) {
+            label.textContent = "Leitud Äriregistrist";
+            label.className = "status-tag status-green";
+          }
+          if (title) title.textContent = result.companyName;
+          const parts = [result.statusText, result.legalForm, result.addressSummary].filter(Boolean);
+          if (detail) detail.textContent = parts.length ? parts.join(" · ") : "Ettevõtte põhiandmed leitud.";
+          setHiddenValue(form, "companyName", result.companyName || "");
+          setHiddenValue(form, "statusText", result.statusText || "");
+          setHiddenValue(form, "legalForm", result.legalForm || "");
+          setHiddenValue(form, "addressSummary", result.addressSummary || "");
+          setHiddenValue(form, "checkedAt", result.checkedAt || "");
+          return;
+        }
+
+        card.classList.add("is-error");
+        clearRikFields(form);
+        if (label) {
+          label.textContent = state === "empty" ? "Ei leidnud" : "Kontroll käsitsi";
+          label.className = "status-tag status-amber";
+        }
+        if (title) title.textContent = state === "empty" ? "Selle koodiga ettevõtet ei leitud." : "Automaatne kontroll ei õnnestunud.";
+        if (detail) detail.textContent = "Võite vormi siiski saata. Kontrollime andmed käsitsi üle.";
+      };
+
+      const lookupRikCompany = async (form: HTMLFormElement, registryCode: string, signal?: AbortSignal): Promise<RikLookupResult | null> => {
+        const lookupUrl = form.dataset.rikLookupUrl?.trim();
+        const lookupKey = form.dataset.rikLookupKey?.trim();
+        if (!lookupUrl || !lookupKey) return null;
+
+        const response = await fetch(lookupUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${lookupKey}`,
+            "apikey": lookupKey
+          },
+          body: JSON.stringify({ registryCode }),
+          signal
+        });
+
+        const body = await response.json() as RikLookupResponse;
+        if (!response.ok || body.error) {
+          throw new Error(body.error || "rik_lookup_failed");
+        }
+        return body.result || null;
+      };
+
       document.querySelectorAll("[data-site-lead-form]").forEach((form) => {
+        if (!(form instanceof HTMLFormElement)) return;
+
+        const registryInput = form.querySelector("#registryCode");
+        const companyInput = form.querySelector("#company");
+        let rikLookupTimer = 0;
+        let rikAbortController: AbortController | null = null;
+        let lastRikLookupCode = "";
+
+        const runRikLookup = async (registryCode: string): Promise<void> => {
+          const normalizedCode = normalizeRegistryCode(registryCode);
+          if (normalizedCode.length !== 8) {
+            setRikStatus(form, "idle");
+            return;
+          }
+          const knownCompany = form.querySelector("[data-rik-field='companyName']");
+          if (lastRikLookupCode === normalizedCode && knownCompany instanceof HTMLInputElement && knownCompany.value) return;
+
+          rikAbortController?.abort();
+          rikAbortController = new AbortController();
+          setRikStatus(form, "loading");
+
+          try {
+            const result = await lookupRikCompany(form, normalizedCode, rikAbortController.signal);
+            lastRikLookupCode = normalizedCode;
+            if (result?.companyName && Number(result.foundCount || 0) !== 0) {
+              setRikStatus(form, "success", result);
+              if (companyInput instanceof HTMLInputElement && !companyInput.value.trim()) {
+                companyInput.value = result.companyName;
+              }
+              (window as any).digiteekaartTrack?.("rik_lookup_result", {
+                form_name: "digiteekaart_eelhindamine",
+                result_status: "found",
+                company_status: result.statusText || "",
+                registry_code_present: "yes"
+              });
+            } else {
+              setRikStatus(form, "empty", result || undefined);
+              (window as any).digiteekaartTrack?.("rik_lookup_result", {
+                form_name: "digiteekaart_eelhindamine",
+                result_status: "not_found",
+                registry_code_present: "yes"
+              });
+            }
+          } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") return;
+            setRikStatus(form, "error");
+            (window as any).digiteekaartTrack?.("rik_lookup_result", {
+              form_name: "digiteekaart_eelhindamine",
+              result_status: "error",
+              registry_code_present: "yes"
+            });
+          }
+        };
+
+        const scheduleRikLookup = (): void => {
+          if (!(registryInput instanceof HTMLInputElement)) return;
+          const normalizedCode = normalizeRegistryCode(registryInput.value);
+          if (registryInput.value !== normalizedCode) registryInput.value = normalizedCode;
+
+          window.clearTimeout(rikLookupTimer);
+          if (normalizedCode.length < 8) {
+            lastRikLookupCode = "";
+            rikAbortController?.abort();
+            setRikStatus(form, "idle");
+            return;
+          }
+
+          rikLookupTimer = window.setTimeout(() => {
+            void runRikLookup(normalizedCode);
+          }, 450);
+        };
+
+        const ensureRikLookup = async (): Promise<void> => {
+          if (!(registryInput instanceof HTMLInputElement)) return;
+          const normalizedCode = normalizeRegistryCode(registryInput.value);
+          if (normalizedCode.length === 8) {
+            window.clearTimeout(rikLookupTimer);
+            await runRikLookup(normalizedCode);
+          }
+        };
+
+        if (registryInput instanceof HTMLInputElement) {
+          registryInput.addEventListener("input", scheduleRikLookup);
+          registryInput.addEventListener("blur", () => {
+            window.clearTimeout(rikLookupTimer);
+            void ensureRikLookup();
+          });
+        }
+
         const assessmentButton = form.querySelector("[data-assessment-button]");
         assessmentButton?.addEventListener("click", () => {
-          if (!(form instanceof HTMLFormElement)) return;
           writeAssessment(form, makeAssessment(form));
         });
 
         form.querySelectorAll("[data-assessment-input]").forEach((input) => {
           input.addEventListener("change", () => {
-            if (!(form instanceof HTMLFormElement)) return;
             if (form.querySelector("[data-assessment-result]:not([hidden])")) {
               writeAssessment(form, makeAssessment(form));
             }
@@ -689,8 +896,10 @@ const schema = {
 
           const note = currentForm.querySelector("[data-form-note]");
           const submitButton = currentForm.querySelector("button[type='submit']");
-          const data = new FormData(currentForm);
+          let data = new FormData(currentForm);
           if (data.get("website")) return;
+          await ensureRikLookup();
+          data = new FormData(currentForm);
 
           const attribution = (window as any).digiteekaartGetAttribution?.() || {};
           const lastCta = (window as any).digiteekaartGetLastCta?.() || {};
@@ -705,6 +914,11 @@ const schema = {
             lastCta,
             company: String(data.get("company") || ""),
             registryCode: String(data.get("registryCode") || ""),
+            rikCompanyName: String(data.get("rikCompanyName") || ""),
+            rikCompanyStatus: String(data.get("rikCompanyStatus") || ""),
+            rikCompanyLegalForm: String(data.get("rikCompanyLegalForm") || ""),
+            rikCompanyAddress: String(data.get("rikCompanyAddress") || ""),
+            rikCheckedAt: String(data.get("rikCheckedAt") || ""),
             person: String(data.get("person") || ""),
             role: String(data.get("role") || ""),
             email: String(data.get("email") || ""),
@@ -730,6 +944,11 @@ const schema = {
           const fallbackText = [
             `Ettevõte: ${payload.company}`,
             `Registrikood: ${payload.registryCode || "-"}`,
+            `RIK ettevõte: ${payload.rikCompanyName || "-"}`,
+            `RIK staatus: ${payload.rikCompanyStatus || "-"}`,
+            `RIK vorm: ${payload.rikCompanyLegalForm || "-"}`,
+            `RIK aadress: ${payload.rikCompanyAddress || "-"}`,
+            `RIK kontrollitud: ${payload.rikCheckedAt || "-"}`,
             `Nimi: ${payload.person}`,
             `Roll: ${payload.role || "-"}`,
             `Email: ${payload.email}`,
@@ -774,6 +993,7 @@ const schema = {
               });
               if (response.ok) {
                 currentForm.reset();
+                setRikStatus(currentForm, "idle");
                 if (note) note.textContent = "Aitäh. Päring on salvestatud ja jõudis meieni. Võtame ühendust ühe tööpäeva jooksul.";
                 (window as any).digiteekaartTrack?.("lead_form_submit", {
                   form_name: "digiteekaart_eelhindamine",

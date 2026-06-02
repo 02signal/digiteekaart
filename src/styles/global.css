@@ -1113,6 +1113,45 @@ section {
   color: var(--muted);
 }
 
+.rik-lookup-card {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  padding: 14px;
+  background: #f4fffb;
+}
+
+.rik-lookup-card[hidden] {
+  display: none;
+}
+
+.rik-lookup-card.is-loading {
+  border-left-color: var(--blue);
+  background: #f1f7fc;
+}
+
+.rik-lookup-card.is-error {
+  border-left-color: var(--accent);
+  background: #fff9ea;
+}
+
+.rik-lookup-card .status-tag {
+  margin-bottom: 4px;
+}
+
+.rik-lookup-card strong {
+  color: var(--navy);
+  font-size: 1.08rem;
+}
+
+.rik-lookup-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

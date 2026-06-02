@@ -10,8 +10,8 @@
     },
     {
       "name": "RIK Äriregistri avaandmed",
-      "status": "järgmine tehniline samm",
-      "note": "Esimeses versioonis küsime müügitulu kasutajalt. RIK avaandmete/API ühendus tuleb lisada eraldi andmekihina."
+      "status": "kasutusel registrikoodi põhikontrolliks",
+      "note": "Leht saab registrikoodi põhjal kuvada ettevõtte nime, staatuse, õigusliku vormi ja aadressi kokkuvõtte. Müügitulu küsime esimeses versioonis kasutajalt ja kontrollime hiljem eraldi."
     },
     {
       "name": "VTA/RAR kontroll",
