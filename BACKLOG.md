@@ -24,7 +24,10 @@
 - Done: first on-page funding filter shows likely route, possible support, own contribution logic and missing checks before consultant contact.
 - Done: `funding-programs.json` exposes the bounded support-rule register for agents and future integrations.
 - Done: RIK warehouse foundation added under `infra/rik-warehouse/` with PostgreSQL schema, fixture and smoke test.
+- Done: privacy wording now covers public registry/RAR/MTA data use for support pre-assessment.
+- Done: warehouse foundation now separates raw public source archive from owner-facing product views and stores dated VTA/tax-debt snapshots.
 - Next: wire RIK/Business Register data lookup so registry code can pre-fill company data and revenue checks.
+- Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.

@@ -4,6 +4,29 @@
 
 create schema if not exists public_registry;
 create schema if not exists support_assessment;
+create schema if not exists source_archive;
+
+create table if not exists source_archive.public_source_records (
+  id uuid primary key default gen_random_uuid(),
+  source_system text not null check (source_system in ('rik', 'rar', 'mta', 'eis', 'manual')),
+  source_kind text not null,
+  record_key text not null,
+  registry_code text check (registry_code is null or registry_code ~ '^[0-9]{8}$'),
+  source_date date,
+  observed_at timestamptz not null default now(),
+  checksum_sha256 text,
+  payload_classification text not null default 'public_business_data'
+    check (payload_classification in ('public_business_data', 'public_person_data', 'restricted', 'unknown')),
+  retention_policy text not null default 'business_analysis',
+  payload jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+create unique index if not exists public_source_records_source_record_idx
+  on source_archive.public_source_records (source_system, source_kind, record_key, observed_at);
+
+create index if not exists public_source_records_registry_idx
+  on source_archive.public_source_records (registry_code, observed_at desc);
 
 create table if not exists public_registry.rik_import_batches (
   id uuid primary key default gen_random_uuid(),
@@ -78,6 +101,42 @@ create table if not exists support_assessment.support_program_rules (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create table if not exists support_assessment.rar_de_minimis_snapshots (
+  id uuid primary key default gen_random_uuid(),
+  registry_code text not null check (registry_code ~ '^[0-9]{8}$'),
+  company_name text,
+  de_minimis_used numeric(14, 2),
+  de_minimis_limit numeric(14, 2) not null default 300000,
+  de_minimis_left numeric(14, 2),
+  check_status text not null default 'checked'
+    check (check_status in ('checked', 'not_found', 'source_unavailable', 'manual_review')),
+  checked_at timestamptz not null default now(),
+  source_system text not null default 'RAR',
+  source_record_id uuid references source_archive.public_source_records(id),
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists rar_de_minimis_registry_idx
+  on support_assessment.rar_de_minimis_snapshots (registry_code, checked_at desc);
+
+create table if not exists support_assessment.mta_tax_debt_snapshots (
+  id uuid primary key default gen_random_uuid(),
+  registry_code text not null check (registry_code ~ '^[0-9]{8}$'),
+  has_tax_debt boolean,
+  tax_debt_amount numeric(14, 2),
+  check_status text not null default 'checked'
+    check (check_status in ('checked', 'not_found', 'source_unavailable', 'manual_review')),
+  checked_at timestamptz not null default now(),
+  source_system text not null default 'MTA',
+  source_record_id uuid references source_archive.public_source_records(id),
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists mta_tax_debt_registry_idx
+  on support_assessment.mta_tax_debt_snapshots (registry_code, checked_at desc);
 
 create table if not exists support_assessment.support_preassessment_events (
   id uuid primary key default gen_random_uuid(),
@@ -162,6 +221,13 @@ select
   s.latest_fiscal_year,
   s.average_revenue_last_two,
   s.latest_employee_count,
+  v.de_minimis_used,
+  v.de_minimis_limit,
+  v.de_minimis_left,
+  v.checked_at as de_minimis_checked_at,
+  t.has_tax_debt,
+  t.tax_debt_amount,
+  t.checked_at as tax_debt_checked_at,
   r.program_id,
   r.short_name as recommended_program,
   r.support_text,
@@ -169,6 +235,7 @@ select
   r.min_average_revenue,
   case
     when s.company_status_flag <> 'active' then 'needs_review'
+    when t.has_tax_debt is true then 'needs_review'
     when s.average_revenue_last_two is null then 'missing_revenue'
     when s.average_revenue_last_two >= r.min_average_revenue then 'can_check_further'
     else 'revenue_below_threshold'
@@ -176,12 +243,34 @@ select
   array_remove(array[
     case when s.company_status_flag <> 'active' then 'ettevõtte staatus' end,
     case when s.average_revenue_last_two is null then 'kahe viimase aasta müügitulu' end,
-    'VTA jääk',
-    'maksuvõla kontroll',
+    case when v.checked_at is null then 'VTA jääk' end,
+    case when t.checked_at is null then 'maksuvõla kontroll' end,
+    case when t.has_tax_debt is true then 'maksuvõla lahendamine' end,
     'varasemad sama sisuga toetused'
   ], null) as missing_checks,
   r.source_url,
   r.source_checked_at
 from support_assessment.company_revenue_summary s
+left join lateral (
+  select
+    de_minimis_used,
+    de_minimis_limit,
+    de_minimis_left,
+    checked_at
+  from support_assessment.rar_de_minimis_snapshots v
+  where v.registry_code = s.registry_code
+  order by checked_at desc
+  limit 1
+) v on true
+left join lateral (
+  select
+    has_tax_debt,
+    tax_debt_amount,
+    checked_at
+  from support_assessment.mta_tax_debt_snapshots t
+  where t.registry_code = s.registry_code
+  order by checked_at desc
+  limit 1
+) t on true
 cross join support_assessment.support_program_rules r
 where r.status = 'active';
