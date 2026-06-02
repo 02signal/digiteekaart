@@ -88,6 +88,8 @@ Raw public source records may be stored in the source archive for internal analy
    - `RIK_API_USERNAME`
    - `RIK_API_PASSWORD`
    - optional `RIK_API_ENDPOINT` for test/prod switching.
+   - `ALLOWED_ORIGINS` with public site origins such as `https://digiteekaart.ee,https://www.digiteekaart.ee`.
+     Without this, the Edge Function can answer server-side smoke tests but the browser form may fail CORS.
 3. Build a batch loader for the RIK bulk files once the exact file format is selected.
 4. Extend `rik-company-lookup` to store a source archive record and normalized company snapshot.
 5. Add a public-safe server endpoint:
