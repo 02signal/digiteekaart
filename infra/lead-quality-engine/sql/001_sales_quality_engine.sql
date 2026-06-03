@@ -160,6 +160,226 @@ create table if not exists sales_crm.vta_check_queue (
 create index if not exists vta_check_queue_work_idx
   on sales_crm.vta_check_queue (queue_status, scheduled_for, priority_score desc);
 
+create table if not exists sales_crm.lead_scoring_criteria (
+  criterion_id text primary key,
+  label text not null,
+  max_points integer not null check (max_points > 0),
+  plain_rule text not null,
+  strong_signal_note text,
+  sort_order integer not null default 100,
+  active boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+comment on table sales_crm.lead_scoring_criteria is
+  'Owner/operator-visible lead scoring model. Keep wording plain and match the SQL scoring rules.';
+
+insert into sales_crm.lead_scoring_criteria (
+  criterion_id,
+  label,
+  max_points,
+  plain_rule,
+  strong_signal_note,
+  sort_order
+) values
+  (
+    'active_status',
+    'Ettevõte on tegutsev',
+    15,
+    'Registris peab ettevõte olema aktiivne. Kui staatus vajab kontrolli, ei ole see esimene kõne.',
+    'Aktiivne ettevõte saab 15 punkti.',
+    10
+  ),
+  (
+    'company_age',
+    'Ettevõttel on ajalugu',
+    25,
+    'Vähemalt 10 aastat tegutsenud ettevõte on tavaliselt stabiilsem ja tal on päris protsessid.',
+    '10+ aastat annab 25 punkti, 5-9 aastat annab 15 punkti.',
+    20
+  ),
+  (
+    'revenue_scale',
+    'Müügitulu lubab praktilist projekti',
+    35,
+    'Kui müügitulu on piisav, on omanikul tõenäolisemalt päris valud ja eelarve.',
+    '200 000+ eurot annab 35 punkti, 50 000+ eurot annab 25 punkti.',
+    30
+  ),
+  (
+    'vta_left',
+    'VTA jääk võib toetust lubada',
+    20,
+    'Kui vähese tähtsusega abi jääk on suur, on toetusega arutelu lihtsam. Kui jääk puudub või on kontrollimata, vajab see eraldi sammu.',
+    '50 000+ eurot jääki annab 20 punkti, 10 000+ eurot annab 12 punkti.',
+    40
+  ),
+  (
+    'activity_known',
+    'Tegevusala on arusaadav',
+    5,
+    'Kui tegevusala on nähtav, saab müügikõne konkreetsemaks teha.',
+    'Tuvastatud tegevusala annab 5 punkti.',
+    50
+  )
+on conflict (criterion_id) do update
+set
+  label = excluded.label,
+  max_points = excluded.max_points,
+  plain_rule = excluded.plain_rule,
+  strong_signal_note = excluded.strong_signal_note,
+  sort_order = excluded.sort_order,
+  active = true,
+  updated_at = now();
+
+create or replace view sales_crm.company_lead_universe as
+with base as (
+  select
+    c.registry_code,
+    c.name as company_name,
+    c.legal_form,
+    c.status as company_status,
+    c.registered_at,
+    case
+      when c.registered_at is null then null
+      else greatest(0, extract(year from age(current_date, c.registered_at))::integer)
+    end as company_age_years,
+    c.primary_activity_code,
+    c.primary_activity_name,
+    c.address_summary,
+    r.latest_fiscal_year,
+    r.average_revenue_last_two,
+    r.latest_employee_count,
+    v.de_minimis_left,
+    v.checked_at as de_minimis_checked_at,
+    p.id as prospect_id,
+    p.crm_status,
+    p.last_contacted_at,
+    p.next_follow_up_at,
+    p.owner_name
+  from public_registry.rik_companies c
+  left join support_assessment.company_revenue_summary r on r.registry_code = c.registry_code
+  left join lateral (
+    select
+      de_minimis_left,
+      checked_at
+    from support_assessment.rar_de_minimis_snapshots v
+    where v.registry_code = c.registry_code
+    order by checked_at desc
+    limit 1
+  ) v on true
+  left join lateral (
+    select
+      id,
+      crm_status,
+      last_contacted_at,
+      next_follow_up_at,
+      owner_name
+    from sales_crm.prospect_companies p
+    where p.registry_code = c.registry_code
+    order by created_at desc
+    limit 1
+  ) p on true
+),
+scored as (
+  select
+    b.*,
+    case
+      when lower(coalesce(b.company_status, '')) in ('registrisse kantud', 'active', 'aktiivne', 'r') then 15
+      else 0
+    end as active_points,
+    case
+      when b.company_age_years >= 10 then 25
+      when b.company_age_years >= 5 then 15
+      else 0
+    end as age_points,
+    case
+      when b.average_revenue_last_two >= 200000 then 35
+      when b.average_revenue_last_two >= 50000 then 25
+      else 0
+    end as revenue_points,
+    case
+      when b.de_minimis_left >= 50000 then 20
+      when b.de_minimis_left >= 10000 then 12
+      else 0
+    end as vta_points,
+    case
+      when nullif(b.primary_activity_name, '') is not null then 5
+      else 0
+    end as activity_points
+  from base b
+)
+select
+  s.prospect_id,
+  s.registry_code,
+  s.company_name,
+  s.company_status,
+  s.legal_form,
+  s.registered_at,
+  s.company_age_years,
+  s.primary_activity_code,
+  s.primary_activity_name,
+  s.address_summary,
+  s.latest_fiscal_year,
+  s.average_revenue_last_two,
+  s.latest_employee_count,
+  s.de_minimis_left,
+  s.de_minimis_checked_at,
+  case
+    when s.de_minimis_left is null then 'not_checked'
+    when s.de_minimis_left >= 50000 then 'high_left'
+    when s.de_minimis_left >= 10000 then 'some_left'
+    when s.de_minimis_left > 0 then 'low_left'
+    else 'used_up'
+  end as vta_signal,
+  least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) as priority_score,
+  case
+    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then 'good_first_call'
+    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then 'needs_review'
+    else 'weak_fit'
+  end as sales_signal,
+  array_remove(array[
+    case when s.active_points > 0 then 'ettevõte on registris aktiivne' end,
+    case when s.age_points = 25 then 'ettevõte on tegutsenud vähemalt 10 aastat' end,
+    case when s.age_points = 15 then 'ettevõte on tegutsenud üle 5 aasta' end,
+    case when s.revenue_points = 35 then 'müügitulu on tugev' end,
+    case when s.revenue_points = 25 then 'müügitulu paistab piisav' end,
+    case when s.vta_points > 0 then 'VTA jääk paistab kasutatav' end,
+    case when s.de_minimis_left is null then 'VTA vajab kontrolli' end,
+    case when s.activity_points > 0 then 'tegevusala on tuvastatav' end
+  ], null) as score_reason,
+  jsonb_build_array(
+    jsonb_build_object('criterion_id', 'active_status', 'label', 'Ettevõte on tegutsev', 'max_points', 15, 'points', s.active_points),
+    jsonb_build_object('criterion_id', 'company_age', 'label', 'Ettevõttel on ajalugu', 'max_points', 25, 'points', s.age_points),
+    jsonb_build_object('criterion_id', 'revenue_scale', 'label', 'Müügitulu lubab projekti', 'max_points', 35, 'points', s.revenue_points),
+    jsonb_build_object('criterion_id', 'vta_left', 'label', 'VTA jääk', 'max_points', 20, 'points', s.vta_points),
+    jsonb_build_object('criterion_id', 'activity_known', 'label', 'Tegevusala teada', 'max_points', 5, 'points', s.activity_points)
+  ) as score_breakdown,
+  case
+    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+      'Kontrolli VTA jääk ja võta ühendust: ettevõte paistab piisavalt vana ning müügitulu lubab praktilist projekti arutada.'
+    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then
+      'Kontrolli puuduvad andmed enne kõnet.'
+    else
+      'Jäta madalamasse prioriteeti.'
+  end as next_action,
+  case
+    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+      'Tere, vaatasin avalike andmete põhjal, et ettevõte on tegutsenud pikalt ja müügitulu järgi võiks olla mõistlik arutada tarkvara, andmete või tööde korrastamise plaani. Kas teil on sel aastal mõni selline mõte?'
+    else
+      'Tere, kontrollime ettevõtte digitoetuse ja tööde korrastamise võimalust. Kas teil on mõni tarkvara või korduv töö, mille kohta soovite kiiret eelhinnangut?'
+  end as recommended_pitch,
+  coalesce(s.owner_name, 'Toomas') as owner_name,
+  coalesce(s.crm_status, 'not_in_sales') as crm_status,
+  s.last_contacted_at,
+  s.next_follow_up_at,
+  s.prospect_id is not null as is_prospect
+from scored s
+where coalesce(s.crm_status, 'not_in_sales') not in ('do_not_contact', 'won', 'lost');
+
+comment on view sales_crm.company_lead_universe is
+  'All imported public-company facts scored for sales prioritisation. Excludes restricted personal contact fields.';
+
 create or replace view sales_crm.toomas_priority_board as
 select
   p.id as prospect_id,
@@ -329,6 +549,133 @@ as $$
   order by u.active desc, u.role asc, u.email asc;
 $$;
 
+create or replace function public.crm_get_lead_scoring_criteria()
+returns table (
+  criterion_id text,
+  label text,
+  max_points integer,
+  plain_rule text,
+  strong_signal_note text,
+  sort_order integer
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, public
+as $$
+  select
+    c.criterion_id,
+    c.label,
+    c.max_points,
+    c.plain_rule,
+    c.strong_signal_note,
+    c.sort_order
+  from sales_crm.lead_scoring_criteria c
+  where c.active is true
+    and sales_crm.current_crm_user_allowed()
+  order by c.sort_order asc;
+$$;
+
+create or replace function public.crm_get_warehouse_stats()
+returns table (
+  imported_companies bigint,
+  scored_companies bigint,
+  strong_leads bigint,
+  prospects bigint,
+  unchecked_vta bigint
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, public_registry, support_assessment, public
+as $$
+  select
+    (select count(*) from public_registry.rik_companies) as imported_companies,
+    (select count(*) from sales_crm.company_lead_universe) as scored_companies,
+    (select count(*) from sales_crm.company_lead_universe where priority_score >= 75) as strong_leads,
+    (select count(*) from sales_crm.prospect_companies where crm_status not in ('do_not_contact', 'won', 'lost')) as prospects,
+    (select count(*) from sales_crm.company_lead_universe where vta_signal = 'not_checked') as unchecked_vta
+  where sales_crm.current_crm_user_allowed();
+$$;
+
+create or replace function public.crm_get_company_lead_universe(
+  p_limit integer default 500,
+  p_min_score integer default 0
+)
+returns table (
+  prospect_id uuid,
+  registry_code text,
+  company_name text,
+  company_status text,
+  legal_form text,
+  registered_at date,
+  company_age_years integer,
+  primary_activity_code text,
+  primary_activity_name text,
+  address_summary text,
+  latest_fiscal_year integer,
+  average_revenue_last_two numeric,
+  latest_employee_count integer,
+  de_minimis_left numeric,
+  de_minimis_checked_at timestamptz,
+  vta_signal text,
+  priority_score integer,
+  sales_signal text,
+  score_reason text[],
+  score_breakdown jsonb,
+  recommended_pitch text,
+  next_action text,
+  owner_name text,
+  crm_status text,
+  last_contacted_at timestamptz,
+  next_follow_up_at timestamptz,
+  is_prospect boolean
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, public_registry, support_assessment, public
+as $$
+  select
+    u.prospect_id,
+    u.registry_code,
+    u.company_name,
+    u.company_status,
+    u.legal_form,
+    u.registered_at,
+    u.company_age_years,
+    u.primary_activity_code,
+    u.primary_activity_name,
+    u.address_summary,
+    u.latest_fiscal_year,
+    u.average_revenue_last_two,
+    u.latest_employee_count,
+    u.de_minimis_left,
+    u.de_minimis_checked_at,
+    u.vta_signal,
+    u.priority_score,
+    u.sales_signal,
+    u.score_reason,
+    u.score_breakdown,
+    u.recommended_pitch,
+    u.next_action,
+    u.owner_name,
+    u.crm_status,
+    u.last_contacted_at,
+    u.next_follow_up_at,
+    u.is_prospect
+  from sales_crm.company_lead_universe u
+  where sales_crm.current_crm_user_allowed()
+    and u.priority_score >= greatest(0, least(100, coalesce(p_min_score, 0)))
+  order by
+    u.is_prospect desc,
+    u.priority_score desc,
+    u.company_age_years desc nulls last,
+    u.average_revenue_last_two desc nulls last,
+    u.company_name asc
+  limit greatest(1, least(1000, coalesce(p_limit, 500)));
+$$;
+
 create or replace function public.crm_get_toomas_priority_board()
 returns table (
   prospect_id uuid,
@@ -400,6 +747,116 @@ as $$
     b.priority_score desc,
     b.company_age_years desc nulls last,
     b.company_name asc;
+$$;
+
+create or replace function public.crm_promote_company_to_prospect(p_registry_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = sales_crm, public_registry, support_assessment, public
+as $$
+declare
+  v_registry_code text;
+  v_company sales_crm.company_lead_universe%rowtype;
+  v_prospect_id uuid;
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  v_registry_code = regexp_replace(coalesce(p_registry_code, ''), '\D', '', 'g');
+
+  if v_registry_code !~ '^[0-9]{8}$' then
+    raise exception 'Invalid registry code';
+  end if;
+
+  select *
+  into v_company
+  from sales_crm.company_lead_universe
+  where registry_code = v_registry_code
+  limit 1;
+
+  if not found then
+    raise exception 'Company not found in warehouse';
+  end if;
+
+  select id
+  into v_prospect_id
+  from sales_crm.prospect_companies
+  where registry_code = v_registry_code
+    and crm_status not in ('do_not_contact', 'won', 'lost')
+  order by created_at desc
+  limit 1;
+
+  if v_prospect_id is not null then
+    return v_prospect_id;
+  end if;
+
+  insert into sales_crm.prospect_companies (
+    registry_code,
+    company_name,
+    legal_form,
+    status,
+    registered_at,
+    company_age_years,
+    primary_activity_code,
+    primary_activity_name,
+    address_summary,
+    average_revenue_last_two,
+    latest_employee_count,
+    latest_fiscal_year,
+    de_minimis_left,
+    de_minimis_checked_at,
+    vta_signal,
+    sales_signal,
+    priority_score,
+    score_reason,
+    recommended_pitch,
+    next_action,
+    crm_status,
+    source_system,
+    source_observed_at
+  ) values (
+    v_company.registry_code,
+    v_company.company_name,
+    v_company.legal_form,
+    v_company.company_status,
+    v_company.registered_at,
+    v_company.company_age_years,
+    v_company.primary_activity_code,
+    v_company.primary_activity_name,
+    v_company.address_summary,
+    v_company.average_revenue_last_two,
+    v_company.latest_employee_count,
+    v_company.latest_fiscal_year,
+    v_company.de_minimis_left,
+    v_company.de_minimis_checked_at,
+    v_company.vta_signal,
+    v_company.sales_signal,
+    v_company.priority_score,
+    v_company.score_reason,
+    v_company.recommended_pitch,
+    v_company.next_action,
+    case when v_company.priority_score >= 75 then 'call_next' else 'to_review' end,
+    'rik_warehouse',
+    now()
+  )
+  returning id into v_prospect_id;
+
+  insert into sales_crm.prospect_activities (
+    prospect_company_id,
+    activity_type,
+    activity_note,
+    created_by
+  ) values (
+    v_prospect_id,
+    'qualification',
+    'Lisatud CRM-i andmebaasi skoori põhjal.',
+    lower(coalesce(auth.jwt() ->> 'email', 'unknown'))
+  );
+
+  return v_prospect_id;
+end;
 $$;
 
 create or replace function public.crm_upsert_user(
@@ -558,8 +1015,13 @@ grant execute on function public.crm_get_current_user() to authenticated;
 grant execute on function public.crm_list_users() to authenticated;
 grant execute on function public.crm_upsert_user(text, text, boolean) to authenticated;
 grant execute on function public.crm_set_user_active(text, boolean) to authenticated;
+grant execute on function public.crm_get_lead_scoring_criteria() to authenticated;
+grant execute on function public.crm_get_warehouse_stats() to authenticated;
+grant execute on function public.crm_get_company_lead_universe(integer, integer) to authenticated;
+grant execute on function public.crm_promote_company_to_prospect(text) to authenticated;
 
 alter table sales_crm.prospect_lists enable row level security;
+alter table sales_crm.lead_scoring_criteria enable row level security;
 alter table sales_crm.crm_users enable row level security;
 alter table sales_crm.prospect_companies enable row level security;
 alter table sales_crm.prospect_contacts_restricted enable row level security;

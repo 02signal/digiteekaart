@@ -80,6 +80,10 @@ Vercel rewrites `https://crm.digiteekaart.ee/` to that page through `vercel.json
 The page uses Supabase magic-link login and public RPC wrappers:
 
 - `public.crm_get_toomas_priority_board()`
+- `public.crm_get_company_lead_universe(...)`
+- `public.crm_get_lead_scoring_criteria()`
+- `public.crm_get_warehouse_stats()`
+- `public.crm_promote_company_to_prospect(...)`
 - `public.crm_update_prospect_status(...)`
 - `public.crm_get_current_user()`
 - `public.crm_list_users()`
@@ -89,6 +93,28 @@ The page uses Supabase magic-link login and public RPC wrappers:
 It does not query restricted contact tables and it has `noindex,nofollow`.
 
 Admins can add and deactivate CRM users from the interface. Sales users can work with the lead board but cannot manage users.
+
+## Lead Score Shown in CRM
+
+The CRM shows the scoring model directly so Toomas can see why a company is a strong signal.
+
+| Criterion | Points | Plain rule |
+| --- | ---: | --- |
+| Active company | 15 | Company is active in the register. |
+| Company age | 25 | 10+ years gives full points; 5-9 years gives partial points. |
+| Revenue scale | 35 | 200,000+ EUR revenue gives full points; 50,000+ EUR gives partial points. |
+| VTA left | 20 | 50,000+ EUR remaining VTA gives full points; 10,000+ gives partial points. |
+| Activity known | 5 | Known activity makes the sales conversation more concrete. |
+
+For the first RIK public-data import, VTA is not checked yet. A company can still reach 75 points from active status, age and revenue. The CRM marks this as `VTA kontrollimata`, which means: check VTA before promising a support route.
+
+The current CRM views are:
+
+- **Tugev signaal**: score 75+.
+- **Kõik andmebaasis**: every imported public-company row.
+- **Müüki lisatud**: companies already promoted into Toomas' working list.
+
+Use `Lisa müüki` to promote a database-only company into the sales workflow.
 
 ## Required Setup for crm.digiteekaart.ee
 
@@ -200,11 +226,8 @@ Expected outcome: a public-safe prospect score and call signal are printed for t
 
 ## Next Build Slice
 
-1. Add migration execution to Supabase.
-2. Import the first bounded RIK bulk sample.
-3. Insert the first 50-100 prospect companies into `sales_crm.prospect_companies`.
-4. Create an n8n daily VTA queue workflow with a hard limit of 20-30 checks per day.
-5. Send Toomas a daily Telegram summary:
+1. Create an n8n daily VTA queue workflow with a hard limit of 20-30 checks per day.
+2. Send Toomas a daily Telegram summary:
    - new high-priority companies;
    - VTA checked and high left;
    - calls due today;

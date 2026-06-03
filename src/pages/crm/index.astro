@@ -35,7 +35,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         <div class="crm-note">
           Kui link jõuab kohale, vajuta seda samas seadmes. Kui sisse ei saa, peab administraator lisama teie e-maili
-          `sales_crm.crm_users` tabelisse.
+          CRM-i kasutajate plokis.
         </div>
       </section>
 
@@ -55,6 +55,22 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         </header>
 
         <div class="crm-metrics" data-metrics></div>
+
+        <section class="crm-panel crm-score-model">
+          <div>
+            <span class="kicker">Lead'i tugevuse mudel</span>
+            <h2>Mille järgi me hindame, et ettevõte on hea esimene kõne?</h2>
+            <p>
+              Skoor põhineb avalikel ettevõtte faktidel. Kontaktisiku andmeid siin ei näidata. VTA kontrollimata tähendab
+              “kontrolli enne pakkumist”, mitte seda, et ettevõte ei sobi.
+            </p>
+          </div>
+          <div class="crm-criteria-grid" data-criteria-list></div>
+          <p class="crm-score-note">
+            Tugev signaal algab 75 punktist. Esimene müügikõne peab siiski kontrollima: kas ettevõttel on päris plaan,
+            kas toetus sobib ja kas VTA jääk on hetkel piisav.
+          </p>
+        </section>
 
         <section class="crm-panel crm-admin" data-admin-panel hidden>
           <div class="crm-admin-head">
@@ -85,6 +101,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           <p class="crm-message" data-users-message></p>
         </section>
 
+        <div class="crm-view-tabs" data-view-filter>
+          <button class="is-active" type="button" data-view="strong">Tugev signaal</button>
+          <button type="button" data-view="all">Kõik andmebaasis</button>
+          <button type="button" data-view="prospects">Müüki lisatud</button>
+        </div>
+
         <section class="crm-panel crm-filters" aria-label="Filtrid">
           <label>
             Otsi
@@ -94,6 +116,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             Staatus
             <select data-status-filter>
               <option value="">Kõik</option>
+              <option value="not_in_sales">Ainult andmebaasis</option>
               <option value="new">Uus</option>
               <option value="call_next">Helista järgmisena</option>
               <option value="to_review">Vajab ülevaatust</option>
@@ -116,7 +139,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           </label>
           <label>
             Min skoor
-            <input data-score-filter type="number" min="0" max="100" step="5" value="50" />
+            <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
           </label>
           <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
         </section>
@@ -139,7 +162,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             </table>
           </div>
           <div class="crm-empty" data-empty-state hidden>
-            Andmeid ei ole veel näidata. Kui olete sisse logitud, tuleb järgmine samm: SQL migratsioon Supabase’is ja esimese prospect listi täitmine.
+            Andmeid ei ole veel näidata. Kui olete sisse logitud, tuleb järgmine samm: SQL migratsioon Supabase’is ja esimese RIK avalike andmete impordi käivitamine.
           </div>
           <p class="crm-message" data-board-message></p>
         </section>
@@ -167,9 +190,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const boardBody = document.querySelector("[data-board-body]");
       const emptyState = document.querySelector("[data-empty-state]");
       const metrics = document.querySelector("[data-metrics]");
+      const criteriaList = document.querySelector("[data-criteria-list]");
       const userEmail = document.querySelector("[data-user-email]");
       const signOutButton = document.querySelector("[data-sign-out]");
       const refreshButton = document.querySelector("[data-refresh]");
+      const viewFilter = document.querySelector("[data-view-filter]");
       const adminPanel = document.querySelector("[data-admin-panel]");
       const usersRefreshButton = document.querySelector("[data-users-refresh]");
       const userForm = document.querySelector("[data-user-form]");
@@ -190,7 +215,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         proposal_sent: "Pakkumine",
         won: "Võidetud",
         lost: "Kaotatud",
-        do_not_contact: "Ära võta ühendust"
+        do_not_contact: "Ära võta ühendust",
+        not_in_sales: "Ainult andmebaasis"
       };
 
       const vtaLabels = {
@@ -216,7 +242,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         session: null,
         currentUser: null,
         rows: [],
-        users: []
+        users: [],
+        criteria: [],
+        stats: null,
+        view: "strong"
       };
 
       const formatMoney = (value) => {
@@ -241,6 +270,13 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const setMessage = (target, text, type = "") => {
         target.textContent = text;
         target.dataset.type = type;
+      };
+
+      const signalLabel = (row) => {
+        const score = Number(row.priority_score || 0);
+        if (score >= 75) return "Tugev signaal";
+        if (score >= 50) return "Vajab ülevaatust";
+        return "Madal prioriteet";
       };
 
       const supabase = supabaseAnonKey
@@ -299,6 +335,33 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         adminPanel.hidden = state.currentUser?.role !== "admin";
       };
 
+      const renderCriteria = () => {
+        if (!state.criteria.length) {
+          criteriaList.innerHTML = "<article><strong>Skoorimudel laadimata</strong><span>Värskenda CRM-i või kontrolli kasutaja ligipääsu.</span></article>";
+          return;
+        }
+
+        criteriaList.innerHTML = state.criteria.map((criterion) => `
+          <article>
+            <strong>${escapeHtml(criterion.label)} <b>${criterion.max_points}p</b></strong>
+            <span>${escapeHtml(criterion.plain_rule)}</span>
+            <em>${escapeHtml(criterion.strong_signal_note)}</em>
+          </article>
+        `).join("");
+      };
+
+      const loadCriteriaAndStats = async () => {
+        const [criteriaResult, statsResult] = await Promise.all([
+          supabase.rpc("crm_get_lead_scoring_criteria"),
+          supabase.rpc("crm_get_warehouse_stats")
+        ]);
+
+        state.criteria = Array.isArray(criteriaResult.data) ? criteriaResult.data : [];
+        state.stats = Array.isArray(statsResult.data) && statsResult.data.length ? statsResult.data[0] : null;
+
+        renderCriteria();
+      };
+
       const loadUsers = async () => {
         if (adminPanel.hidden) return;
 
@@ -355,16 +418,20 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         await loadUsers();
       };
 
-      const renderMetrics = (rows) => {
-        const high = rows.filter((row) => row.priority_score >= 75).length;
-        const callNext = rows.filter((row) => row.crm_status === "call_next").length;
-        const highVta = rows.filter((row) => row.vta_signal === "high_left").length;
-        const unchecked = rows.filter((row) => row.vta_signal === "not_checked").length;
+      const renderMetrics = () => {
+        const stats = state.stats || {};
+        const rows = state.rows;
+        const imported = stats.imported_companies ?? rows.length;
+        const scored = stats.scored_companies ?? rows.length;
+        const strong = stats.strong_leads ?? rows.filter((row) => row.priority_score >= 75).length;
+        const prospects = stats.prospects ?? rows.filter((row) => row.is_prospect).length;
+        const unchecked = stats.unchecked_vta ?? rows.filter((row) => row.vta_signal === "not_checked").length;
+
         metrics.innerHTML = `
-          <article><strong>${rows.length}</strong><span>nähtavat firmat</span></article>
-          <article><strong>${high}</strong><span>tugev signaal</span></article>
-          <article><strong>${callNext}</strong><span>helista järgmisena</span></article>
-          <article><strong>${highVta}</strong><span>suur VTA jääk</span></article>
+          <article><strong>${imported}</strong><span>firmat andmebaasis</span></article>
+          <article><strong>${scored}</strong><span>skooritud firmat</span></article>
+          <article><strong>${strong}</strong><span>tugev signaal</span></article>
+          <article><strong>${prospects}</strong><span>müüki lisatud</span></article>
           <article><strong>${unchecked}</strong><span>VTA kontrollimata</span></article>
         `;
       };
@@ -376,12 +443,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const minScore = Number(scoreFilter.value || 0);
 
         return state.rows.filter((row) => {
+          if (state.view === "strong" && Number(row.priority_score || 0) < 75) return false;
+          if (state.view === "prospects" && !row.is_prospect) return false;
+
           const text = [
             row.company_name,
             row.registry_code,
             row.primary_activity_name,
             row.recommended_pitch,
-            ...(row.why_now || [])
+            ...(row.score_reason || [])
           ].join(" ").toLowerCase();
 
           if (search && !text.includes(search)) return false;
@@ -394,19 +464,27 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       const renderBoard = () => {
         const rows = filteredRows();
-        renderMetrics(state.rows);
+        renderMetrics();
         emptyState.hidden = rows.length > 0;
 
         boardBody.innerHTML = rows.map((row) => {
-          const why = [...(row.why_now || []), ...(row.score_reason || [])]
+          const why = [...(row.score_reason || [])]
             .filter(Boolean)
             .slice(0, 4)
             .map((reason) => `<span>${escapeHtml(reason)}</span>`)
             .join("");
 
-          const actions = actionButtons.map(([status, label]) => (
-            `<button type="button" data-status-action="${status}" data-prospect-id="${row.prospect_id}">${label}</button>`
-          )).join("");
+          const scoreBreakdown = Array.isArray(row.score_breakdown)
+            ? row.score_breakdown
+                .map((part) => `<span>${escapeHtml(part.label)} ${part.points}/${part.max_points}</span>`)
+                .join("")
+            : "";
+
+          const actions = row.is_prospect
+            ? actionButtons.map(([status, label]) => (
+                `<button type="button" data-status-action="${status}" data-prospect-id="${row.prospect_id}">${label}</button>`
+              )).join("")
+            : `<button type="button" data-promote-code="${escapeHtml(row.registry_code)}">Lisa müüki</button>`;
 
           return `
             <tr>
@@ -415,7 +493,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
                 <span>${escapeHtml(row.registry_code)} · ${escapeHtml(row.primary_activity_name) || "tegevusala puudu"}</span>
                 <span>${row.company_age_years ?? "-"} aastat · ${formatMoney(row.average_revenue_last_two)} keskmine müügitulu</span>
               </td>
-              <td><b>${row.priority_score ?? 0}</b></td>
+              <td>
+                <b>${row.priority_score ?? 0}</b>
+                <span>${signalLabel(row)}</span>
+                <div class="crm-score-breakdown">${scoreBreakdown}</div>
+              </td>
               <td>
                 <strong>${escapeHtml(vtaLabels[row.vta_signal] || row.vta_signal || "-")}</strong>
                 <span>${formatMoney(row.de_minimis_left)} jääk</span>
@@ -425,7 +507,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
                 <strong>${escapeHtml(row.next_action) || "Vaata üle"}</strong>
                 <span>${escapeHtml(row.recommended_pitch)}</span>
               </td>
-              <td><span class="crm-status">${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span></td>
+              <td>
+                <span class="crm-status">${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span>
+                <small>${row.is_prospect ? "CRM-is" : "veel ainult andmebaasis"}</small>
+              </td>
               <td><div class="crm-row-actions">${actions}</div></td>
             </tr>
           `;
@@ -438,8 +523,13 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           return;
         }
 
-        setMessage(boardMessage, "Laen CRM andmeid...", "");
-        const { data, error } = await supabase.rpc("crm_get_toomas_priority_board");
+        setMessage(boardMessage, "Laen ettevõtteid ja müügisignaale...", "");
+        await loadCriteriaAndStats();
+
+        const { data, error } = await supabase.rpc("crm_get_company_lead_universe", {
+          p_limit: 1000,
+          p_min_score: 0
+        });
 
         if (error) {
           setMessage(boardMessage, `CRM andmete laadimine ei õnnestunud: ${error.message}`, "error");
@@ -451,6 +541,21 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         state.rows = Array.isArray(data) ? data : [];
         setMessage(boardMessage, state.rows.length ? "Andmed laetud." : "Andmeid pole veel või kasutajal puudub ligipääs.", state.rows.length ? "ok" : "");
         renderBoard();
+      };
+
+      const promoteCompany = async (registryCode) => {
+        setMessage(boardMessage, "Lisan ettevõtte Toomase müügitöösse...", "");
+        const { error } = await supabase.rpc("crm_promote_company_to_prospect", {
+          p_registry_code: registryCode
+        });
+
+        if (error) {
+          setMessage(boardMessage, `Ettevõtet ei saanud müüki lisada: ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(boardMessage, "Ettevõte lisatud müüki.", "ok");
+        await loadBoard();
       };
 
       const updateStatus = async (prospectId, status) => {
@@ -525,6 +630,18 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       });
 
       refreshButton.addEventListener("click", loadBoard);
+      viewFilter.addEventListener("click", (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-view]")
+          : null;
+        if (!button) return;
+
+        state.view = button.getAttribute("data-view") || "strong";
+        viewFilter.querySelectorAll("[data-view]").forEach((item) => {
+          item.classList.toggle("is-active", item === button);
+        });
+        renderBoard();
+      });
       usersRefreshButton.addEventListener("click", loadUsers);
       userForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -536,11 +653,20 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       });
 
       boardBody.addEventListener("click", async (event) => {
-        const button = event.target instanceof Element
+        const statusButton = event.target instanceof Element
           ? event.target.closest("[data-status-action]")
           : null;
-        if (!button) return;
-        await updateStatus(button.getAttribute("data-prospect-id"), button.getAttribute("data-status-action"));
+        if (statusButton) {
+          await updateStatus(statusButton.getAttribute("data-prospect-id"), statusButton.getAttribute("data-status-action"));
+          return;
+        }
+
+        const promoteButton = event.target instanceof Element
+          ? event.target.closest("[data-promote-code]")
+          : null;
+        if (promoteButton) {
+          await promoteCompany(promoteButton.getAttribute("data-promote-code"));
+        }
       });
 
       usersList.addEventListener("click", async (event) => {
@@ -677,6 +803,65 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-weight: 800;
       }
 
+      .crm-score-model {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+        margin-bottom: 16px;
+        box-shadow: none;
+        background: #f7fbfb;
+      }
+
+      .crm-score-model h2 {
+        margin: 6px 0 0;
+        color: var(--navy);
+        font-size: 1.55rem;
+      }
+
+      .crm-score-model p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .crm-criteria-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .crm-criteria-grid article {
+        display: grid;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--white);
+      }
+
+      .crm-criteria-grid strong {
+        color: var(--navy);
+      }
+
+      .crm-criteria-grid strong b {
+        color: var(--teal);
+        white-space: nowrap;
+      }
+
+      .crm-criteria-grid span,
+      .crm-criteria-grid em {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-style: normal;
+      }
+
+      .crm-score-note {
+        border-left: 4px solid var(--teal);
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: var(--white);
+        font-weight: 750;
+      }
+
       .crm-admin {
         padding: 18px;
         margin-bottom: 16px;
@@ -772,6 +957,29 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         opacity: 0.55;
       }
 
+      .crm-view-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .crm-view-tabs button {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 9px 12px;
+        background: var(--white);
+        color: var(--navy);
+        cursor: pointer;
+        font-weight: 850;
+      }
+
+      .crm-view-tabs button.is-active {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: var(--white);
+      }
+
       .crm-filters {
         display: grid;
         grid-template-columns: minmax(240px, 1.4fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(110px, 0.45fr) auto;
@@ -831,14 +1039,24 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-size: 0.9rem;
       }
 
+      .crm-table small {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
       .crm-tags,
-      .crm-row-actions {
+      .crm-row-actions,
+      .crm-score-breakdown {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
       }
 
       .crm-tags span,
+      .crm-score-breakdown span,
       .crm-status {
         display: inline-flex;
         border-radius: 999px;
@@ -847,6 +1065,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         color: var(--navy);
         font-size: 0.78rem;
         font-weight: 850;
+      }
+
+      .crm-score-breakdown {
+        margin-top: 8px;
+      }
+
+      .crm-score-breakdown span {
+        background: #f4f7f7;
+        color: var(--muted);
       }
 
       .crm-row-actions button {
@@ -896,6 +1123,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
 
         .crm-metrics,
+        .crm-criteria-grid,
         .crm-admin-head,
         .crm-user-form,
         .crm-filters {

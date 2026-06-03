@@ -72,6 +72,39 @@ It is for Toomas' sales workflow, not for the public landing page:
 
 Keep the public funding pre-assessment and the internal sales CRM separate. A company can be visible in Toomas' priority board without exposing personal contact data in the public site.
 
+## First Public-Data Sales Import
+
+The first bounded import for `crm.digiteekaart.ee` is generated from RIK downloadable public CSV ZIP files:
+
+```bash
+node infra/rik-warehouse/scripts/build-initial-sales-prospect-sql.mjs --limit 75 --warehouse-limit 250
+```
+
+Default source files are expected under `/private/tmp/digiteekaart-rik/`:
+
+- `lihtandmed.csv.zip`
+- `aruanded-yld.zip`
+- `aruanded2024.zip`
+
+The generated SQL is written to:
+
+```text
+/private/tmp/digiteekaart-rik/initial-sales-prospects.sql
+```
+
+Default filters:
+
+- warehouse sample: active OÜ/AS, 5+ years old, 2024 revenue 50,000-10,000,000 EUR, max 100 employees when employee count is known;
+- sales prospect list: active OÜ/AS, 10+ years old, 2024 revenue 200,000-5,000,000 EUR, max 50 employees when employee count is known;
+- no personal contacts, board members, e-mails or phone numbers are imported;
+- VTA is marked `not_checked` until a separate RAR/VTA check is stored.
+
+Apply the generated SQL only after the registry foundation and lead quality SQL have been applied:
+
+```bash
+supabase db query --workdir supabase --linked --file /private/tmp/digiteekaart-rik/initial-sales-prospects.sql
+```
+
 ## Privacy Rule
 
 For the MVP we do **not** expose board-member names, beneficial owners, personal codes, raw reports, raw API payloads, or signed/source URLs in product tables or owner-facing views.
