@@ -43,10 +43,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         <header class="crm-header">
           <div>
             <span class="kicker">Müügi töölaud</span>
-            <h1>Millistele ettevõtetele täna tähelepanu pöörata?</h1>
-            <p>
-              Vaade näitab ainult firma fakte ja müügisignaali. Omaniku või juhatuse kontaktid on eraldi piiratud kihis.
-            </p>
+            <h1>Millisele firmale täna helistada?</h1>
+            <p>Üks kaart, üks signaal, üks järgmine samm. Täpsem info avaneb ainult siis, kui seda vaja on.</p>
           </div>
           <div class="crm-user-box">
             <span data-user-email></span>
@@ -56,21 +54,27 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         <div class="crm-metrics" data-metrics></div>
 
-        <section class="crm-panel crm-score-model">
-          <div>
-            <span class="kicker">Lead'i tugevuse mudel</span>
-            <h2>Mille järgi me hindame, et ettevõte on hea esimene kõne?</h2>
-            <p>
-              Skoor põhineb avalikel ettevõtte faktidel. Kontaktisiku andmeid siin ei näidata. VTA kontrollimata tähendab
-              “kontrolli enne pakkumist”, mitte seda, et ettevõte ei sobi.
+        <details class="crm-panel crm-score-model">
+          <summary>
+            <span>
+              <strong>Kuidas skoor tekib?</strong>
+              <em>75+ tähendab: hea kandidaat esimeseks kõneks.</em>
+            </span>
+          </summary>
+          <div class="crm-score-model-body">
+            <div>
+              <span class="kicker">Lead'i tugevuse mudel</span>
+              <h2>Miks see firma on nimekirjas?</h2>
+              <p>
+                Skoor põhineb avalikel ettevõtte faktidel. VTA kontrollimata tähendab: enne pakkumist tuleb jääk üle vaadata.
+              </p>
+            </div>
+            <div class="crm-criteria-grid" data-criteria-list></div>
+            <p class="crm-score-note">
+              Kõne kinnitab alati kolm asja: kas plaan on päris, kas toetus sobib ja kas VTA jääk on hetkel piisav.
             </p>
           </div>
-          <div class="crm-criteria-grid" data-criteria-list></div>
-          <p class="crm-score-note">
-            Tugev signaal algab 75 punktist. Esimene müügikõne peab siiski kontrollima: kas ettevõttel on päris plaan,
-            kas toetus sobib ja kas VTA jääk on hetkel piisav.
-          </p>
-        </section>
+        </details>
 
         <section class="crm-panel crm-admin" data-admin-panel hidden>
           <div class="crm-admin-head">
@@ -142,7 +146,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
           </label>
           <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
-          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Lisa 10 VTA kontrolli</button>
+          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Käivita 10 VTA</button>
         </section>
 
         <section class="crm-workspace" aria-label="Müügi töölaud">
@@ -278,6 +282,20 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }).format(Number(value));
       };
 
+      const formatCompactMoney = (value) => {
+        if (value === null || value === undefined || value === "") return "käive ?";
+        const amount = Number(value);
+        if (!Number.isFinite(amount)) return "käive ?";
+        if (Math.abs(amount) >= 1000000) {
+          const decimals = Math.abs(amount) >= 10000000 ? 0 : 1;
+          return `${new Intl.NumberFormat("et-EE", { maximumFractionDigits: decimals }).format(amount / 1000000)} mln €`;
+        }
+        if (Math.abs(amount) >= 1000) {
+          return `${new Intl.NumberFormat("et-EE", { maximumFractionDigits: 0 }).format(amount / 1000)} tuh €`;
+        }
+        return `${new Intl.NumberFormat("et-EE", { maximumFractionDigits: 0 }).format(amount)} €`;
+      };
+
       const formatDate = (value) => {
         if (!value) return "-";
         const date = new Date(value);
@@ -311,11 +329,52 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         return "Madal prioriteet";
       };
 
+      const signalTone = (row) => {
+        const score = Number(row.priority_score || 0);
+        if (score >= 75) return "strong";
+        if (score >= 50) return "medium";
+        return "low";
+      };
+
       const vtaStatusLabel = (row) => {
         if (row.vta_queue_status === "queued") return "VTA järjekorras";
         if (row.vta_queue_status === "checking") return "VTA kontrollis";
         if (row.vta_queue_status === "checked") return "VTA kontrollitud";
         return vtaLabels[row.vta_signal] || row.vta_signal || "-";
+      };
+
+      const vtaSummary = (row) => {
+        if (row.vta_queue_status === "queued") {
+          return { label: "VTA taustal", hint: "tulemus tuleb siia", state: "running" };
+        }
+        if (row.vta_queue_status === "checking") {
+          return { label: "Kontrollib", hint: "päring käib", state: "running" };
+        }
+        if (row.vta_queue_status === "checked") {
+          return {
+            label: "VTA tehtud",
+            hint: row.de_minimis_left === null || row.de_minimis_left === undefined ? "jääk teadmata" : `${formatCompactMoney(row.de_minimis_left)} jääk`,
+            state: "checked"
+          };
+        }
+        if (row.vta_signal === "high_left" || row.vta_signal === "some_left") {
+          return {
+            label: "VTA jääk olemas",
+            hint: row.de_minimis_left === null || row.de_minimis_left === undefined ? "kontrolli üle" : `${formatCompactMoney(row.de_minimis_left)} jääk`,
+            state: "good"
+          };
+        }
+        if (row.vta_signal === "low_left" || row.vta_signal === "used_up") {
+          return { label: "VTA risk", hint: "ära paku enne kontrolli", state: "risk" };
+        }
+        return { label: "VTA teadmata", hint: "kontrolli enne pakkumist", state: "unknown" };
+      };
+
+      const vtaActionLabel = (row) => {
+        if (row.vta_queue_status === "queued") return "VTA taustal";
+        if (row.vta_queue_status === "checking") return "Kontrollib";
+        if (row.vta_queue_status === "checked") return "Uuenda VTA";
+        return "Käivita VTA";
       };
 
       const scoreParts = (row) => {
@@ -517,18 +576,21 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       const renderCardActions = (row, compact = true) => {
         const registryCode = escapeHtml(row.registry_code);
-        const detailButton = `<button type="button" data-detail-code="${registryCode}">Detail</button>`;
-        const vtaButton = `<button type="button" data-vta-code="${registryCode}">${row.vta_queue_status === "queued" ? "VTA järjekorras" : "VTA kontrolli"}</button>`;
+        const vtaRunning = row.vta_queue_status === "queued" || row.vta_queue_status === "checking";
+        const detailButton = `<button class="crm-action-secondary" type="button" data-detail-code="${registryCode}">Ava</button>`;
+        const vtaButton = `<button class="crm-action-primary" type="button" data-vta-code="${registryCode}" ${vtaRunning ? "disabled" : ""}>${vtaActionLabel(row)}</button>`;
 
         if (!row.is_prospect) {
-          return `${detailButton}${vtaButton}<button type="button" data-promote-code="${registryCode}">Lisa müüki</button>`;
+          return compact
+            ? `${vtaButton}${detailButton}<button class="crm-action-secondary" type="button" data-promote-code="${registryCode}">Lisa müüki</button>`
+            : `${detailButton}${vtaButton}<button class="crm-action-secondary" type="button" data-promote-code="${registryCode}">Lisa müüki</button>`;
         }
 
-        const statuses = compact
-          ? [["called", "Helistatud"], ["meeting_booked", "Kohtumine"], ["proposal_sent", "Pakkumine"], ["not_relevant", "Ei sobi"]]
-          : actionButtons;
+        if (compact) {
+          return `${vtaButton}${detailButton}<button class="crm-action-secondary" type="button" data-status-action="called" data-prospect-id="${row.prospect_id}">Helistatud</button>`;
+        }
 
-        const statusButtons = statuses.map(([status, label]) => (
+        const statusButtons = actionButtons.map(([status, label]) => (
           `<button type="button" data-status-action="${status}" data-prospect-id="${row.prospect_id}">${label}</button>`
         )).join("");
 
@@ -536,44 +598,38 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       };
 
       const renderCompanyCard = (row) => {
-        const why = [...(row.score_reason || [])]
-          .filter(Boolean)
-          .slice(0, 3)
-          .map((reason) => `<span>${escapeHtml(reason)}</span>`)
-          .join("");
-
-        const topScoreParts = scoreParts(row)
-          .filter((part) => part.points > 0)
-          .slice(0, 3)
-          .map((part) => `<span>${escapeHtml(part.label)} ${part.points}/${part.maxPoints}</span>`)
-          .join("");
-
         const selected = state.selectedRegistryCode === row.registry_code ? " is-selected" : "";
         const employeeText = row.latest_employee_count === null || row.latest_employee_count === undefined
-          ? "töötajate arv teadmata"
+          ? "töötajaid ?"
           : `${row.latest_employee_count} töötajat`;
+        const ageText = row.company_age_years === null || row.company_age_years === undefined
+          ? "vanus ?"
+          : `${row.company_age_years} a`;
+        const firstReason = safeText((row.score_reason || []).find(Boolean)) || "vaata detaili";
+        const vta = vtaSummary(row);
 
         return `
-          <article class="crm-lead-card${selected}" data-card-code="${escapeHtml(row.registry_code)}">
+          <article class="crm-lead-card crm-signal-${signalTone(row)}${selected}" data-card-code="${escapeHtml(row.registry_code)}">
             <header>
               <div>
-                <strong>${escapeHtml(row.company_name)}</strong>
-                <span>${escapeHtml(row.registry_code)} · ${row.company_age_years ?? "-"} aastat · ${employeeText}</span>
+                <strong class="crm-card-title">${escapeHtml(row.company_name)}</strong>
+                <span>${escapeHtml(row.registry_code)} · ${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span>
               </div>
               <b>${row.priority_score ?? 0}</b>
             </header>
-            <div class="crm-card-facts">
-              <span>${formatMoney(row.average_revenue_last_two)} keskmine müügitulu</span>
-              <span>${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span>
-              <span>${escapeHtml(row.primary_activity_name) || "tegevusala puudu"}</span>
+            <div class="crm-signal-line">
+              <span>${escapeHtml(signalLabel(row))}</span>
+              <strong>${escapeHtml(firstReason)}</strong>
             </div>
-            <div class="crm-tags">${why || "<span>Vajab ülevaatust</span>"}</div>
-            <div class="crm-score-breakdown">${topScoreParts}</div>
-            <div class="crm-vta-line">
-              <strong>${escapeHtml(vtaStatusLabel(row))}</strong>
-              <span>${row.de_minimis_left === null || row.de_minimis_left === undefined ? "jääk tuleb kontrollida" : `${formatMoney(row.de_minimis_left)} jääk`}</span>
+            <div class="crm-signal-chips">
+              <span>${escapeHtml(ageText)}</span>
+              <span>${escapeHtml(employeeText)}</span>
+              <span>${formatCompactMoney(row.average_revenue_last_two)}</span>
             </div>
-            <p>${escapeHtml(row.next_action) || "Vaata üle ja vali järgmine samm."}</p>
+            <div class="crm-vta-mini" data-vta-state="${escapeHtml(vta.state)}">
+              <strong>${escapeHtml(vta.label)}</strong>
+              <span>${escapeHtml(vta.hint)}</span>
+            </div>
             <div class="crm-row-actions">${renderCardActions(row)}</div>
           </article>
         `;
@@ -641,16 +697,16 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <div class="crm-tags">${reasons || "<span>Vajab ülevaatust</span>"}</div>
           </section>
 
-          <section>
-            <h3>Skoori põhimõte</h3>
+          <details class="crm-sheet-section">
+            <summary>Skoori põhimõte</summary>
             <ul class="crm-sheet-list">${scoreRows}</ul>
-          </section>
+          </details>
 
-          <section>
-            <h3>Ajaloolised märgid</h3>
+          <details class="crm-sheet-section">
+            <summary>Ajaloolised märgid</summary>
             <ul class="crm-sheet-list">${historyRows}</ul>
             <p class="crm-sheet-note">VTA jääk ei ole püsiv hinnang. Enne pakkumist tuleb see päringu hetkel üle kontrollida ja tulemus andmebaasi salvestada.</p>
-          </section>
+          </details>
 
           <section>
             <h3>Esimese kõne mõte</h3>
@@ -658,11 +714,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <button class="btn btn-light" type="button" data-copy-pitch="${escapeHtml(row.registry_code)}">Kopeeri kõnespikker</button>
           </section>
 
-          <section>
-            <h3>Sisemine link</h3>
+          <details class="crm-sheet-section">
+            <summary>Sisemine link</summary>
             <p class="crm-sheet-note">See on sisemine firma tööleht CRM-is. Avaliku personaalse maandumislehe teeme hiljem ainult siis, kui andmed ja pakkumine on kontrollitud.</p>
             <code>${escapeHtml(sheetUrl)}</code>
-          </section>
+          </details>
 
           <div class="crm-row-actions crm-sheet-actions">${renderCardActions(row, false)}</div>
         `;
@@ -766,22 +822,22 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       };
 
       const queueVtaCheck = async (registryCode) => {
-        setMessage(boardMessage, "Lisan VTA kontrollijärjekorda...", "");
+        setMessage(boardMessage, "Käivitan selle firma VTA kontrolli taustal...", "");
         const { error } = await supabase.rpc("crm_queue_vta_check", {
           p_registry_code: registryCode
         });
 
         if (error) {
-          setMessage(boardMessage, `VTA järjekorda lisamine ei õnnestunud: ${error.message}`, "error");
+          setMessage(boardMessage, `VTA kontrolli ei saanud käivitada: ${error.message}`, "error");
           return;
         }
 
-        setMessage(boardMessage, "VTA kontroll lisatud järjekorda.", "ok");
+        setMessage(boardMessage, "VTA kontroll käivitatud. Tulemus ilmub siia, kui taustatöö lõpetab.", "ok");
         await loadBoard();
       };
 
       const queueTopVtaChecks = async () => {
-        setMessage(boardMessage, "Lisan järgmised tugevamad firmad VTA kontrollijärjekorda...", "");
+        setMessage(boardMessage, "Käivitan 10 tugeva firma VTA kontrolli taustal...", "");
         queueTopVtaButton.disabled = true;
 
         const { data, error } = await supabase.rpc("crm_queue_next_vta_checks", {
@@ -792,12 +848,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         queueTopVtaButton.disabled = false;
 
         if (error) {
-          setMessage(boardMessage, `VTA järjekorra lisamine ei õnnestunud: ${error.message}`, "error");
+          setMessage(boardMessage, `VTA kontrolle ei saanud käivitada: ${error.message}`, "error");
           return;
         }
 
         const added = Array.isArray(data) ? data.length : 0;
-        setMessage(boardMessage, added ? `${added} tugevat firmat lisatud VTA kontrollijärjekorda.` : "Uusi sobivaid VTA kontrolle ei olnud lisada.", added ? "ok" : "");
+        setMessage(boardMessage, added ? `${added} firmat läks VTA taustakontrolli.` : "Uusi sobivaid VTA kontrolle ei olnud lisada.", added ? "ok" : "");
         await loadBoard();
       };
 
@@ -1095,12 +1151,63 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       }
 
       .crm-score-model {
-        display: grid;
-        gap: 14px;
-        padding: 18px;
+        padding: 0;
         margin-bottom: 16px;
         box-shadow: none;
         background: #f7fbfb;
+      }
+
+      .crm-score-model summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px 18px;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .crm-score-model summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .crm-score-model summary::after {
+        content: "+";
+        display: inline-grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--white);
+        color: var(--navy);
+        font-weight: 900;
+      }
+
+      .crm-score-model[open] summary::after {
+        content: "−";
+      }
+
+      .crm-score-model summary strong,
+      .crm-score-model summary em {
+        display: block;
+      }
+
+      .crm-score-model summary strong {
+        color: var(--navy);
+      }
+
+      .crm-score-model summary em {
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-style: normal;
+        font-weight: 800;
+      }
+
+      .crm-score-model-body {
+        display: grid;
+        gap: 14px;
+        padding: 0 18px 18px;
       }
 
       .crm-score-model h2 {
@@ -1273,7 +1380,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       .crm-filters {
         display: grid;
-        grid-template-columns: minmax(240px, 1.4fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(110px, 0.45fr) auto;
+        grid-template-columns: minmax(240px, 1.4fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(110px, 0.45fr) auto auto;
         gap: 12px;
         align-items: end;
         padding: 14px;
@@ -1367,11 +1474,23 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       .crm-lead-card {
         display: grid;
-        gap: 10px;
+        gap: 8px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        padding: 12px;
+        padding: 10px;
         background: var(--white);
+      }
+
+      .crm-lead-card.crm-signal-strong {
+        border-left: 5px solid var(--teal);
+      }
+
+      .crm-lead-card.crm-signal-medium {
+        border-left: 5px solid var(--accent);
+      }
+
+      .crm-lead-card.crm-signal-low {
+        border-left: 5px solid var(--line);
       }
 
       .crm-lead-card.is-selected {
@@ -1391,14 +1510,14 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         display: block;
       }
 
-      .crm-lead-card header strong {
+      .crm-lead-card header strong,
+      .crm-card-title {
         color: var(--navy);
         line-height: 1.2;
       }
 
       .crm-lead-card header span,
-      .crm-card-facts span,
-      .crm-vta-line span {
+      .crm-vta-mini span {
         color: var(--muted);
         font-size: 0.84rem;
         font-weight: 750;
@@ -1406,8 +1525,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       .crm-lead-card header b {
         display: inline-grid;
-        min-width: 42px;
-        min-height: 42px;
+        min-width: 40px;
+        min-height: 40px;
         place-items: center;
         border-radius: 8px;
         background: var(--teal);
@@ -1415,12 +1534,44 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-size: 1.1rem;
       }
 
-      .crm-card-facts {
+      .crm-signal-line {
         display: grid;
-        gap: 4px;
+        gap: 3px;
+        border-radius: 8px;
+        padding: 8px;
+        background: #f7fbfb;
       }
 
-      .crm-vta-line {
+      .crm-signal-line span {
+        color: var(--teal);
+        font-size: 0.78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .crm-signal-line strong {
+        color: var(--navy);
+        font-size: 0.9rem;
+        line-height: 1.3;
+      }
+
+      .crm-signal-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .crm-signal-chips span {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: var(--ice);
+        color: var(--navy);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .crm-vta-mini {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         gap: 8px;
@@ -1430,16 +1581,22 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         background: #fff9ea;
       }
 
-      .crm-vta-line strong {
-        color: var(--navy);
-        font-size: 0.9rem;
+      .crm-vta-mini[data-vta-state="good"],
+      .crm-vta-mini[data-vta-state="checked"] {
+        background: var(--ice);
       }
 
-      .crm-lead-card p {
-        margin: 0;
-        color: var(--ink);
+      .crm-vta-mini[data-vta-state="risk"] {
+        background: #fff1ed;
+      }
+
+      .crm-vta-mini[data-vta-state="running"] {
+        background: #eef6f8;
+      }
+
+      .crm-vta-mini strong {
+        color: var(--navy);
         font-size: 0.9rem;
-        line-height: 1.45;
       }
 
       .crm-company-sheet {
@@ -1518,16 +1675,23 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-weight: 850;
       }
 
-      .crm-company-sheet section {
+      .crm-company-sheet section,
+      .crm-sheet-section {
         display: grid;
         gap: 10px;
         border-top: 1px solid var(--line);
         padding-top: 14px;
       }
 
-      .crm-company-sheet h3 {
+      .crm-company-sheet h3,
+      .crm-sheet-section summary {
         color: var(--navy);
         font-size: 0.98rem;
+      }
+
+      .crm-sheet-section summary {
+        cursor: pointer;
+        font-weight: 900;
       }
 
       .crm-sheet-list {
@@ -1671,9 +1835,28 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-weight: 850;
       }
 
+      .crm-row-actions .crm-action-primary {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: var(--white);
+      }
+
+      .crm-row-actions .crm-action-secondary {
+        background: #f7fbfb;
+      }
+
+      .crm-row-actions button:disabled {
+        cursor: not-allowed;
+        opacity: 0.68;
+      }
+
       .crm-row-actions button:hover {
         border-color: var(--teal);
         color: var(--teal);
+      }
+
+      .crm-row-actions .crm-action-primary:hover {
+        color: var(--white);
       }
 
       .crm-empty {
