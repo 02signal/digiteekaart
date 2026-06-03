@@ -106,12 +106,14 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         </section>
 
         <div class="crm-view-tabs" data-view-filter>
-          <button class="is-active" type="button" data-view="strong">Tugev signaal</button>
-          <button type="button" data-view="all">Kõik andmebaasis</button>
+          <button class="is-active" type="button" data-view="focus">Fookus (1 ettevõte korraga)</button>
+          <button type="button" data-view="starred">⭐ Märgistatud lemmikud</button>
+          <button type="button" data-view="strong">Kõik tugevad signaalid</button>
+          <button type="button" data-view="all">Kogu andmebaas</button>
           <button type="button" data-view="prospects">Müüki lisatud</button>
         </div>
 
-        <section class="crm-panel crm-filters" aria-label="Filtrid">
+        <section class="crm-panel crm-filters" aria-label="Filtrid" data-filters-panel hidden>
           <label>
             Otsi
             <input data-search type="search" placeholder="Firma nimi, registrikood või tegevusala" />
@@ -162,11 +164,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             Mobiil
           </label>
           <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
-          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Käivita 10 VTA</button>
+          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Pane 5 VTA järjekorda</button>
         </section>
 
         <section class="crm-workspace" aria-label="Müügi töölaud">
-          <div class="crm-kanban" data-kanban-board></div>
+          <div class="crm-focus-mode" data-focus-board></div>
+          <div class="crm-kanban" data-kanban-board hidden></div>
 
           <aside class="crm-panel crm-company-sheet" data-detail-panel hidden>
             <div class="crm-sheet-empty">
@@ -204,6 +207,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const loginMessage = document.querySelector("[data-login-message]");
       const boardMessage = document.querySelector("[data-board-message]");
       const kanbanBoard = document.querySelector("[data-kanban-board]");
+      const focusBoard = document.querySelector("[data-focus-board]");
+      const filtersPanel = document.querySelector("[data-filters-panel]");
       const detailPanel = document.querySelector("[data-detail-panel]");
       const detailContent = document.querySelector("[data-detail-content]");
       const emptyState = document.querySelector("[data-empty-state]");
@@ -289,7 +294,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         users: [],
         criteria: [],
         stats: null,
-        view: "strong",
+        view: "focus",
         selectedRegistryCode: null
       };
 
@@ -405,10 +410,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const vtaActionLabel = (row) => {
         if (row.vta_queue_status === "queued") return "VTA taustal";
         if (row.vta_queue_status === "checking") return "Kontrollib";
-        if (row.vta_queue_status === "checked") return "Uuenda VTA";
-        if (row.vta_queue_status === "failed") return "Proovi VTA uuesti";
-        if (row.vta_queue_status === "manual_review") return "Uuenda VTA";
-        return "Käivita VTA";
+        if (row.vta_queue_status === "checked") return "Kontrolli uuesti";
+        if (row.vta_queue_status === "failed") return "Proovi uuesti";
+        if (row.vta_queue_status === "manual_review") return "Kontrolli uuesti";
+        return "Kontrolli VTA";
       };
 
       const scoreParts = (row) => {
@@ -589,6 +594,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         return state.rows.filter((row) => {
           if (state.view === "strong" && Number(row.priority_score || 0) < 75) return false;
+          if (state.view === "focus" && (Number(row.priority_score || 0) < 75 || ["called", "meeting_booked", "proposal_sent", "not_relevant", "do_not_contact", "won", "lost"].includes(row.crm_status))) return false;
+          if (state.view === "starred" && !row.is_starred) return false;
           if (state.view === "prospects" && !row.is_prospect) return false;
 
           const text = [
@@ -641,6 +648,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           ? "juhatus ?"
           : `${row.board_member_count} juht${row.board_member_count === 1 ? '' : 'ti'}`;
         const mobileIcon = row.has_mobile_phone ? " 📱" : "";
+        const starIcon = row.is_starred ? " ⭐" : "";
         const firstReason = safeText((row.score_reason || []).find(Boolean)) || "vaata detaili";
         const vta = vtaSummary(row);
 
@@ -648,7 +656,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           <article class="crm-lead-card crm-signal-${signalTone(row)}${selected}" data-card-code="${escapeHtml(row.registry_code)}">
             <header>
               <div>
-                <strong class="crm-card-title">${escapeHtml(row.company_name)}${mobileIcon}</strong>
+                <strong class="crm-card-title">${escapeHtml(row.company_name)}${mobileIcon}${starIcon}</strong>
                 <span>${escapeHtml(row.registry_code)} · ${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span>
               </div>
               <b>${row.priority_score ?? 0}</b>
@@ -787,33 +795,138 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
       };
 
+      const renderFocusBoard = (rows) => {
+        if (!rows.length) {
+          focusBoard.innerHTML = `<div class="crm-focus-empty">
+            <h2>Kõik tehtud! 🎉</h2>
+            <p>Hetkel ei ole ühtegi uut tugevat (75+) kontakti, millele helistada. Proovi värskendada või muuda filtreid "Kogu andmebaas" vaates.</p>
+          </div>`;
+          if (!state.selectedRegistryCode) closeDetail();
+          return;
+        }
+
+        const topRow = rows[0];
+        const ageText = topRow.company_age_years === null || topRow.company_age_years === undefined ? "?" : `${topRow.company_age_years} a`;
+        const employeeText = topRow.latest_employee_count === null || topRow.latest_employee_count === undefined ? "?" : `${topRow.latest_employee_count} töötajat`;
+        const boardText = topRow.board_member_count === null || topRow.board_member_count === undefined ? "?" : `${topRow.board_member_count} juht${topRow.board_member_count === 1 ? '' : 'ti'}`;
+        const mobileIcon = topRow.has_mobile_phone ? " 📱" : "";
+        const vta = vtaSummary(topRow);
+        
+        if (state.selectedRegistryCode !== topRow.registry_code) {
+           openDetail(topRow.registry_code, false);
+        }
+
+        focusBoard.innerHTML = `
+          <div class="crm-focus-card">
+            <header>
+              <div>
+                <span class="kicker">Sinu järgmine samm</span>
+                <h1>${escapeHtml(topRow.company_name)}${mobileIcon}</h1>
+                <p>${escapeHtml(topRow.registry_code)} · ${escapeHtml(topRow.primary_activity_name || "Tegevusala teadmata")}</p>
+              </div>
+              <div class="crm-focus-score">
+                <b>${topRow.priority_score ?? 0}</b>
+                <span>Skoor</span>
+              </div>
+            </header>
+            
+            <div class="crm-focus-stats">
+              <div>
+                <strong>${escapeHtml(ageText)}</strong>
+                <span>Vanus</span>
+              </div>
+              <div>
+                <strong>${escapeHtml(employeeText)}</strong>
+                <span>Suurus</span>
+              </div>
+              <div>
+                <strong>${escapeHtml(boardText)}</strong>
+                <span>Juhatus</span>
+              </div>
+              <div>
+                <strong>${formatCompactMoney(topRow.average_revenue_last_two)}</strong>
+                <span>Müügitulu</span>
+              </div>
+            </div>
+
+            <div class="crm-focus-vta" data-vta-state="${escapeHtml(vta.state)}">
+              <div class="crm-focus-vta-text">
+                <strong>VTA: ${escapeHtml(vta.label)}</strong>
+                <span>${escapeHtml(vta.hint)}</span>
+              </div>
+              <button class="btn btn-secondary" type="button" data-vta-code="${escapeHtml(topRow.registry_code)}">${vtaActionLabel(topRow)}</button>
+            </div>
+            
+            <div class="crm-focus-pitch">
+              <h3>Telefonikõne spikker</h3>
+              <p>${escapeHtml(topRow.recommended_pitch)}</p>
+            </div>
+
+            <div class="crm-focus-actions">
+               <button class="btn btn-primary" type="button" data-status-action="called" data-prospect-id="${topRow.prospect_id}">✅ Tehtud: Helistasin</button>
+               <button class="btn btn-light" type="button" data-status-action="not_relevant" data-prospect-id="${topRow.prospect_id}">❌ Ei sobi meile</button>
+               <button class="btn btn-light" type="button" data-status-action="do_not_contact" data-prospect-id="${topRow.prospect_id}">Keelas ühendust võtta</button>
+               ${!topRow.is_prospect ? `<button class="btn btn-secondary" type="button" data-promote-code="${escapeHtml(topRow.registry_code)}">Lisa müüki</button>` : ''}
+            </div>
+
+            <div class="crm-focus-activity-box">
+              <button type="button" class="crm-star-btn ${topRow.is_starred ? 'is-starred' : ''}" data-star-prospect="${topRow.prospect_id}" data-next-star="${!topRow.is_starred}">
+                ${topRow.is_starred ? '⭐ Märgistatud' : '☆ Märgista tärniga'}
+              </button>
+              
+              <form class="crm-quick-note" data-quick-note="${topRow.prospect_id}">
+                <input type="text" name="note" placeholder="Kirjuta kiire märkus või tegevus..." required />
+                <select name="new_status">
+                  <option value="">Jäta samaks</option>
+                  <option value="call_next">Helista varsti uuesti</option>
+                  <option value="meeting_booked">Kohtumine kokku lepitud</option>
+                  <option value="proposal_sent">Pakkumine saadetud</option>
+                </select>
+                <button class="btn btn-secondary" type="submit">Salvesta märkus</button>
+              </form>
+            </div>
+          </div>
+        `;
+      };
+
       const renderBoard = () => {
         const rows = filteredRows();
         renderMetrics();
         emptyState.hidden = rows.length > 0;
 
-        kanbanBoard.innerHTML = kanbanColumns.map((column) => {
-          const columnRows = rows.filter(column.matches);
-          const cards = columnRows.length
-            ? columnRows.map(renderCompanyCard).join("")
-            : `<div class="crm-column-empty">Praegu tühi.</div>`;
+        if (state.view === "focus") {
+           filtersPanel.hidden = true;
+           kanbanBoard.hidden = true;
+           focusBoard.hidden = false;
+           renderFocusBoard(rows);
+        } else {
+           filtersPanel.hidden = false;
+           kanbanBoard.hidden = false;
+           focusBoard.hidden = true;
+           
+           kanbanBoard.innerHTML = kanbanColumns.map((column) => {
+             const columnRows = rows.filter(column.matches);
+             const cards = columnRows.length
+               ? columnRows.map(renderCompanyCard).join("")
+               : `<div class="crm-column-empty">Praegu tühi.</div>`;
 
-          return `
-            <section class="crm-kanban-column" data-column="${column.id}">
-              <header>
-                <div>
-                  <h2>${escapeHtml(column.title)}</h2>
-                  <p>${escapeHtml(column.hint)}</p>
-                </div>
-                <b>${columnRows.length}</b>
-              </header>
-              <div class="crm-kanban-cards">${cards}</div>
-            </section>
-          `;
-        }).join("");
+             return `
+               <section class="crm-kanban-column" data-column="${column.id}">
+                 <header>
+                   <div>
+                     <h2>${escapeHtml(column.title)}</h2>
+                     <p>${escapeHtml(column.hint)}</p>
+                   </div>
+                   <b>${columnRows.length}</b>
+                 </header>
+                 <div class="crm-kanban-cards">${cards}</div>
+               </section>
+             `;
+           }).join("");
 
-        if (state.selectedRegistryCode) {
-          renderDetail(state.selectedRegistryCode);
+           if (state.selectedRegistryCode) {
+             renderDetail(state.selectedRegistryCode);
+           }
         }
       };
 
@@ -866,8 +979,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       };
 
       const queueVtaCheck = async (registryCode) => {
-        setMessage(boardMessage, "Käivitan selle firma VTA kontrolli taustal...", "");
-        const { error } = await supabase.rpc("crm_queue_vta_check", {
+        setMessage(boardMessage, "Panen selle firma VTA kontrolli järjekorra etteotsa...", "");
+        const { error } = await supabase.rpc("crm_queue_vta_check_now", {
           p_registry_code: registryCode
         });
 
@@ -876,16 +989,16 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           return;
         }
 
-        setMessage(boardMessage, "VTA kontroll käivitatud. Tulemus ilmub siia, kui taustatöö lõpetab.", "ok");
+        setMessage(boardMessage, "Firma on VTA järjekorra ees. Taustatöö võtab selle järgmisel tsüklil.", "ok");
         await loadBoard();
       };
 
       const queueTopVtaChecks = async () => {
-        setMessage(boardMessage, "Käivitan 10 tugeva firma VTA kontrolli taustal...", "");
+        setMessage(boardMessage, "Panen 5 tugevat firmat VTA kontrolli järjekorda...", "");
         queueTopVtaButton.disabled = true;
 
-        const { data, error } = await supabase.rpc("crm_queue_next_vta_checks", {
-          p_limit: 10,
+        const { data, error } = await supabase.rpc("crm_queue_next_vta_checks_now", {
+          p_limit: 5,
           p_min_score: 75
         });
 
@@ -897,16 +1010,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
 
         const added = Array.isArray(data) ? data.length : 0;
-        setMessage(boardMessage, added ? `${added} firmat läks VTA taustakontrolli.` : "Uusi sobivaid VTA kontrolle ei olnud lisada.", added ? "ok" : "");
+        setMessage(boardMessage, added ? `${added} firmat läks VTA järjekorda.` : "Uusi sobivaid VTA kontrolle ei olnud lisada.", added ? "ok" : "");
         await loadBoard();
       };
 
       const updateStatus = async (prospectId, status) => {
-        const note = window.prompt("Lühike märkus järgmisele sammule:", "") || "";
         const { error } = await supabase.rpc("crm_update_prospect_status", {
           p_prospect_id: prospectId,
           p_crm_status: status,
-          p_note: note,
+          p_note: null,
           p_next_follow_up_at: null
         });
 
@@ -916,6 +1028,47 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
 
         setMessage(boardMessage, "Staatus uuendatud.", "ok");
+        await loadBoard();
+      };
+
+      const toggleStar = async (prospectId, isStarred) => {
+        const { error } = await supabase.rpc("crm_toggle_star", {
+          p_prospect_id: prospectId,
+          p_is_starred: isStarred
+        });
+        
+        if (error) {
+          setMessage(boardMessage, `Märgise muutmine ei õnnestunud: ${error.message}`, "error");
+          return;
+        }
+        await loadBoard();
+      };
+
+      const addQuickNote = async (form) => {
+        const prospectId = form.getAttribute("data-quick-note");
+        const formData = new FormData(form);
+        const note = safeText(formData.get("note"));
+        const newStatus = safeText(formData.get("new_status"));
+        
+        if (!note) return;
+
+        setMessage(boardMessage, "Salvestan märget...", "");
+        
+        const { error } = await supabase.rpc("crm_add_activity", {
+          p_prospect_id: prospectId,
+          p_activity_type: "note",
+          p_activity_note: note,
+          p_new_status: newStatus || null,
+          p_next_follow_up_at: null
+        });
+
+        if (error) {
+          setMessage(boardMessage, `Märke salvestamine ebaõnnestus: ${error.message}`, "error");
+          return;
+        }
+
+        form.reset();
+        setMessage(boardMessage, "Märge salvestatud.", "ok");
         await loadBoard();
       };
 
@@ -977,7 +1130,20 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const promoteButton = target.closest("[data-promote-code]");
         if (promoteButton) {
           await promoteCompany(promoteButton.getAttribute("data-promote-code"));
+          return;
         }
+
+        const starButton = target.closest("[data-star-prospect]");
+        if (starButton) {
+          await toggleStar(starButton.getAttribute("data-star-prospect"), starButton.getAttribute("data-next-star") === "true");
+        }
+      };
+
+      const handleNoteSubmit = async (event) => {
+        const form = event.target instanceof Element ? event.target.closest("[data-quick-note]") : null;
+        if (!form) return;
+        event.preventDefault();
+        await addQuickNote(form);
       };
 
       const boot = async () => {
@@ -1061,7 +1227,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       });
 
       kanbanBoard.addEventListener("click", handleCrmAction);
+      focusBoard.addEventListener("click", handleCrmAction);
+      focusBoard.addEventListener("submit", handleNoteSubmit);
       detailPanel.addEventListener("click", handleCrmAction);
+      detailPanel.addEventListener("submit", handleNoteSubmit);
 
       usersList.addEventListener("click", async (event) => {
         const button = event.target instanceof Element
@@ -1522,6 +1691,242 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       .crm-kanban-cards {
         display: grid;
         gap: 10px;
+      }
+      
+      .crm-focus-mode {
+        display: grid;
+        gap: 16px;
+      }
+      
+      .crm-focus-empty {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: var(--white);
+        color: var(--navy);
+      }
+      
+      .crm-focus-empty h2 {
+        margin: 0 0 10px;
+        font-size: 1.8rem;
+      }
+      
+      .crm-focus-empty p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      
+      .crm-focus-card {
+        display: grid;
+        gap: 20px;
+        border: 2px solid var(--teal);
+        border-radius: 12px;
+        padding: 24px;
+        background: var(--white);
+        box-shadow: 0 8px 30px rgba(0, 155, 141, 0.12);
+      }
+      
+      .crm-focus-card header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: start;
+      }
+      
+      .crm-focus-card header h1 {
+        margin: 8px 0 4px;
+        color: var(--navy);
+        font-size: 2.2rem;
+        line-height: 1.1;
+      }
+      
+      .crm-focus-card header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.1rem;
+      }
+      
+      .crm-focus-score {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        background: var(--teal);
+        color: var(--white);
+      }
+      
+      .crm-focus-score b {
+        font-size: 2.2rem;
+        line-height: 1;
+      }
+      
+      .crm-focus-score span {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        opacity: 0.9;
+      }
+      
+      .crm-focus-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 20px 0;
+      }
+      
+      .crm-focus-stats div {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .crm-focus-stats strong {
+        color: var(--navy);
+        font-size: 1.4rem;
+      }
+      
+      .crm-focus-stats span {
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 750;
+      }
+      
+      .crm-focus-vta {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        border-radius: 12px;
+        padding: 16px 20px;
+        background: #fff9ea;
+      }
+      
+      .crm-focus-vta[data-vta-state="good"],
+      .crm-focus-vta[data-vta-state="checked"] {
+        background: var(--ice);
+      }
+
+      .crm-focus-vta[data-vta-state="risk"] {
+        background: #fff1ed;
+      }
+
+      .crm-focus-vta[data-vta-state="running"] {
+        background: #eef6f8;
+      }
+      
+      .crm-focus-vta-text strong {
+        display: block;
+        color: var(--navy);
+        font-size: 1.1rem;
+      }
+      
+      .crm-focus-vta-text span {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+      
+      .crm-focus-pitch {
+        border-radius: 12px;
+        padding: 20px;
+        background: #f7fbfb;
+      }
+      
+      .crm-focus-pitch h3 {
+        margin: 0 0 10px;
+        color: var(--teal);
+        font-size: 1rem;
+        text-transform: uppercase;
+      }
+      
+      .crm-focus-pitch p {
+        margin: 0;
+        color: var(--navy);
+        font-size: 1.15rem;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+      
+      .crm-focus-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 10px;
+      }
+      
+      .crm-focus-actions button {
+        padding: 14px 24px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        font-weight: 800;
+        cursor: pointer;
+        border: 1px solid var(--line);
+      }
+      
+      .crm-focus-actions .btn-primary {
+        background: var(--teal);
+        color: white;
+        border-color: var(--teal);
+      }
+
+      .crm-focus-activity-box {
+        display: grid;
+        gap: 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+      }
+      
+      .crm-star-btn {
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 16px;
+        background: var(--white);
+        color: var(--muted);
+        font-weight: 850;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .crm-star-btn:hover {
+        border-color: #f59e0b;
+        color: #d97706;
+      }
+      
+      .crm-star-btn.is-starred {
+        background: #fef3c7;
+        border-color: #fbbf24;
+        color: #b45309;
+      }
+      
+      .crm-quick-note {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 10px;
+        align-items: center;
+      }
+      
+      .crm-quick-note input,
+      .crm-quick-note select {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--ink);
+        background: var(--white);
+      }
+      
+      .crm-quick-note button {
+        min-height: 48px;
       }
 
       .crm-column-empty {

@@ -79,6 +79,7 @@ create table if not exists sales_crm.prospect_companies (
       'lost',
       'do_not_contact'
     )),
+  is_starred boolean not null default false,
   last_contacted_at timestamptz,
   next_follow_up_at timestamptz,
   source_system text not null default 'rik_warehouse',
@@ -281,6 +282,7 @@ with base as (
     p.crm_status,
     p.last_contacted_at,
     p.next_follow_up_at,
+    p.is_starred,
     p.owner_name,
     q.queue_status as vta_queue_status,
     q.scheduled_for as vta_scheduled_for,
@@ -440,6 +442,7 @@ select
   end as recommended_pitch,
   coalesce(s.owner_name, 'Müük') as owner_name,
   coalesce(s.crm_status, 'not_in_sales') as crm_status,
+  s.is_starred,
   s.last_contacted_at,
   s.next_follow_up_at,
   s.prospect_id is not null as is_prospect,
@@ -483,6 +486,7 @@ select
   p.next_action,
   p.owner_name,
   p.crm_status,
+  p.is_starred,
   p.last_contacted_at,
   p.next_follow_up_at,
   q.queue_status as vta_queue_status,
@@ -722,6 +726,7 @@ returns table (
   last_contacted_at timestamptz,
   next_follow_up_at timestamptz,
   is_prospect boolean,
+  is_starred boolean,
   vta_queue_status text,
   vta_scheduled_for date,
   vta_queue_checked_at timestamptz
@@ -762,6 +767,7 @@ as $$
     u.last_contacted_at,
     u.next_follow_up_at,
     u.is_prospect,
+    u.is_starred,
     u.vta_queue_status,
     u.vta_scheduled_for,
     u.vta_queue_checked_at
@@ -1320,8 +1326,108 @@ begin
 end;
 $$;
 
+create or replace function public.crm_toggle_star(
+  p_prospect_id uuid,
+  p_is_starred boolean
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = sales_crm, public
+as $$
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  update sales_crm.prospect_companies
+  set
+    is_starred = p_is_starred,
+    updated_at = now()
+  where id = p_prospect_id;
+
+  if not found then
+    raise exception 'Prospect not found';
+  end if;
+
+  return true;
+end;
+$$;
+
+create or replace function public.crm_add_activity(
+  p_prospect_id uuid,
+  p_activity_type text,
+  p_activity_note text,
+  p_new_status text default null,
+  p_next_follow_up_at timestamptz default null
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = sales_crm, public
+as $$
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  if p_activity_type not in (
+    'note',
+    'call_attempt',
+    'call_connected',
+    'email_sent',
+    'meeting_booked',
+    'qualification',
+    'do_not_contact'
+  ) then
+    raise exception 'Invalid activity type: %', p_activity_type;
+  end if;
+
+  insert into sales_crm.prospect_activities (
+    prospect_company_id,
+    activity_type,
+    activity_note,
+    created_by
+  ) values (
+    p_prospect_id,
+    p_activity_type,
+    nullif(p_activity_note, ''),
+    lower(coalesce(auth.jwt() ->> 'email', 'unknown'))
+  );
+
+  if p_new_status is not null then
+    if p_new_status not in (
+      'new',
+      'to_review',
+      'call_next',
+      'called',
+      'not_relevant',
+      'meeting_booked',
+      'proposal_sent',
+      'won',
+      'lost',
+      'do_not_contact'
+    ) then
+      raise exception 'Invalid CRM status: %', p_new_status;
+    end if;
+
+    update sales_crm.prospect_companies
+    set
+      crm_status = p_new_status,
+      next_follow_up_at = coalesce(p_next_follow_up_at, next_follow_up_at),
+      last_contacted_at = now(),
+      updated_at = now()
+    where id = p_prospect_id;
+  end if;
+
+  return true;
+end;
+$$;
+
 grant execute on function public.crm_get_toomas_priority_board() to authenticated;
 grant execute on function public.crm_update_prospect_status(uuid, text, text, timestamptz) to authenticated;
+grant execute on function public.crm_add_activity(uuid, text, text, text, timestamptz) to authenticated;
+grant execute on function public.crm_toggle_star(uuid, boolean) to authenticated;
 grant execute on function public.crm_get_current_user() to authenticated;
 grant execute on function public.crm_list_users() to authenticated;
 grant execute on function public.crm_upsert_user(text, text, boolean) to authenticated;
