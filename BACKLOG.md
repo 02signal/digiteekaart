@@ -34,7 +34,9 @@
 - Done: first internal CRM page added for `crm.digiteekaart.ee` with Supabase magic-link login, public-safe priority board, status update actions and admin-managed CRM users.
 - Done: CRM now shows the full imported company universe, strong-signal leads, scoring criteria/weights, warehouse counts and a `Lisa müüki` action for database-only companies.
 - Done: first bounded RIK public CSV import loaded 250 company rows and 75 strong-signal sales prospects into Supabase; no personal contacts were imported.
-- Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
+- Done: CRM sales view now uses a Kanban-style board, compact lead cards, internal company work-sheets, visible score reasons, CRM history markers and a `VTA kontrolli` queue action.
+- Next: add RAR/VTA lookup adapter that processes `sales_crm.vta_check_queue`, stores dated VTA snapshots and updates the company work-sheet.
+- Next: import multiple annual-report years so the company work-sheet can show revenue/employee trend, not only the latest 2024 signal.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: add Toomas through CRM interface and smoke-test his magic-link login.
 - Next: add email verification before showing a more detailed generated report.

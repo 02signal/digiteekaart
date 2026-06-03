@@ -1,6 +1,6 @@
 -- Digiteekaart.ee / 02Signal lead quality engine foundation
 -- PostgreSQL / Supabase compatible schema.
--- Purpose: internal operating memory for Toomas' B2B sales prioritisation.
+-- Purpose: internal operating memory for B2B sales prioritisation.
 --
 -- Privacy rule:
 -- - company facts and scores may be used in owner/operator views;
@@ -28,7 +28,7 @@ create table if not exists sales_crm.crm_users (
 );
 
 comment on table sales_crm.crm_users is
-  'Allowed users for the internal CRM. Insert Toomas and admins here before exposing CRM data.';
+  'Allowed users for the internal CRM. Add sales users and admins here before exposing CRM data.';
 
 insert into sales_crm.crm_users (email, role, active)
 values ('ak@ettevotluskeskus.ee', 'admin', true)
@@ -62,7 +62,7 @@ create table if not exists sales_crm.prospect_companies (
   score_reason text[] not null default array[]::text[],
   recommended_pitch text,
   next_action text,
-  owner_name text not null default 'Toomas',
+  owner_name text not null default 'Müük',
   crm_status text not null default 'new'
     check (crm_status in (
       'new',
@@ -93,6 +93,9 @@ create index if not exists prospect_companies_status_score_idx
 
 create index if not exists prospect_companies_name_idx
   on sales_crm.prospect_companies using gin (to_tsvector('simple', coalesce(company_name, '')));
+
+alter table sales_crm.prospect_companies
+  alter column owner_name set default 'Müük';
 
 create table if not exists sales_crm.prospect_contacts_restricted (
   id uuid primary key default gen_random_uuid(),
@@ -256,7 +259,10 @@ with base as (
     p.crm_status,
     p.last_contacted_at,
     p.next_follow_up_at,
-    p.owner_name
+    p.owner_name,
+    q.queue_status as vta_queue_status,
+    q.scheduled_for as vta_scheduled_for,
+    q.checked_at as vta_queue_checked_at
   from public_registry.rik_companies c
   left join support_assessment.company_revenue_summary r on r.registry_code = c.registry_code
   left join lateral (
@@ -280,6 +286,16 @@ with base as (
     order by created_at desc
     limit 1
   ) p on true
+  left join lateral (
+    select
+      queue_status,
+      scheduled_for,
+      checked_at
+    from sales_crm.vta_check_queue q
+    where q.registry_code = c.registry_code
+    order by scheduled_for desc, created_at desc
+    limit 1
+  ) q on true
 ),
 scored as (
   select
@@ -369,11 +385,14 @@ select
     else
       'Tere, kontrollime ettevõtte digitoetuse ja tööde korrastamise võimalust. Kas teil on mõni tarkvara või korduv töö, mille kohta soovite kiiret eelhinnangut?'
   end as recommended_pitch,
-  coalesce(s.owner_name, 'Toomas') as owner_name,
+  coalesce(s.owner_name, 'Müük') as owner_name,
   coalesce(s.crm_status, 'not_in_sales') as crm_status,
   s.last_contacted_at,
   s.next_follow_up_at,
-  s.prospect_id is not null as is_prospect
+  s.prospect_id is not null as is_prospect,
+  s.vta_queue_status,
+  s.vta_scheduled_for,
+  s.vta_queue_checked_at
 from scored s
 where coalesce(s.crm_status, 'not_in_sales') not in ('do_not_contact', 'won', 'lost');
 
@@ -449,7 +468,7 @@ left join lateral (
 where p.crm_status not in ('do_not_contact', 'won', 'lost');
 
 comment on view sales_crm.toomas_priority_board is
-  'Public-company-fact CRM board for Toomas. Excludes restricted personal contact fields.';
+  'Public-company-fact CRM board for sales work. Excludes restricted personal contact fields.';
 
 create or replace view sales_crm.toomas_call_sheet_export as
 select
@@ -598,6 +617,8 @@ as $$
   where sales_crm.current_crm_user_allowed();
 $$;
 
+drop function if exists public.crm_get_company_lead_universe(integer, integer);
+
 create or replace function public.crm_get_company_lead_universe(
   p_limit integer default 500,
   p_min_score integer default 0
@@ -629,7 +650,10 @@ returns table (
   crm_status text,
   last_contacted_at timestamptz,
   next_follow_up_at timestamptz,
-  is_prospect boolean
+  is_prospect boolean,
+  vta_queue_status text,
+  vta_scheduled_for date,
+  vta_queue_checked_at timestamptz
 )
 language sql
 stable
@@ -663,7 +687,10 @@ as $$
     u.crm_status,
     u.last_contacted_at,
     u.next_follow_up_at,
-    u.is_prospect
+    u.is_prospect,
+    u.vta_queue_status,
+    u.vta_scheduled_for,
+    u.vta_queue_checked_at
   from sales_crm.company_lead_universe u
   where sales_crm.current_crm_user_allowed()
     and u.priority_score >= greatest(0, least(100, coalesce(p_min_score, 0)))
@@ -859,6 +886,95 @@ begin
 end;
 $$;
 
+create or replace function public.crm_queue_vta_check(p_registry_code text)
+returns uuid
+language plpgsql
+security definer
+set search_path = sales_crm, public_registry, support_assessment, public
+as $$
+declare
+  v_registry_code text;
+  v_company sales_crm.company_lead_universe%rowtype;
+  v_queue_id uuid;
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  v_registry_code = regexp_replace(coalesce(p_registry_code, ''), '\D', '', 'g');
+
+  if v_registry_code !~ '^[0-9]{8}$' then
+    raise exception 'Invalid registry code';
+  end if;
+
+  select *
+  into v_company
+  from sales_crm.company_lead_universe
+  where registry_code = v_registry_code
+  limit 1;
+
+  if not found then
+    raise exception 'Company not found in warehouse';
+  end if;
+
+  insert into sales_crm.vta_check_queue (
+    prospect_company_id,
+    registry_code,
+    company_name,
+    priority_score,
+    check_method,
+    queue_status,
+    scheduled_for
+  ) values (
+    v_company.prospect_id,
+    v_company.registry_code,
+    v_company.company_name,
+    v_company.priority_score,
+    'rar_public_manual',
+    'queued',
+    current_date
+  )
+  on conflict (registry_code, scheduled_for, check_method) do update
+  set
+    prospect_company_id = excluded.prospect_company_id,
+    company_name = excluded.company_name,
+    priority_score = excluded.priority_score,
+    queue_status = case
+      when sales_crm.vta_check_queue.queue_status in ('checked', 'manual_review') then sales_crm.vta_check_queue.queue_status
+      else 'queued'
+    end,
+    updated_at = now()
+  returning id into v_queue_id;
+
+  if v_company.prospect_id is not null then
+    insert into sales_crm.prospect_activities (
+      prospect_company_id,
+      activity_type,
+      activity_note,
+      created_by
+    ) values (
+      v_company.prospect_id,
+      'qualification',
+      'Lisatud VTA kontrollijärjekorda.',
+      lower(coalesce(auth.jwt() ->> 'email', 'unknown'))
+    );
+  end if;
+
+  return v_queue_id;
+end;
+$$;
+
+update sales_crm.prospect_companies
+set
+  owner_name = case when owner_name = 'Toomas' then 'Müük' else owner_name end,
+  next_action = case
+    when next_action like '%Toomasele%' then 'Kontrolli VTA jääk. Kui jääk sobib, tee esimene kõne.'
+    else next_action
+  end,
+  updated_at = now()
+where owner_name = 'Toomas'
+  or next_action like '%Toomasele%';
+
 create or replace function public.crm_upsert_user(
   p_email text,
   p_role text default 'sales',
@@ -1019,6 +1135,7 @@ grant execute on function public.crm_get_lead_scoring_criteria() to authenticate
 grant execute on function public.crm_get_warehouse_stats() to authenticated;
 grant execute on function public.crm_get_company_lead_universe(integer, integer) to authenticated;
 grant execute on function public.crm_promote_company_to_prospect(text) to authenticated;
+grant execute on function public.crm_queue_vta_check(text) to authenticated;
 
 alter table sales_crm.prospect_lists enable row level security;
 alter table sales_crm.lead_scoring_criteria enable row level security;

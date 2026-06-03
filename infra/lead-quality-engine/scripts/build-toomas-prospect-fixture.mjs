@@ -101,7 +101,7 @@ const result = {
   recommendedPitch,
   nextAction:
     salesSignal === "good_first_call"
-      ? "Lisa VTA kontrolli järjekorda ja märgi Toomasele helistamiseks."
+      ? "Lisa VTA kontrolli järjekorda. Kui jääk sobib, tee esimene kõne."
       : "Kontrolli andmed üle enne müügikõnet."
 };
 
