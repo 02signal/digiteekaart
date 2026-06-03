@@ -702,6 +702,7 @@ $$;
 
 drop function if exists public.crm_get_company_lead_universe(integer, integer);
 drop function if exists public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean);
+drop function if exists public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean, text);
 
 create or replace function public.crm_get_company_lead_universe(
   p_limit integer default 500,
@@ -1454,7 +1455,7 @@ grant execute on function public.crm_upsert_user(text, text, boolean) to authent
 grant execute on function public.crm_set_user_active(text, boolean) to authenticated;
 grant execute on function public.crm_get_lead_scoring_criteria() to authenticated;
 grant execute on function public.crm_get_warehouse_stats() to authenticated;
-grant execute on function public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean) to authenticated;
+grant execute on function public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean, text) to authenticated;
 grant execute on function public.crm_promote_company_to_prospect(text) to authenticated;
 grant execute on function public.crm_queue_vta_check(text) to authenticated;
 grant execute on function public.crm_queue_next_vta_checks(integer, integer) to authenticated;

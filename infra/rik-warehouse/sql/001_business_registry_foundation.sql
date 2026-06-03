@@ -63,6 +63,11 @@ create table if not exists public_registry.rik_companies (
   raw_source_kind text not null default 'bounded_normalized'
 );
 
+alter table public_registry.rik_companies
+  add column if not exists board_member_count integer,
+  add column if not exists oldest_board_member_age integer,
+  add column if not exists has_mobile_phone boolean not null default false;
+
 create index if not exists rik_companies_name_idx
   on public_registry.rik_companies using gin (to_tsvector('simple', coalesce(name, '')));
 
@@ -170,6 +175,9 @@ create index if not exists support_preassessment_registry_idx
 
 create index if not exists support_preassessment_created_idx
   on support_assessment.support_preassessment_events (created_at desc);
+
+drop view if exists support_assessment.company_support_snapshots cascade;
+drop view if exists support_assessment.company_revenue_summary cascade;
 
 create or replace view support_assessment.company_revenue_summary as
 with ranked_reports as (
