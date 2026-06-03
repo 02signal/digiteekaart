@@ -56,6 +56,14 @@ When adding tools, include useful event parameters such as `tool_name`, `result_
 
 Do not expose raw personal data, secrets, tokens, signed URLs, or private payloads. Lead forms must explain what data is collected and why.
 
+## Internal CRM Rules
+
+- Do not expose restricted contacts (`sales_crm.prospect_contacts_restricted`) or any personal ID numbers (isikukood) in public views or Astro static pages.
+- Lead scoring must run in SQL (e.g. `001_sales_quality_engine.sql`), outputting reasons via arrays (`score_reason`); Astro only displays the result.
+- **Focus Mode:** The default CRM view is "Focus Mode" designed to minimize cognitive load by showing only the single highest-priority prospect. Do not modify the CRM to default to long table/list views.
+- **Nomenclature:** Never use specific person names (e.g., "Toomas") for variables, file names, views, or comments. Use role-based, neutral naming (e.g., `sales_priority_board`, "sales user").
+- **Activity Logging:** Prefer natural language activity logging (`crm_add_activity`) connected to the prospect card rather than forcing the user to manually edit database rows.
+
 ## Technical
 
 The site is an Astro static site deployed on Vercel and served through Cloudflare/DNS.
