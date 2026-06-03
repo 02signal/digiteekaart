@@ -1,0 +1,135 @@
+# Lead Quality Engine
+
+Internal foundation for finding useful B2B sales signals for Digiteekaart.ee, digitaliseerimine.ee and related 02Signal sales pages.
+
+This is not a public website feature. It is the first warehouse and CRM layer for Toomas so he can see which companies are worth calling first.
+
+## What Toomas Should See
+
+The first useful view is simple:
+
+- company name and registry code;
+- whether the company is active;
+- company age;
+- main activity;
+- latest known revenue and employee signal;
+- VTA check state: not checked, high left, some left, low left, used up;
+- priority score from 0 to 100;
+- why the lead is interesting;
+- suggested first sentence for the call;
+- CRM status: new, call next, called, meeting booked, proposal sent, won, lost, do not contact.
+
+The owner/contact-person layer is separate and restricted. It must not appear in public pages, `llms.txt`, static JSON files or client-side API responses.
+
+## Why This Is Valuable
+
+For Toomas the strongest first signal is:
+
+1. company is old enough to have established habits and legacy work;
+2. company still operates and has enough revenue to act;
+3. VTA is unused or has a large remaining balance;
+4. the likely offer is practical: digiteekaart, RTE/software support, automation or a small paid assessment;
+5. the next action is obvious: call, ask 2-3 simple questions, offer a small safe step.
+
+This avoids random cold calling. The call starts from a concrete business reason.
+
+## Data Flow
+
+1. RIK bulk/open data loads public company facts into `public_registry`.
+2. Support and VTA snapshots are stored in `support_assessment`.
+3. Candidate companies are copied or projected into `sales_crm.prospect_companies`.
+4. `sales_crm.vta_check_queue` schedules 20-30 VTA checks per day while official RAR/X-tee integration is pending.
+5. `sales_crm.toomas_priority_board` gives the working view.
+6. `sales_crm.prospect_activities` stores calls, notes and follow-ups.
+7. `sales_crm.prospect_contacts_restricted` stores people/contact data only for authenticated internal use.
+
+## MVP Interface Options
+
+Fastest safe path:
+
+1. Run SQL migrations in Supabase.
+2. Show `sales_crm.toomas_priority_board` in Supabase table editor or export it to a Google Sheet for Toomas.
+3. Use n8n once per day to:
+   - pick 20-30 queued companies;
+   - run the VTA check;
+   - store a dated snapshot;
+   - send a short Telegram summary to Toomas.
+
+Better next step:
+
+Build a small authenticated internal CRM page:
+
+- Supabase Auth magic link for Toomas;
+- table with search, filters and sorting;
+- one company detail view;
+- buttons: call next, called, meeting booked, not relevant, do not contact;
+- no public access and no indexing.
+
+Do not build this inside the public static landing page.
+
+## VTA Check Rules
+
+VTA is a dated signal, not a permanent company fact.
+
+Use the check result like this:
+
+| Signal | Meaning for sales |
+| --- | --- |
+| `high_left` | Strong reason to contact: support capacity appears available. |
+| `some_left` | Still worth contacting if the company has a clear project. |
+| `low_left` | Be careful: support may still be possible but needs review. |
+| `used_up` | Do not sell support-first; discuss non-support paid work. |
+| `not_checked` | Put in queue before Toomas spends time on it. |
+
+Before a paid recommendation or application-preparation proposal, refresh VTA again.
+
+## Privacy and Legal Guardrails
+
+- Keep company facts and lead score separate from personal contact data.
+- Store board members, beneficial owners, e-mails and phone numbers only in `sales_crm.prospect_contacts_restricted`.
+- Add a written purpose, retention rule and access control before using the restricted contact table in a live tool.
+- Keep opt-out and `do_not_contact` handling.
+- Do not upload personal e-mails from registry data into advertising platforms.
+- Public pages may mention that we use public registry/support data for pre-assessment, but must not expose raw person data.
+
+## SQL Objects
+
+`sql/001_sales_quality_engine.sql` adds:
+
+- `sales_crm.prospect_lists`
+- `sales_crm.prospect_companies`
+- `sales_crm.prospect_contacts_restricted`
+- `sales_crm.prospect_activities`
+- `sales_crm.vta_check_queue`
+- `sales_crm.toomas_priority_board`
+- `sales_crm.toomas_call_sheet_export`
+
+The two Toomas views exclude restricted contact fields.
+
+## Smoke Test
+
+Run:
+
+```bash
+node infra/lead-quality-engine/scripts/build-toomas-prospect-fixture.mjs
+```
+
+Expected outcome: a public-safe prospect score and call signal are printed for the fixture company.
+
+## Next Build Slice
+
+1. Add migration execution to Supabase.
+2. Import the first bounded RIK bulk sample.
+3. Insert the first 50-100 prospect companies into `sales_crm.prospect_companies`.
+4. Create an n8n daily VTA queue workflow with a hard limit of 20-30 checks per day.
+5. Send Toomas a daily Telegram summary:
+   - new high-priority companies;
+   - VTA checked and high left;
+   - calls due today;
+   - companies to avoid.
+
+## Official Source Notes
+
+- RIK/e-Business Register open data is the preferred source for bulk public company facts.
+- RIK contract/API is better for refreshing one company before a live assessment.
+- RAR/VTA checks should be stored as timestamped snapshots and refreshed before paid advice.

@@ -59,6 +59,19 @@ Do not treat an old VTA snapshot as final truth. Before sending a paid recommend
 | `company_support_snapshots` | Queryable owner-facing pre-assessment view. |
 | `support_preassessment_events` | Lead-time assessment events for funnel analysis and follow-up. |
 
+## Sales / Lead Quality Layer
+
+The next internal layer lives in `../lead-quality-engine/`.
+
+It is for Toomas' sales workflow, not for the public landing page:
+
+- `sales_crm.prospect_companies` stores candidate companies and their priority score;
+- `sales_crm.vta_check_queue` schedules low-volume VTA checks before sales calls;
+- `sales_crm.toomas_priority_board` shows the public-safe call-priority board;
+- `sales_crm.prospect_contacts_restricted` stores owner/board/contact data only behind access control.
+
+Keep the public funding pre-assessment and the internal sales CRM separate. A company can be visible in Toomas' priority board without exposing personal contact data in the public site.
+
 ## Privacy Rule
 
 For the MVP we do **not** expose board-member names, beneficial owners, personal codes, raw reports, raw API payloads, or signed/source URLs in product tables or owner-facing views.
