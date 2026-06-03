@@ -56,6 +56,35 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         <div class="crm-metrics" data-metrics></div>
 
+        <section class="crm-panel crm-admin" data-admin-panel hidden>
+          <div class="crm-admin-head">
+            <div>
+              <span class="kicker">Admin</span>
+              <h2>Kasutajad</h2>
+              <p>Lisa ainult inimesed, kellel peab olema ligipääs sisemisele CRM-ile.</p>
+            </div>
+            <button class="btn btn-light" type="button" data-users-refresh>Värskenda kasutajaid</button>
+          </div>
+
+          <form class="crm-user-form" data-user-form>
+            <label>
+              E-mail
+              <input name="email" type="email" autocomplete="email" placeholder="nimi@ettevotluskeskus.ee" required />
+            </label>
+            <label>
+              Roll
+              <select name="role">
+                <option value="sales">Müük</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+            <button class="btn btn-primary" type="submit">Lisa kasutaja</button>
+          </form>
+
+          <div class="crm-users-list" data-users-list></div>
+          <p class="crm-message" data-users-message></p>
+        </section>
+
         <section class="crm-panel crm-filters" aria-label="Filtrid">
           <label>
             Otsi
@@ -141,6 +170,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const userEmail = document.querySelector("[data-user-email]");
       const signOutButton = document.querySelector("[data-sign-out]");
       const refreshButton = document.querySelector("[data-refresh]");
+      const adminPanel = document.querySelector("[data-admin-panel]");
+      const usersRefreshButton = document.querySelector("[data-users-refresh]");
+      const userForm = document.querySelector("[data-user-form]");
+      const usersList = document.querySelector("[data-users-list]");
+      const usersMessage = document.querySelector("[data-users-message]");
       const searchInput = document.querySelector("[data-search]");
       const statusFilter = document.querySelector("[data-status-filter]");
       const vtaFilter = document.querySelector("[data-vta-filter]");
@@ -180,7 +214,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       const state = {
         session: null,
-        rows: []
+        currentUser: null,
+        rows: [],
+        users: []
       };
 
       const formatMoney = (value) => {
@@ -225,6 +261,93 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const showApp = () => {
         loginView.hidden = true;
         appView.hidden = false;
+      };
+
+      const renderUsers = () => {
+        usersList.innerHTML = state.users.map((user) => {
+          const isSelf = state.currentUser?.email === user.email;
+          const actionLabel = user.active ? "Lülita välja" : "Tee aktiivseks";
+          return `
+            <article class="crm-user-row">
+              <div>
+                <strong>${escapeHtml(user.email)}</strong>
+                <span>${user.role === "admin" ? "Admin" : "Müük"} · ${user.active ? "aktiivne" : "välja lülitatud"}</span>
+              </div>
+              <button
+                type="button"
+                data-user-active-toggle="${escapeHtml(user.email)}"
+                data-next-active="${user.active ? "false" : "true"}"
+                ${isSelf && user.active ? "disabled" : ""}
+              >${actionLabel}</button>
+            </article>
+          `;
+        }).join("");
+      };
+
+      const loadCurrentUser = async () => {
+        const { data, error } = await supabase.rpc("crm_get_current_user");
+        if (error) {
+          state.currentUser = null;
+          return;
+        }
+        state.currentUser = Array.isArray(data) && data.length ? data[0] : null;
+        adminPanel.hidden = state.currentUser?.role !== "admin";
+      };
+
+      const loadUsers = async () => {
+        if (adminPanel.hidden) return;
+
+        setMessage(usersMessage, "Laen kasutajaid...", "");
+        const { data, error } = await supabase.rpc("crm_list_users");
+
+        if (error) {
+          setMessage(usersMessage, `Kasutajate laadimine ei õnnestunud: ${error.message}`, "error");
+          state.users = [];
+          renderUsers();
+          return;
+        }
+
+        state.users = Array.isArray(data) ? data : [];
+        renderUsers();
+        setMessage(usersMessage, state.users.length ? "Kasutajad laetud." : "Kasutajaid ei ole.", state.users.length ? "ok" : "");
+      };
+
+      const addUser = async (form) => {
+        const formData = new FormData(form);
+        const email = safeText(formData.get("email")).toLowerCase();
+        const role = safeText(formData.get("role")) || "sales";
+
+        setMessage(usersMessage, "Lisan kasutajat...", "");
+        const { error } = await supabase.rpc("crm_upsert_user", {
+          p_email: email,
+          p_role: role,
+          p_active: true
+        });
+
+        if (error) {
+          setMessage(usersMessage, `Kasutajat ei saanud lisada: ${error.message}`, "error");
+          return;
+        }
+
+        form.reset();
+        setMessage(usersMessage, "Kasutaja lisatud.", "ok");
+        await loadUsers();
+      };
+
+      const setUserActive = async (email, active) => {
+        setMessage(usersMessage, "Uuendan kasutajat...", "");
+        const { error } = await supabase.rpc("crm_set_user_active", {
+          p_email: email,
+          p_active: active
+        });
+
+        if (error) {
+          setMessage(usersMessage, `Kasutajat ei saanud muuta: ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(usersMessage, "Kasutaja uuendatud.", "ok");
+        await loadUsers();
       };
 
       const renderMetrics = (rows) => {
@@ -360,7 +483,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         userEmail.textContent = state.session.user?.email || "";
         showApp();
+        await loadCurrentUser();
         await loadBoard();
+        await loadUsers();
       };
 
       loginForm.addEventListener("submit", async (event) => {
@@ -388,11 +513,18 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       signOutButton.addEventListener("click", async () => {
         await supabase.auth.signOut();
         state.session = null;
+        state.currentUser = null;
         state.rows = [];
+        state.users = [];
         showLogin();
       });
 
       refreshButton.addEventListener("click", loadBoard);
+      usersRefreshButton.addEventListener("click", loadUsers);
+      userForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        await addUser(userForm);
+      });
       [searchInput, statusFilter, vtaFilter, scoreFilter].forEach((input) => {
         input.addEventListener("input", renderBoard);
         input.addEventListener("change", renderBoard);
@@ -404,6 +536,17 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           : null;
         if (!button) return;
         await updateStatus(button.getAttribute("data-prospect-id"), button.getAttribute("data-status-action"));
+      });
+
+      usersList.addEventListener("click", async (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-user-active-toggle]")
+          : null;
+        if (!button) return;
+        await setUserActive(
+          button.getAttribute("data-user-active-toggle"),
+          button.getAttribute("data-next-active") === "true"
+        );
       });
 
       supabase?.auth.onAuthStateChange((_event, session) => {
@@ -527,6 +670,101 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         color: var(--muted);
         font-size: 0.86rem;
         font-weight: 800;
+      }
+
+      .crm-admin {
+        padding: 18px;
+        margin-bottom: 16px;
+        box-shadow: none;
+        background: #fff9ea;
+      }
+
+      .crm-admin-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .crm-admin h2 {
+        margin-top: 6px;
+        color: var(--navy);
+        font-size: 1.6rem;
+      }
+
+      .crm-admin p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .crm-user-form {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) minmax(130px, 0.28fr) auto;
+        gap: 12px;
+        align-items: end;
+        margin-top: 16px;
+      }
+
+      .crm-user-form label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 850;
+      }
+
+      .crm-user-form input,
+      .crm-user-form select {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--ink);
+        background: var(--white);
+      }
+
+      .crm-users-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .crm-user-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid rgba(214, 166, 66, 0.4);
+        border-radius: 8px;
+        padding: 10px 12px;
+        background: var(--white);
+      }
+
+      .crm-user-row strong,
+      .crm-user-row span {
+        display: block;
+      }
+
+      .crm-user-row span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .crm-user-row button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: var(--white);
+        color: var(--navy);
+        cursor: pointer;
+        font-size: 0.86rem;
+        font-weight: 850;
+      }
+
+      .crm-user-row button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
       }
 
       .crm-filters {
@@ -653,6 +891,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
 
         .crm-metrics,
+        .crm-admin-head,
+        .crm-user-form,
         .crm-filters {
           grid-template-columns: 1fr;
         }

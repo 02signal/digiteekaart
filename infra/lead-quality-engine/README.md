@@ -81,8 +81,14 @@ The page uses Supabase magic-link login and public RPC wrappers:
 
 - `public.crm_get_toomas_priority_board()`
 - `public.crm_update_prospect_status(...)`
+- `public.crm_get_current_user()`
+- `public.crm_list_users()`
+- `public.crm_upsert_user(...)`
+- `public.crm_set_user_active(...)`
 
 It does not query restricted contact tables and it has `noindex,nofollow`.
+
+Admins can add and deactivate CRM users from the interface. Sales users can work with the lead board but cannot manage users.
 
 ## Required Setup for crm.digiteekaart.ee
 
@@ -105,6 +111,8 @@ set active = excluded.active,
 ```
 
 Use Toomas' real work e-mail.
+
+`ak@ettevotluskeskus.ee` is seeded by the SQL as the first `admin` user. After that, new users can be added from the CRM interface.
 
 3. Check Vercel environment variables:
 

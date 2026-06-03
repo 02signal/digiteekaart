@@ -30,6 +30,13 @@ create table if not exists sales_crm.crm_users (
 comment on table sales_crm.crm_users is
   'Allowed users for the internal CRM. Insert Toomas and admins here before exposing CRM data.';
 
+insert into sales_crm.crm_users (email, role, active)
+values ('ak@ettevotluskeskus.ee', 'admin', true)
+on conflict (email) do update
+set
+  role = 'admin',
+  active = true;
+
 create table if not exists sales_crm.prospect_companies (
   id uuid primary key default gen_random_uuid(),
   list_id uuid references sales_crm.prospect_lists(id) on delete set null,
@@ -264,6 +271,64 @@ as $$
   );
 $$;
 
+create or replace function sales_crm.current_crm_user_is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = sales_crm, public
+as $$
+  select exists (
+    select 1
+    from sales_crm.crm_users u
+    where lower(u.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and u.role = 'admin'
+      and u.active is true
+  );
+$$;
+
+create or replace function public.crm_get_current_user()
+returns table (
+  email text,
+  role text,
+  active boolean
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, public
+as $$
+  select
+    u.email,
+    u.role,
+    u.active
+  from sales_crm.crm_users u
+  where lower(u.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+    and u.active is true;
+$$;
+
+create or replace function public.crm_list_users()
+returns table (
+  email text,
+  role text,
+  active boolean,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, public
+as $$
+  select
+    u.email,
+    u.role,
+    u.active,
+    u.created_at
+  from sales_crm.crm_users u
+  where sales_crm.current_crm_user_is_admin()
+  order by u.active desc, u.role asc, u.email asc;
+$$;
+
 create or replace function public.crm_get_toomas_priority_board()
 returns table (
   prospect_id uuid,
@@ -335,6 +400,85 @@ as $$
     b.priority_score desc,
     b.company_age_years desc nulls last,
     b.company_name asc;
+$$;
+
+create or replace function public.crm_upsert_user(
+  p_email text,
+  p_role text default 'sales',
+  p_active boolean default true
+)
+returns table (
+  email text,
+  role text,
+  active boolean,
+  created_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = sales_crm, public
+as $$
+declare
+  v_email text;
+begin
+  if not sales_crm.current_crm_user_is_admin() then
+    raise exception 'CRM admin access denied';
+  end if;
+
+  v_email = coalesce(lower(trim(p_email)), '');
+
+  if v_email = '' or v_email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'Invalid e-mail';
+  end if;
+
+  if p_role not in ('sales', 'admin') then
+    raise exception 'Invalid CRM role: %', p_role;
+  end if;
+
+  insert into sales_crm.crm_users (email, role, active)
+  values (v_email, p_role, coalesce(p_active, true))
+  on conflict (email) do update
+  set
+    role = excluded.role,
+    active = excluded.active
+  returning crm_users.email, crm_users.role, crm_users.active, crm_users.created_at
+  into email, role, active, created_at;
+
+  return next;
+end;
+$$;
+
+create or replace function public.crm_set_user_active(
+  p_email text,
+  p_active boolean
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = sales_crm, public
+as $$
+declare
+  v_email text;
+begin
+  if not sales_crm.current_crm_user_is_admin() then
+    raise exception 'CRM admin access denied';
+  end if;
+
+  v_email = coalesce(lower(trim(p_email)), '');
+
+  if v_email = lower(coalesce(auth.jwt() ->> 'email', '')) and p_active is false then
+    raise exception 'You cannot deactivate your own CRM user';
+  end if;
+
+  update sales_crm.crm_users
+  set active = p_active
+  where lower(email) = v_email;
+
+  if not found then
+    raise exception 'CRM user not found';
+  end if;
+
+  return true;
+end;
 $$;
 
 create or replace function public.crm_update_prospect_status(
@@ -410,6 +554,10 @@ $$;
 
 grant execute on function public.crm_get_toomas_priority_board() to authenticated;
 grant execute on function public.crm_update_prospect_status(uuid, text, text, timestamptz) to authenticated;
+grant execute on function public.crm_get_current_user() to authenticated;
+grant execute on function public.crm_list_users() to authenticated;
+grant execute on function public.crm_upsert_user(text, text, boolean) to authenticated;
+grant execute on function public.crm_set_user_active(text, boolean) to authenticated;
 
 alter table sales_crm.prospect_lists enable row level security;
 alter table sales_crm.crm_users enable row level security;

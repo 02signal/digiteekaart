@@ -31,11 +31,11 @@
 - Done: homepage company-name autocomplete lets owners start by typing the company name, select the right company and auto-fill the registry code before the RIK check.
 - Done: sample digitalisation roadmap page added to show owners what a practical roadmap should contain and why it can be useful.
 - Done: internal lead quality engine foundation added for Toomas: prospect scoring, public-safe priority board, VTA check queue and restricted contact layer.
-- Done: first internal CRM page added for `crm.digiteekaart.ee` with Supabase magic-link login, public-safe priority board and status update actions.
+- Done: first internal CRM page added for `crm.digiteekaart.ee` with Supabase magic-link login, public-safe priority board, status update actions and admin-managed CRM users.
 - Next: add RAR/VTA lookup adapter and refresh VTA before showing a detailed paid recommendation.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: run first bounded RIK company import and populate 50-100 sales prospects for Toomas without exposing restricted contacts publicly.
-- Next: apply lead quality SQL in Supabase, add Toomas to `sales_crm.crm_users`, add `crm.digiteekaart.ee` in Vercel/Cloudflare and smoke-test magic link.
+- Next: apply lead quality SQL in Supabase, confirm `ak@ettevotluskeskus.ee` admin login, add Toomas through CRM interface, add `crm.digiteekaart.ee` in Vercel/Cloudflare and smoke-test magic link.
 - Next: add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.
 - Keep official funding facts checked against official sources before publishing.
