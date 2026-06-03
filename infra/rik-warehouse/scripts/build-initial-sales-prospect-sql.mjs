@@ -118,17 +118,22 @@ const downloadIfRequested = async () => {
 
   for (const [key, url] of Object.entries(officialFiles)) {
     const destination = options[key];
-    const response = await fetch(url);
-    if (!response.ok || !response.body) {
-      throw new Error(`Download failed for ${url}: ${response.status}`);
-    }
+    try {
+      const response = await fetch(url);
+      if (!response.ok || !response.body) {
+        console.error(`Download skipped for ${url}: HTTP ${response.status}`);
+        continue;
+      }
 
-    const writer = createWriteStream(destination);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    await new Promise((resolveWrite, rejectWrite) => {
-      writer.on("error", rejectWrite);
-      writer.end(buffer, resolveWrite);
-    });
+      const writer = createWriteStream(destination);
+      const buffer = Buffer.from(await response.arrayBuffer());
+      await new Promise((resolveWrite, rejectWrite) => {
+        writer.on("error", rejectWrite);
+        writer.end(buffer, resolveWrite);
+      });
+    } catch (err) {
+      console.error(`Failed to download ${url}: ${err.message}`);
+    }
   }
 };
 
@@ -348,62 +353,70 @@ const getAgeFromIsikukood = (isikukood, sourceDate) => {
 
 const loadBoardMembers = async () => {
   const boardData = new Map();
-  const { lines, done } = zipLines(options.isikudZip);
-  let header;
+  try {
+    const { lines, done } = zipLines(options.isikudZip);
+    let header;
 
-  for await (const line of lines) {
-    const cells = parseCsvLine(line);
-    if (!header) {
-      header = cells;
-      continue;
+    for await (const line of lines) {
+      const cells = parseCsvLine(line);
+      if (!header) {
+        header = cells;
+        continue;
+      }
+
+      const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
+      const registryCode = normalizeRegistryCode(row.ariregistri_kood);
+      if (!registryCode) continue;
+
+      const role = row.isiku_roll_tekstina || "";
+      if (role !== "Juhatuse liige") continue;
+
+      const current = boardData.get(registryCode) || { count: 0, oldestAge: null };
+      current.count += 1;
+
+      const isikukood = row.isikukood;
+      const age = getAgeFromIsikukood(isikukood, options.sourceDate);
+      if (age !== null && (current.oldestAge === null || age > current.oldestAge)) {
+        current.oldestAge = age;
+      }
+
+      boardData.set(registryCode, current);
     }
 
-    const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
-    const registryCode = normalizeRegistryCode(row.ariregistri_kood);
-    if (!registryCode) continue;
-
-    const role = row.isiku_roll_tekstina || "";
-    if (role !== "Juhatuse liige") continue;
-
-    const current = boardData.get(registryCode) || { count: 0, oldestAge: null };
-    current.count += 1;
-
-    const isikukood = row.isikukood;
-    const age = getAgeFromIsikukood(isikukood, options.sourceDate);
-    if (age !== null && (current.oldestAge === null || age > current.oldestAge)) {
-      current.oldestAge = age;
-    }
-
-    boardData.set(registryCode, current);
+    await done;
+  } catch (err) {
+    console.error(`Skipping board members load: ${err.message}`);
   }
-
-  await done;
   return boardData;
 };
 
 const loadMobilePhones = async () => {
   const mobilePhones = new Set();
-  const { lines, done } = zipLines(options.sidevahendidZip);
-  let header;
+  try {
+    const { lines, done } = zipLines(options.sidevahendidZip);
+    let header;
 
-  for await (const line of lines) {
-    const cells = parseCsvLine(line);
-    if (!header) {
-      header = cells;
-      continue;
+    for await (const line of lines) {
+      const cells = parseCsvLine(line);
+      if (!header) {
+        header = cells;
+        continue;
+      }
+
+      const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
+      const registryCode = normalizeRegistryCode(row.ariregistri_kood);
+      if (!registryCode) continue;
+
+      const type = row.sidevahendi_liik_tekstina || "";
+      if (type !== "mobiiltelefon") continue;
+
+      mobilePhones.add(registryCode);
     }
 
-    const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
-    const registryCode = normalizeRegistryCode(row.ariregistri_kood);
-    if (!registryCode) continue;
-
-    const type = row.sidevahendi_liik_tekstina || "";
-    if (type !== "mobiiltelefon") continue;
-
-    mobilePhones.add(registryCode);
+    await done;
+  } catch (err) {
+    console.error(`Skipping mobile phones load: ${err.message}`);
   }
-
-  await done;
   return mobilePhones;
 };
 
