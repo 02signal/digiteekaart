@@ -142,6 +142,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
           </label>
           <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
+          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Lisa 10 VTA kontrolli</button>
         </section>
 
         <section class="crm-workspace" aria-label="Müügi töölaud">
@@ -191,6 +192,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const userEmail = document.querySelector("[data-user-email]");
       const signOutButton = document.querySelector("[data-sign-out]");
       const refreshButton = document.querySelector("[data-refresh]");
+      const queueTopVtaButton = document.querySelector("[data-queue-top-vta]");
       const viewFilter = document.querySelector("[data-view-filter]");
       const adminPanel = document.querySelector("[data-admin-panel]");
       const usersRefreshButton = document.querySelector("[data-users-refresh]");
@@ -778,6 +780,27 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         await loadBoard();
       };
 
+      const queueTopVtaChecks = async () => {
+        setMessage(boardMessage, "Lisan järgmised tugevamad firmad VTA kontrollijärjekorda...", "");
+        queueTopVtaButton.disabled = true;
+
+        const { data, error } = await supabase.rpc("crm_queue_next_vta_checks", {
+          p_limit: 10,
+          p_min_score: 75
+        });
+
+        queueTopVtaButton.disabled = false;
+
+        if (error) {
+          setMessage(boardMessage, `VTA järjekorra lisamine ei õnnestunud: ${error.message}`, "error");
+          return;
+        }
+
+        const added = Array.isArray(data) ? data.length : 0;
+        setMessage(boardMessage, added ? `${added} tugevat firmat lisatud VTA kontrollijärjekorda.` : "Uusi sobivaid VTA kontrolle ei olnud lisada.", added ? "ok" : "");
+        await loadBoard();
+      };
+
       const updateStatus = async (prospectId, status) => {
         const note = window.prompt("Lühike märkus järgmisele sammule:", "") || "";
         const { error } = await supabase.rpc("crm_update_prospect_status", {
@@ -911,6 +934,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       });
 
       refreshButton.addEventListener("click", loadBoard);
+      queueTopVtaButton.addEventListener("click", queueTopVtaChecks);
       viewFilter.addEventListener("click", (event) => {
         const button = event.target instanceof Element
           ? event.target.closest("[data-view]")

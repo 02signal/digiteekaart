@@ -19,8 +19,8 @@ const defaults = {
   warehouseMinRevenue: 50000,
   warehouseMaxRevenue: 10000000,
   warehouseMinAge: 5,
-  maxEmployees: 50,
-  warehouseMaxEmployees: 100,
+  maxEmployees: 250,
+  warehouseMaxEmployees: 500,
   prospectMinScore: 75,
   sourceDate: "2026-04-30"
 };
@@ -178,20 +178,40 @@ const scoreCandidate = (candidate) => {
     scoreReason.push("ettevõte on registris aktiivne");
   }
 
-  if (candidate.companyAgeYears >= 10) {
+  if (candidate.companyAgeYears >= 30) {
     score += 25;
+    scoreReason.push("ettevõte on tegutsenud vähemalt 30 aastat");
+  } else if (candidate.companyAgeYears >= 20) {
+    score += 22;
+    scoreReason.push("ettevõte on tegutsenud vähemalt 20 aastat");
+  } else if (candidate.companyAgeYears >= 10) {
+    score += 18;
     scoreReason.push("ettevõte on tegutsenud vähemalt 10 aastat");
   } else if (candidate.companyAgeYears >= 5) {
-    score += 15;
+    score += 10;
     scoreReason.push("ettevõte on tegutsenud üle 5 aasta");
   }
 
-  if (candidate.revenue >= 200000) {
-    score += 35;
-    scoreReason.push("müügitulu on tugev");
-  } else if (candidate.revenue >= 50000) {
+  if (candidate.employeeCount >= 25) {
+    score += 20;
+    scoreReason.push("ettevõttes on vähemalt 25 töötajat");
+  } else if (candidate.employeeCount >= 10) {
+    score += 14;
+    scoreReason.push("ettevõttes on vähemalt 10 töötajat");
+  } else if (candidate.employeeCount >= 3) {
+    score += 8;
+    scoreReason.push("ettevõttes on mitu inimest tööl");
+  }
+
+  if (candidate.revenue >= 1000000) {
     score += 25;
+    scoreReason.push("müügitulu on tugev");
+  } else if (candidate.revenue >= 200000) {
+    score += 20;
     scoreReason.push("müügitulu paistab piisav");
+  } else if (candidate.revenue >= 50000) {
+    score += 12;
+    scoreReason.push("müügitulu on kontrolli jaoks piisav");
   }
 
   scoreReason.push("VTA vajab kontrolli");
@@ -327,8 +347,9 @@ const loadCompanies = async (facts) => {
     .sort((a, b) =>
       Number(isProspectFit(b)) - Number(isProspectFit(a)) ||
       b.priorityScore - a.priorityScore ||
-      b.revenue - a.revenue ||
       b.companyAgeYears - a.companyAgeYears ||
+      (b.employeeCount || 0) - (a.employeeCount || 0) ||
+      b.revenue - a.revenue ||
       a.companyName.localeCompare(b.companyName, "et")
     )
     .slice(0, options.warehouseLimit);
@@ -346,12 +367,12 @@ const buildSql = (candidates) => {
     "begin;",
     "",
     `insert into public_registry.rik_import_batches (id, source_name, source_kind, source_url, source_date, record_count, started_at, finished_at, status) values (${toSql(batchId)}, ${toSql(sourceName)}, 'bulk_file', ${toSql(officialFiles.lihtandmedZip)}, ${toSql(options.sourceDate)}, ${candidates.length}, ${toSql(nowIso)}, ${toSql(nowIso)}, 'completed') on conflict (id) do nothing;`,
-    `insert into sales_crm.prospect_lists (id, name, description, source, created_by) values (${toSql(listId)}, ${toSql(`Esimene kõrge signaaliga müüginimekiri ${options.year}`)}, ${toSql(`Aktiivne OÜ/AS, vähemalt ${options.minAge} aastat vana, ${options.year} müügitulu ${options.minRevenue}-${options.maxRevenue} eurot, kuni ${options.maxEmployees} töötajat või töötajate arv teadmata. VTA vajab eraldi kontrolli.`)}, 'rik_warehouse', 'ak@ettevotluskeskus.ee') on conflict (id) do nothing;`,
+    `insert into sales_crm.prospect_lists (id, name, description, source, created_by) values (${toSql(listId)}, ${toSql(`Esimene kõrge signaaliga müüginimekiri ${options.year}`)}, ${toSql(`Aktiivne OÜ/AS, vähemalt ${options.minAge} aastat vana, ${options.year} müügitulu ${options.minRevenue}-${options.maxRevenue} eurot, kuni ${options.maxEmployees} töötajat või töötajate arv teadmata. Vanemad ja rohkemate töötajatega firmad lähevad ettepoole. VTA vajab eraldi kontrolli.`)}, 'rik_warehouse', 'ak@ettevotluskeskus.ee') on conflict (id) do nothing;`,
     ""
   ];
 
   for (const candidate of candidates) {
-    const pitch = `Tere, vaatasin avalike andmete põhjal, et ${candidate.companyName} on tegutsenud ${candidate.companyAgeYears} aastat ja ${candidate.latestFiscalYear}. aasta müügitulu paistab tugev. Kas teil on sel aastal mõni tarkvara, andmete või korduva töö korrastamise plaan, mille võiks toetusega läbi mõelda?`;
+    const pitch = `Tere, vaatasin avalike andmete põhjal, et ${candidate.companyName} on tegutsenud ${candidate.companyAgeYears} aastat ja seal on inimesi tööl. Sellistes firmades on tihti mõni vana tarkvara, Exceli töö või käsitsi info liigutamine, mida saab toetuse abil korda teha. Kas teil on sel aastal mõni selline plaan?`;
 
     lines.push(
       `insert into public_registry.rik_companies (registry_code, name, legal_form, status, registered_at, address_summary, source_updated_at, last_seen_at, last_import_batch_id, raw_source_kind) values (${toSql(candidate.registryCode)}, ${toSql(candidate.companyName)}, ${toSql(candidate.legalForm)}, ${toSql(candidate.statusText)}, ${toSql(candidate.registeredAt)}, ${toSql(candidate.addressSummary)}, ${toSql(nowIso)}, ${toSql(nowIso)}, ${toSql(batchId)}, 'rik_avaandmed_csv') on conflict (registry_code) do update set name = excluded.name, legal_form = excluded.legal_form, status = excluded.status, registered_at = excluded.registered_at, address_summary = excluded.address_summary, source_updated_at = excluded.source_updated_at, last_seen_at = excluded.last_seen_at, last_import_batch_id = excluded.last_import_batch_id;`,
@@ -408,6 +429,7 @@ console.log(JSON.stringify({
     companyName: candidate.companyName,
     revenue: candidate.revenue,
     companyAgeYears: candidate.companyAgeYears,
+    employeeCount: candidate.employeeCount,
     priorityScore: candidate.priorityScore
   }))
 }, null, 2));

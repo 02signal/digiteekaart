@@ -197,24 +197,32 @@ insert into sales_crm.lead_scoring_criteria (
     'company_age',
     'Ettevõttel on ajalugu',
     25,
-    'Vähemalt 10 aastat tegutsenud ettevõte on tavaliselt stabiilsem ja tal on päris protsessid.',
-    '10+ aastat annab 25 punkti, 5-9 aastat annab 15 punkti.',
+    '30+ aastat tegutsenud ettevõte on eriti tugev signaal: tööviisid on päris, aga võivad olla vanast ajast.',
+    '30+ aastat annab 25 punkti, 20-29 aastat 22 punkti, 10-19 aastat 18 punkti.',
     20
+  ),
+  (
+    'employee_scale',
+    'Ettevõttes on inimesi, kelle aega saab võita',
+    20,
+    'Kui töötajaid on rohkem, on korduva käsitöö ja info liigutamise valu tavaliselt suurem.',
+    '25+ töötajat annab 20 punkti, 10-24 töötajat 14 punkti, 3-9 töötajat 8 punkti.',
+    25
   ),
   (
     'revenue_scale',
     'Müügitulu lubab praktilist projekti',
-    35,
+    25,
     'Kui müügitulu on piisav, on omanikul tõenäolisemalt päris valud ja eelarve.',
-    '200 000+ eurot annab 35 punkti, 50 000+ eurot annab 25 punkti.',
+    '1 000 000+ eurot annab 25 punkti, 200 000+ eurot 20 punkti, 50 000+ eurot 12 punkti.',
     30
   ),
   (
     'vta_left',
     'VTA jääk võib toetust lubada',
-    20,
+    10,
     'Kui vähese tähtsusega abi jääk on suur, on toetusega arutelu lihtsam. Kui jääk puudub või on kontrollimata, vajab see eraldi sammu.',
-    '50 000+ eurot jääki annab 20 punkti, 10 000+ eurot annab 12 punkti.',
+    '50 000+ eurot jääki annab 10 punkti, 10 000+ eurot annab 6 punkti.',
     40
   ),
   (
@@ -305,18 +313,27 @@ scored as (
       else 0
     end as active_points,
     case
-      when b.company_age_years >= 10 then 25
-      when b.company_age_years >= 5 then 15
+      when b.company_age_years >= 30 then 25
+      when b.company_age_years >= 20 then 22
+      when b.company_age_years >= 10 then 18
+      when b.company_age_years >= 5 then 10
       else 0
     end as age_points,
     case
-      when b.average_revenue_last_two >= 200000 then 35
-      when b.average_revenue_last_two >= 50000 then 25
+      when b.latest_employee_count >= 25 then 20
+      when b.latest_employee_count >= 10 then 14
+      when b.latest_employee_count >= 3 then 8
+      else 0
+    end as employee_points,
+    case
+      when b.average_revenue_last_two >= 1000000 then 25
+      when b.average_revenue_last_two >= 200000 then 20
+      when b.average_revenue_last_two >= 50000 then 12
       else 0
     end as revenue_points,
     case
-      when b.de_minimis_left >= 50000 then 20
-      when b.de_minimis_left >= 10000 then 12
+      when b.de_minimis_left >= 50000 then 10
+      when b.de_minimis_left >= 10000 then 6
       else 0
     end as vta_points,
     case
@@ -348,18 +365,24 @@ select
     when s.de_minimis_left > 0 then 'low_left'
     else 'used_up'
   end as vta_signal,
-  least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) as priority_score,
+  least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) as priority_score,
   case
-    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then 'good_first_call'
-    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then 'needs_review'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then 'good_first_call'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then 'needs_review'
     else 'weak_fit'
   end as sales_signal,
   array_remove(array[
     case when s.active_points > 0 then 'ettevõte on registris aktiivne' end,
-    case when s.age_points = 25 then 'ettevõte on tegutsenud vähemalt 10 aastat' end,
-    case when s.age_points = 15 then 'ettevõte on tegutsenud üle 5 aasta' end,
-    case when s.revenue_points = 35 then 'müügitulu on tugev' end,
-    case when s.revenue_points = 25 then 'müügitulu paistab piisav' end,
+    case when s.company_age_years >= 30 then 'ettevõte on tegutsenud vähemalt 30 aastat' end,
+    case when s.company_age_years >= 20 and s.company_age_years < 30 then 'ettevõte on tegutsenud vähemalt 20 aastat' end,
+    case when s.company_age_years >= 10 and s.company_age_years < 20 then 'ettevõte on tegutsenud vähemalt 10 aastat' end,
+    case when s.company_age_years >= 5 and s.company_age_years < 10 then 'ettevõte on tegutsenud üle 5 aasta' end,
+    case when s.employee_points = 20 then 'ettevõttes on vähemalt 25 töötajat' end,
+    case when s.employee_points = 14 then 'ettevõttes on vähemalt 10 töötajat' end,
+    case when s.employee_points = 8 then 'ettevõttes on mitu inimest tööl' end,
+    case when s.revenue_points = 25 then 'müügitulu on tugev' end,
+    case when s.revenue_points = 20 then 'müügitulu paistab piisav' end,
+    case when s.revenue_points = 12 then 'müügitulu on kontrolli jaoks piisav' end,
     case when s.vta_points > 0 then 'VTA jääk paistab kasutatav' end,
     case when s.de_minimis_left is null then 'VTA vajab kontrolli' end,
     case when s.activity_points > 0 then 'tegevusala on tuvastatav' end
@@ -367,21 +390,22 @@ select
   jsonb_build_array(
     jsonb_build_object('criterion_id', 'active_status', 'label', 'Ettevõte on tegutsev', 'max_points', 15, 'points', s.active_points),
     jsonb_build_object('criterion_id', 'company_age', 'label', 'Ettevõttel on ajalugu', 'max_points', 25, 'points', s.age_points),
-    jsonb_build_object('criterion_id', 'revenue_scale', 'label', 'Müügitulu lubab projekti', 'max_points', 35, 'points', s.revenue_points),
-    jsonb_build_object('criterion_id', 'vta_left', 'label', 'VTA jääk', 'max_points', 20, 'points', s.vta_points),
+    jsonb_build_object('criterion_id', 'employee_scale', 'label', 'Töötajate arv', 'max_points', 20, 'points', s.employee_points),
+    jsonb_build_object('criterion_id', 'revenue_scale', 'label', 'Müügitulu lubab projekti', 'max_points', 25, 'points', s.revenue_points),
+    jsonb_build_object('criterion_id', 'vta_left', 'label', 'VTA jääk', 'max_points', 10, 'points', s.vta_points),
     jsonb_build_object('criterion_id', 'activity_known', 'label', 'Tegevusala teada', 'max_points', 5, 'points', s.activity_points)
   ) as score_breakdown,
   case
-    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
-      'Kontrolli VTA jääk ja võta ühendust: ettevõte paistab piisavalt vana ning müügitulu lubab praktilist projekti arutada.'
-    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then
+    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+      'Kontrolli VTA jääk ja võta ühendust: ettevõte on vana, seal on inimesi tööl ja andmete põhjal võib väike praktiline projekt olla mõistlik.'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then
       'Kontrolli puuduvad andmed enne kõnet.'
     else
       'Jäta madalamasse prioriteeti.'
   end as next_action,
   case
-    when least(100, s.active_points + s.age_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
-      'Tere, vaatasin avalike andmete põhjal, et ettevõte on tegutsenud pikalt ja müügitulu järgi võiks olla mõistlik arutada tarkvara, andmete või tööde korrastamise plaani. Kas teil on sel aastal mõni selline mõte?'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+      'Tere, vaatasin avalike andmete põhjal, et teie ettevõte on tegutsenud pikalt ja seal on inimesi tööl. Sellistes firmades on tihti mõni vana tarkvara, Exceli töö või käsitsi info liigutamine, mida saab toetuse abil korda teha. Kas teil on sel aastal mõni selline plaan?'
     else
       'Tere, kontrollime ettevõtte digitoetuse ja tööde korrastamise võimalust. Kas teil on mõni tarkvara või korduv töö, mille kohta soovite kiiret eelhinnangut?'
   end as recommended_pitch,
@@ -432,7 +456,10 @@ select
   q.queue_status as vta_queue_status,
   q.scheduled_for as vta_scheduled_for,
   array_remove(array[
-    case when p.company_age_years >= 10 then 'vanem toimiv ettevõte' end,
+    case when p.company_age_years >= 30 then '30+ aastat tegutsenud ettevõte' end,
+    case when p.company_age_years >= 20 and p.company_age_years < 30 then '20+ aastat tegutsenud ettevõte' end,
+    case when coalesce(s.latest_employee_count, p.latest_employee_count) >= 25 then 'palju inimesi tööl' end,
+    case when coalesce(s.latest_employee_count, p.latest_employee_count) >= 10 and coalesce(s.latest_employee_count, p.latest_employee_count) < 25 then 'mitu inimest tööl' end,
     case when coalesce(s.average_revenue_last_two, p.average_revenue_last_two) >= 50000 then 'müügitulu paistab piisav' end,
     case when coalesce(s.de_minimis_left, p.de_minimis_left) >= 10000 then 'VTA jääk paistab kasutatav' end,
     case when coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) is null then 'VTA vajab kontrolli' end
@@ -698,6 +725,7 @@ as $$
     u.is_prospect desc,
     u.priority_score desc,
     u.company_age_years desc nulls last,
+    u.latest_employee_count desc nulls last,
     u.average_revenue_last_two desc nulls last,
     u.company_name asc
   limit greatest(1, least(1000, coalesce(p_limit, 500)));
@@ -773,6 +801,7 @@ as $$
     end,
     b.priority_score desc,
     b.company_age_years desc nulls last,
+    b.latest_employee_count desc nulls last,
     b.company_name asc;
 $$;
 
@@ -964,6 +993,96 @@ begin
 end;
 $$;
 
+create or replace function public.crm_queue_next_vta_checks(
+  p_limit integer default 10,
+  p_min_score integer default 75
+)
+returns table (
+  queue_id uuid,
+  registry_code text,
+  company_name text,
+  priority_score integer,
+  company_age_years integer,
+  latest_employee_count integer
+)
+language plpgsql
+security definer
+set search_path = sales_crm, public_registry, support_assessment, public
+as $$
+declare
+  v_limit integer := greatest(1, least(25, coalesce(p_limit, 10)));
+  v_min_score integer := greatest(0, least(100, coalesce(p_min_score, 75)));
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  return query
+  with candidates as (
+    select u.*
+    from sales_crm.company_lead_universe u
+    where u.vta_signal = 'not_checked'
+      and u.priority_score >= v_min_score
+      and coalesce(u.vta_queue_status, '') not in ('queued', 'checking', 'checked')
+    order by
+      u.priority_score desc,
+      u.company_age_years desc nulls last,
+      u.latest_employee_count desc nulls last,
+      u.average_revenue_last_two desc nulls last,
+      u.company_name asc
+    limit v_limit
+  ),
+  inserted as (
+    insert into sales_crm.vta_check_queue (
+      prospect_company_id,
+      registry_code,
+      company_name,
+      priority_score,
+      check_method,
+      queue_status,
+      scheduled_for
+    )
+    select
+      c.prospect_id,
+      c.registry_code,
+      c.company_name,
+      c.priority_score,
+      'rar_public_manual',
+      'queued',
+      current_date
+    from candidates c
+    on conflict (registry_code, scheduled_for, check_method) do update
+    set
+      prospect_company_id = excluded.prospect_company_id,
+      company_name = excluded.company_name,
+      priority_score = excluded.priority_score,
+      queue_status = case
+        when sales_crm.vta_check_queue.queue_status in ('checked', 'manual_review') then sales_crm.vta_check_queue.queue_status
+        else 'queued'
+      end,
+      updated_at = now()
+    returning
+      id,
+      registry_code,
+      company_name,
+      priority_score
+  )
+  select
+    i.id,
+    i.registry_code,
+    i.company_name,
+    i.priority_score,
+    c.company_age_years,
+    c.latest_employee_count
+  from inserted i
+  join candidates c on c.registry_code = i.registry_code
+  order by
+    i.priority_score desc,
+    c.company_age_years desc nulls last,
+    c.latest_employee_count desc nulls last;
+end;
+$$;
+
 update sales_crm.prospect_companies
 set
   owner_name = case when owner_name = 'Toomas' then 'Müük' else owner_name end,
@@ -974,6 +1093,31 @@ set
   updated_at = now()
 where owner_name = 'Toomas'
   or next_action like '%Toomasele%';
+
+update sales_crm.prospect_companies p
+set
+  priority_score = u.priority_score,
+  sales_signal = u.sales_signal,
+  score_reason = u.score_reason,
+  recommended_pitch = u.recommended_pitch,
+  next_action = u.next_action,
+  crm_status = case
+    when p.crm_status in ('new', 'to_review') and u.priority_score >= 75 then 'call_next'
+    when p.crm_status = 'call_next' and u.priority_score < 50 then 'to_review'
+    else p.crm_status
+  end,
+  updated_at = now()
+from sales_crm.company_lead_universe u
+where u.registry_code = p.registry_code
+  and p.crm_status not in ('do_not_contact', 'won', 'lost');
+
+update sales_crm.vta_check_queue q
+set
+  priority_score = u.priority_score,
+  updated_at = now()
+from sales_crm.company_lead_universe u
+where u.registry_code = q.registry_code
+  and q.queue_status in ('queued', 'checking');
 
 create or replace function public.crm_upsert_user(
   p_email text,
@@ -1136,6 +1280,7 @@ grant execute on function public.crm_get_warehouse_stats() to authenticated;
 grant execute on function public.crm_get_company_lead_universe(integer, integer) to authenticated;
 grant execute on function public.crm_promote_company_to_prospect(text) to authenticated;
 grant execute on function public.crm_queue_vta_check(text) to authenticated;
+grant execute on function public.crm_queue_next_vta_checks(integer, integer) to authenticated;
 
 alter table sales_crm.prospect_lists enable row level security;
 alter table sales_crm.lead_scoring_criteria enable row level security;

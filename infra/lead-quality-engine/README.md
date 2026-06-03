@@ -2,9 +2,9 @@
 
 Internal foundation for finding useful B2B sales signals for Digiteekaart.ee, digitaliseerimine.ee and related 02Signal sales pages.
 
-This is not a public website feature. It is the first warehouse and CRM layer for Toomas so he can see which companies are worth calling first.
+This is not a public website feature. It is the first warehouse and CRM layer for the sales team so they can see which companies are worth calling first.
 
-## What Toomas Should See
+## What Sales Should See
 
 The first useful view is simple:
 
@@ -23,13 +23,14 @@ The owner/contact-person layer is separate and restricted. It must not appear in
 
 ## Why This Is Valuable
 
-For Toomas the strongest first signal is:
+For the sales team the strongest first signal is:
 
 1. company is old enough to have established habits and legacy work;
-2. company still operates and has enough revenue to act;
-3. VTA is unused or has a large remaining balance;
-4. the likely offer is practical: digiteekaart, RTE/software support, automation or a small paid assessment;
-5. the next action is obvious: call, ask 2-3 simple questions, offer a small safe step.
+2. company has enough employees that manual work costs real money;
+3. company still operates and has enough revenue to act;
+4. VTA is unused or has a large remaining balance;
+5. the likely offer is practical: digiteekaart, RTE/software support, automation or a small paid assessment;
+6. the next action is obvious: call, ask 2-3 simple questions, offer a small safe step.
 
 This avoids random cold calling. The call starts from a concrete business reason.
 
@@ -48,18 +49,18 @@ This avoids random cold calling. The call starts from a concrete business reason
 Fastest safe path:
 
 1. Run SQL migrations in Supabase.
-2. Show `sales_crm.toomas_priority_board` in Supabase table editor or export it to a Google Sheet for Toomas.
+2. Show `sales_crm.company_lead_universe` or `sales_crm.toomas_priority_board` in Supabase table editor or the CRM page.
 3. Use n8n once per day to:
    - pick 20-30 queued companies;
    - run the VTA check;
    - store a dated snapshot;
-   - send a short Telegram summary to Toomas.
+   - send a short Telegram summary to the sales owner.
 
 Better next step:
 
 Build a small authenticated internal CRM page:
 
-- Supabase Auth magic link for Toomas;
+- Supabase Auth magic link for sales users;
 - table with search, filters and sorting;
 - one company detail view;
 - buttons: call next, called, meeting booked, not relevant, do not contact;
@@ -84,6 +85,8 @@ The page uses Supabase magic-link login and public RPC wrappers:
 - `public.crm_get_lead_scoring_criteria()`
 - `public.crm_get_warehouse_stats()`
 - `public.crm_promote_company_to_prospect(...)`
+- `public.crm_queue_vta_check(...)`
+- `public.crm_queue_next_vta_checks(...)`
 - `public.crm_update_prospect_status(...)`
 - `public.crm_get_current_user()`
 - `public.crm_list_users()`
@@ -94,27 +97,31 @@ It does not query restricted contact tables and it has `noindex,nofollow`.
 
 Admins can add and deactivate CRM users from the interface. Sales users can work with the lead board but cannot manage users.
 
+The CRM also includes a batch action, `Lisa 10 VTA kontrolli`, which calls `public.crm_queue_next_vta_checks(...)`. It queues the next strongest unchecked companies by score, company age, employee count and revenue.
+
 ## Lead Score Shown in CRM
 
-The CRM shows the scoring model directly so Toomas can see why a company is a strong signal.
+The CRM shows the scoring model directly so sales users can see why a company is a strong signal.
 
 | Criterion | Points | Plain rule |
 | --- | ---: | --- |
 | Active company | 15 | Company is active in the register. |
-| Company age | 25 | 10+ years gives full points; 5-9 years gives partial points. |
-| Revenue scale | 35 | 200,000+ EUR revenue gives full points; 50,000+ EUR gives partial points. |
-| VTA left | 20 | 50,000+ EUR remaining VTA gives full points; 10,000+ gives partial points. |
+| Company age | 25 | 30+ years gives full points; 20+ and 10+ years give partial points. |
+| Employee scale | 20 | 25+ employees gives full points; 10+ and 3+ employees give partial points. |
+| Revenue scale | 25 | 1,000,000+ EUR revenue gives full points; 200,000+ and 50,000+ EUR give partial points. |
+| VTA left | 10 | 50,000+ EUR remaining VTA gives full points; 10,000+ gives partial points. |
 | Activity known | 5 | Known activity makes the sales conversation more concrete. |
 
-For the first RIK public-data import, VTA is not checked yet. A company can still reach 75 points from active status, age and revenue. The CRM marks this as `VTA kontrollimata`, which means: check VTA before promising a support route.
+For the first RIK public-data import, VTA is not checked yet. A company can still reach 75 points from active status, age, employees and revenue. The CRM marks this as `VTA kontrollimata`, which means: check VTA before promising a support route.
 
 The current CRM views are:
 
 - **Tugev signaal**: score 75+.
 - **Kõik andmebaasis**: every imported public-company row.
-- **Müüki lisatud**: companies already promoted into Toomas' working list.
+- **Müüki lisatud**: companies already promoted into the working list.
 
 Use `Lisa müüki` to promote a database-only company into the sales workflow.
+Use `Lisa 10 VTA kontrolli` to prepare the next small VTA-check batch before calls.
 
 ## Required Setup for crm.digiteekaart.ee
 
@@ -136,7 +143,7 @@ set active = excluded.active,
     role = excluded.role;
 ```
 
-Use Toomas' real work e-mail.
+Use the sales user's real work e-mail.
 
 `ak@ettevotluskeskus.ee` is seeded by the SQL as the first `admin` user. After that, new users can be added from the CRM interface.
 
@@ -187,7 +194,7 @@ Use the check result like this:
 | `some_left` | Still worth contacting if the company has a clear project. |
 | `low_left` | Be careful: support may still be possible but needs review. |
 | `used_up` | Do not sell support-first; discuss non-support paid work. |
-| `not_checked` | Put in queue before Toomas spends time on it. |
+| `not_checked` | Put in queue before sales spends time on it. |
 
 Before a paid recommendation or application-preparation proposal, refresh VTA again.
 
@@ -212,7 +219,7 @@ Before a paid recommendation or application-preparation proposal, refresh VTA ag
 - `sales_crm.toomas_priority_board`
 - `sales_crm.toomas_call_sheet_export`
 
-The two Toomas views exclude restricted contact fields.
+The sales views exclude restricted contact fields.
 
 ## Smoke Test
 
@@ -227,7 +234,7 @@ Expected outcome: a public-safe prospect score and call signal are printed for t
 ## Next Build Slice
 
 1. Create an n8n daily VTA queue workflow with a hard limit of 20-30 checks per day.
-2. Send Toomas a daily Telegram summary:
+2. Send the sales owner a daily Telegram summary:
    - new high-priority companies;
    - VTA checked and high left;
    - calls due today;

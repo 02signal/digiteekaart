@@ -24,6 +24,7 @@ const averageRevenueLastTwo = Math.round(
   latestTwoReports.reduce((sum, report) => sum + Number(report.revenue || 0), 0) /
     Math.max(1, latestTwoReports.length)
 );
+const latestEmployeeCount = latestTwoReports.find((report) => report.employeeCount !== null)?.employeeCount ?? null;
 
 const deMinimisLimit = 300000;
 const deMinimisUsed = Number(fixture.ownerInputs.deMinimisUsed ?? 0);
@@ -37,27 +38,47 @@ if (fixture.company.status === "active") {
   scoreReason.push("ettevõte on aktiivne");
 }
 
-if (companyAgeYears >= 10) {
+if (companyAgeYears >= 30) {
   priorityScore += 25;
+  scoreReason.push("ettevõte on tegutsenud vähemalt 30 aastat");
+} else if (companyAgeYears >= 20) {
+  priorityScore += 22;
+  scoreReason.push("ettevõte on tegutsenud vähemalt 20 aastat");
+} else if (companyAgeYears >= 10) {
+  priorityScore += 18;
   scoreReason.push("ettevõte on tegutsenud vähemalt 10 aastat");
 } else if (companyAgeYears >= 5) {
-  priorityScore += 15;
+  priorityScore += 10;
   scoreReason.push("ettevõte on tegutsenud üle 5 aasta");
 }
 
-if (averageRevenueLastTwo >= 200000) {
-  priorityScore += 35;
+if (latestEmployeeCount >= 25) {
+  priorityScore += 20;
+  scoreReason.push("ettevõttes on vähemalt 25 töötajat");
+} else if (latestEmployeeCount >= 10) {
+  priorityScore += 14;
+  scoreReason.push("ettevõttes on vähemalt 10 töötajat");
+} else if (latestEmployeeCount >= 3) {
+  priorityScore += 8;
+  scoreReason.push("ettevõttes on mitu inimest tööl");
+}
+
+if (averageRevenueLastTwo >= 1000000) {
+  priorityScore += 25;
+  scoreReason.push("müügitulu on tugev");
+} else if (averageRevenueLastTwo >= 200000) {
+  priorityScore += 20;
   scoreReason.push("müügitulu lubab praktilist projekti arutada");
 } else if (averageRevenueLastTwo >= 50000) {
-  priorityScore += 25;
+  priorityScore += 12;
   scoreReason.push("müügitulu paistab toetuse eelhinnanguks piisav");
 }
 
 if (deMinimisLeft >= 50000) {
-  priorityScore += 20;
+  priorityScore += 10;
   scoreReason.push("VTA jääk paistab suur");
 } else if (deMinimisLeft >= 10000) {
-  priorityScore += 12;
+  priorityScore += 6;
   scoreReason.push("VTA jääki paistab veel olevat");
 }
 
@@ -92,6 +113,7 @@ const result = {
   companyAgeYears,
   primaryActivityName: fixture.company.primaryActivityName,
   averageRevenueLastTwo,
+  latestEmployeeCount,
   deMinimisUsed,
   deMinimisLeft,
   vtaSignal,

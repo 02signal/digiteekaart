@@ -63,14 +63,14 @@ Do not treat an old VTA snapshot as final truth. Before sending a paid recommend
 
 The next internal layer lives in `../lead-quality-engine/`.
 
-It is for Toomas' sales workflow, not for the public landing page:
+It is for the sales workflow, not for the public landing page:
 
 - `sales_crm.prospect_companies` stores candidate companies and their priority score;
-- `sales_crm.vta_check_queue` schedules low-volume VTA checks before sales calls;
+- `sales_crm.vta_check_queue` schedules low-volume VTA checks before sales calls, starting from older companies with more employees;
 - `sales_crm.toomas_priority_board` shows the public-safe call-priority board;
 - `sales_crm.prospect_contacts_restricted` stores owner/board/contact data only behind access control.
 
-Keep the public funding pre-assessment and the internal sales CRM separate. A company can be visible in Toomas' priority board without exposing personal contact data in the public site.
+Keep the public funding pre-assessment and the internal sales CRM separate. A company can be visible in the internal priority board without exposing personal contact data in the public site.
 
 ## First Public-Data Sales Import
 
@@ -94,8 +94,9 @@ The generated SQL is written to:
 
 Default filters:
 
-- warehouse sample: active OÜ/AS, 5+ years old, 2024 revenue 50,000-10,000,000 EUR, max 100 employees when employee count is known;
-- sales prospect list: active OÜ/AS, 10+ years old, 2024 revenue 200,000-5,000,000 EUR, max 50 employees when employee count is known;
+- warehouse sample: active OÜ/AS, 5+ years old, 2024 revenue 50,000-10,000,000 EUR, max 500 employees when employee count is known;
+- sales prospect list: active OÜ/AS, 10+ years old, 2024 revenue 200,000-5,000,000 EUR, max 250 employees when employee count is known;
+- older companies and companies with more employees are sorted ahead because they are more likely to have manual work, old software and real time-loss pain;
 - no personal contacts, board members, e-mails or phone numbers are imported;
 - VTA is marked `not_checked` until a separate RAR/VTA check is stored.
 
