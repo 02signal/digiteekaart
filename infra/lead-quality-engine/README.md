@@ -67,6 +67,80 @@ Build a small authenticated internal CRM page:
 
 Do not build this inside the public static landing page.
 
+## CRM Subdomain
+
+The repository includes a first internal CRM page at:
+
+```text
+/crm/
+```
+
+Vercel rewrites `https://crm.digiteekaart.ee/` to that page through `vercel.json`.
+
+The page uses Supabase magic-link login and public RPC wrappers:
+
+- `public.crm_get_toomas_priority_board()`
+- `public.crm_update_prospect_status(...)`
+
+It does not query restricted contact tables and it has `noindex,nofollow`.
+
+## Required Setup for crm.digiteekaart.ee
+
+1. Apply the SQL:
+
+```bash
+supabase db push
+```
+
+or paste `sql/001_sales_quality_engine.sql` into Supabase SQL Editor.
+
+2. Add the CRM user:
+
+```sql
+insert into sales_crm.crm_users (email, role, active)
+values ('toomas@example.ee', 'sales', true)
+on conflict (email) do update
+set active = excluded.active,
+    role = excluded.role;
+```
+
+Use Toomas' real work e-mail.
+
+3. Check Vercel environment variables:
+
+```text
+PUBLIC_SUPABASE_URL=https://miwpctshbcmkpwvdokne.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+`PUBLIC_SUPABASE_ANON_KEY` is public by design, but it must still come from Supabase Project Settings. Do not use the service-role key in Vercel.
+
+4. In Supabase Auth URL settings, allow:
+
+```text
+https://crm.digiteekaart.ee
+https://crm.digiteekaart.ee/
+```
+
+5. In Vercel, add domain:
+
+```text
+crm.digiteekaart.ee
+```
+
+6. In Cloudflare DNS, add:
+
+```text
+Type: CNAME
+Name: crm
+Target: cname.vercel-dns.com
+Proxy: DNS only
+```
+
+7. Open `https://crm.digiteekaart.ee/`, enter the allowed e-mail and use the magic link.
+
+If login works but the table is empty, either the user is not in `sales_crm.crm_users` or no prospects have been loaded yet.
+
 ## VTA Check Rules
 
 VTA is a dated signal, not a permanent company fact.

@@ -1,0 +1,662 @@
+---
+import "../../styles/global.css";
+
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL ?? "https://miwpctshbcmkpwvdokne.supabase.co";
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <title>Digiteekaart CRM | Toomase müügilaud</title>
+  </head>
+  <body class="crm-page">
+    <main class="crm-shell">
+      <section class="crm-panel crm-login" data-login-view>
+        <div>
+          <span class="kicker">Sisemine töölaud</span>
+          <h1>Digiteekaart CRM</h1>
+          <p>
+            Logi sisse oma töö e-mailiga. Link saadetakse e-mailile ja avaneb samas brauseris.
+          </p>
+        </div>
+
+        <form class="crm-login-form" data-login-form>
+          <label for="crm-email">E-mail</label>
+          <div class="crm-login-row">
+            <input id="crm-email" name="email" type="email" autocomplete="email" placeholder="toomas@..." required />
+            <button class="btn btn-primary" type="submit">Saada link</button>
+          </div>
+          <p class="crm-message" data-login-message></p>
+        </form>
+
+        <div class="crm-note">
+          Kui link jõuab kohale, vajuta seda samas seadmes. Kui sisse ei saa, peab administraator lisama teie e-maili
+          `sales_crm.crm_users` tabelisse.
+        </div>
+      </section>
+
+      <section class="crm-app" data-app-view hidden>
+        <header class="crm-header">
+          <div>
+            <span class="kicker">Toomase prioriteedilaud</span>
+            <h1>Millistele ettevõtetele täna tähelepanu pöörata?</h1>
+            <p>
+              Vaade näitab ainult firma fakte ja müügisignaali. Omaniku või juhatuse kontaktid on eraldi piiratud kihis.
+            </p>
+          </div>
+          <div class="crm-user-box">
+            <span data-user-email></span>
+            <button class="btn btn-light" type="button" data-sign-out>Logi välja</button>
+          </div>
+        </header>
+
+        <div class="crm-metrics" data-metrics></div>
+
+        <section class="crm-panel crm-filters" aria-label="Filtrid">
+          <label>
+            Otsi
+            <input data-search type="search" placeholder="Firma nimi, registrikood või tegevusala" />
+          </label>
+          <label>
+            Staatus
+            <select data-status-filter>
+              <option value="">Kõik</option>
+              <option value="new">Uus</option>
+              <option value="call_next">Helista järgmisena</option>
+              <option value="to_review">Vajab ülevaatust</option>
+              <option value="called">Helistatud</option>
+              <option value="meeting_booked">Kohtumine kokku lepitud</option>
+              <option value="proposal_sent">Pakkumine saadetud</option>
+              <option value="not_relevant">Ei sobi</option>
+            </select>
+          </label>
+          <label>
+            VTA
+            <select data-vta-filter>
+              <option value="">Kõik</option>
+              <option value="high_left">Suur jääk</option>
+              <option value="some_left">Jääk olemas</option>
+              <option value="not_checked">Kontrollimata</option>
+              <option value="low_left">Väike jääk</option>
+              <option value="used_up">Kasutatud</option>
+            </select>
+          </label>
+          <label>
+            Min skoor
+            <input data-score-filter type="number" min="0" max="100" step="5" value="50" />
+          </label>
+          <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
+        </section>
+
+        <section class="crm-panel">
+          <div class="crm-table-wrap">
+            <table class="crm-table">
+              <thead>
+                <tr>
+                  <th>Firma</th>
+                  <th>Skoor</th>
+                  <th>VTA</th>
+                  <th>Miks praegu</th>
+                  <th>Järgmine samm</th>
+                  <th>Staatus</th>
+                  <th>Tegevus</th>
+                </tr>
+              </thead>
+              <tbody data-board-body></tbody>
+            </table>
+          </div>
+          <div class="crm-empty" data-empty-state hidden>
+            Andmeid ei ole veel näidata. Kui olete sisse logitud, tuleb järgmine samm: SQL migratsioon Supabase’is ja esimese prospect listi täitmine.
+          </div>
+          <p class="crm-message" data-board-message></p>
+        </section>
+      </section>
+    </main>
+
+    <div
+      hidden
+      data-crm-config
+      data-supabase-url={supabaseUrl}
+      data-supabase-anon-key={supabaseAnonKey}
+    ></div>
+
+    <script is:inline type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+      const crmConfig = document.querySelector("[data-crm-config]");
+      const supabaseUrl = crmConfig?.getAttribute("data-supabase-url") || "";
+      const supabaseAnonKey = crmConfig?.getAttribute("data-supabase-anon-key") || "";
+      const loginView = document.querySelector("[data-login-view]");
+      const appView = document.querySelector("[data-app-view]");
+      const loginForm = document.querySelector("[data-login-form]");
+      const loginMessage = document.querySelector("[data-login-message]");
+      const boardMessage = document.querySelector("[data-board-message]");
+      const boardBody = document.querySelector("[data-board-body]");
+      const emptyState = document.querySelector("[data-empty-state]");
+      const metrics = document.querySelector("[data-metrics]");
+      const userEmail = document.querySelector("[data-user-email]");
+      const signOutButton = document.querySelector("[data-sign-out]");
+      const refreshButton = document.querySelector("[data-refresh]");
+      const searchInput = document.querySelector("[data-search]");
+      const statusFilter = document.querySelector("[data-status-filter]");
+      const vtaFilter = document.querySelector("[data-vta-filter]");
+      const scoreFilter = document.querySelector("[data-score-filter]");
+
+      const statusLabels = {
+        new: "Uus",
+        to_review: "Vajab ülevaatust",
+        call_next: "Helista järgmisena",
+        called: "Helistatud",
+        not_relevant: "Ei sobi",
+        meeting_booked: "Kohtumine",
+        proposal_sent: "Pakkumine",
+        won: "Võidetud",
+        lost: "Kaotatud",
+        do_not_contact: "Ära võta ühendust"
+      };
+
+      const vtaLabels = {
+        not_checked: "Kontrollimata",
+        high_left: "Suur jääk",
+        some_left: "Jääk olemas",
+        low_left: "Väike jääk",
+        used_up: "Kasutatud",
+        manual_review: "Vajab käsitsi kontrolli",
+        source_unavailable: "Allikas ei vastanud"
+      };
+
+      const actionButtons = [
+        ["call_next", "Helista"],
+        ["called", "Helistatud"],
+        ["meeting_booked", "Kohtumine"],
+        ["proposal_sent", "Pakkumine"],
+        ["not_relevant", "Ei sobi"],
+        ["do_not_contact", "Ära võta"]
+      ];
+
+      const state = {
+        session: null,
+        rows: []
+      };
+
+      const formatMoney = (value) => {
+        if (value === null || value === undefined || value === "") return "-";
+        return new Intl.NumberFormat("et-EE", {
+          style: "currency",
+          currency: "EUR",
+          maximumFractionDigits: 0
+        }).format(Number(value));
+      };
+
+      const safeText = (value) => String(value ?? "").trim();
+
+      const escapeHtml = (value) => safeText(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[char]));
+
+      const setMessage = (target, text, type = "") => {
+        target.textContent = text;
+        target.dataset.type = type;
+      };
+
+      const supabase = supabaseAnonKey
+        ? createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+              detectSessionInUrl: true,
+              persistSession: true,
+              autoRefreshToken: true
+            }
+          })
+        : null;
+
+      const showLogin = () => {
+        loginView.hidden = false;
+        appView.hidden = true;
+      };
+
+      const showApp = () => {
+        loginView.hidden = true;
+        appView.hidden = false;
+      };
+
+      const renderMetrics = (rows) => {
+        const high = rows.filter((row) => row.priority_score >= 75).length;
+        const callNext = rows.filter((row) => row.crm_status === "call_next").length;
+        const highVta = rows.filter((row) => row.vta_signal === "high_left").length;
+        const unchecked = rows.filter((row) => row.vta_signal === "not_checked").length;
+        metrics.innerHTML = `
+          <article><strong>${rows.length}</strong><span>nähtavat firmat</span></article>
+          <article><strong>${high}</strong><span>tugev signaal</span></article>
+          <article><strong>${callNext}</strong><span>helista järgmisena</span></article>
+          <article><strong>${highVta}</strong><span>suur VTA jääk</span></article>
+          <article><strong>${unchecked}</strong><span>VTA kontrollimata</span></article>
+        `;
+      };
+
+      const filteredRows = () => {
+        const search = safeText(searchInput.value).toLowerCase();
+        const status = statusFilter.value;
+        const vta = vtaFilter.value;
+        const minScore = Number(scoreFilter.value || 0);
+
+        return state.rows.filter((row) => {
+          const text = [
+            row.company_name,
+            row.registry_code,
+            row.primary_activity_name,
+            row.recommended_pitch,
+            ...(row.why_now || [])
+          ].join(" ").toLowerCase();
+
+          if (search && !text.includes(search)) return false;
+          if (status && row.crm_status !== status) return false;
+          if (vta && row.vta_signal !== vta) return false;
+          if (Number(row.priority_score || 0) < minScore) return false;
+          return true;
+        });
+      };
+
+      const renderBoard = () => {
+        const rows = filteredRows();
+        renderMetrics(state.rows);
+        emptyState.hidden = rows.length > 0;
+
+        boardBody.innerHTML = rows.map((row) => {
+          const why = [...(row.why_now || []), ...(row.score_reason || [])]
+            .filter(Boolean)
+            .slice(0, 4)
+            .map((reason) => `<span>${escapeHtml(reason)}</span>`)
+            .join("");
+
+          const actions = actionButtons.map(([status, label]) => (
+            `<button type="button" data-status-action="${status}" data-prospect-id="${row.prospect_id}">${label}</button>`
+          )).join("");
+
+          return `
+            <tr>
+              <td>
+                <strong>${escapeHtml(row.company_name)}</strong>
+                <span>${escapeHtml(row.registry_code)} · ${escapeHtml(row.primary_activity_name) || "tegevusala puudu"}</span>
+                <span>${row.company_age_years ?? "-"} aastat · ${formatMoney(row.average_revenue_last_two)} keskmine müügitulu</span>
+              </td>
+              <td><b>${row.priority_score ?? 0}</b></td>
+              <td>
+                <strong>${escapeHtml(vtaLabels[row.vta_signal] || row.vta_signal || "-")}</strong>
+                <span>${formatMoney(row.de_minimis_left)} jääk</span>
+              </td>
+              <td><div class="crm-tags">${why || "<span>Vajab ülevaatust</span>"}</div></td>
+              <td>
+                <strong>${escapeHtml(row.next_action) || "Vaata üle"}</strong>
+                <span>${escapeHtml(row.recommended_pitch)}</span>
+              </td>
+              <td><span class="crm-status">${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span></td>
+              <td><div class="crm-row-actions">${actions}</div></td>
+            </tr>
+          `;
+        }).join("");
+      };
+
+      const loadBoard = async () => {
+        if (!supabase) {
+          setMessage(boardMessage, "Supabase anon key puudub. Lisa Vercelis PUBLIC_SUPABASE_ANON_KEY.", "error");
+          return;
+        }
+
+        setMessage(boardMessage, "Laen CRM andmeid...", "");
+        const { data, error } = await supabase.rpc("crm_get_toomas_priority_board");
+
+        if (error) {
+          setMessage(boardMessage, `CRM andmete laadimine ei õnnestunud: ${error.message}`, "error");
+          state.rows = [];
+          renderBoard();
+          return;
+        }
+
+        state.rows = Array.isArray(data) ? data : [];
+        setMessage(boardMessage, state.rows.length ? "Andmed laetud." : "Andmeid pole veel või kasutajal puudub ligipääs.", state.rows.length ? "ok" : "");
+        renderBoard();
+      };
+
+      const updateStatus = async (prospectId, status) => {
+        const note = window.prompt("Lühike märkus Toomasele / järgmisele sammule:", "") || "";
+        const { error } = await supabase.rpc("crm_update_prospect_status", {
+          p_prospect_id: prospectId,
+          p_crm_status: status,
+          p_note: note,
+          p_next_follow_up_at: null
+        });
+
+        if (error) {
+          setMessage(boardMessage, `Staatuse muutmine ei õnnestunud: ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(boardMessage, "Staatus uuendatud.", "ok");
+        await loadBoard();
+      };
+
+      const boot = async () => {
+        if (!supabase) {
+          showLogin();
+          setMessage(loginMessage, "Supabase anon key puudub. Lisa Vercelis PUBLIC_SUPABASE_ANON_KEY.", "error");
+          return;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        state.session = data.session;
+
+        if (!state.session) {
+          showLogin();
+          return;
+        }
+
+        userEmail.textContent = state.session.user?.email || "";
+        showApp();
+        await loadBoard();
+      };
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!supabase) return;
+
+        const email = new FormData(loginForm).get("email");
+        setMessage(loginMessage, "Saadan sisselogimise lingi...", "");
+
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: window.location.origin
+          }
+        });
+
+        if (error) {
+          setMessage(loginMessage, `Sisselogimise linki ei saanud saata: ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(loginMessage, "Link saadetud. Kontrollige e-maili ja vajutage lingile.", "ok");
+      });
+
+      signOutButton.addEventListener("click", async () => {
+        await supabase.auth.signOut();
+        state.session = null;
+        state.rows = [];
+        showLogin();
+      });
+
+      refreshButton.addEventListener("click", loadBoard);
+      [searchInput, statusFilter, vtaFilter, scoreFilter].forEach((input) => {
+        input.addEventListener("input", renderBoard);
+        input.addEventListener("change", renderBoard);
+      });
+
+      boardBody.addEventListener("click", async (event) => {
+        const button = event.target instanceof Element
+          ? event.target.closest("[data-status-action]")
+          : null;
+        if (!button) return;
+        await updateStatus(button.getAttribute("data-prospect-id"), button.getAttribute("data-status-action"));
+      });
+
+      supabase?.auth.onAuthStateChange((_event, session) => {
+        state.session = session;
+      });
+
+      boot();
+    </script>
+
+    <style>
+      .crm-page {
+        min-height: 100vh;
+        background: #eef6f8;
+      }
+
+      .crm-shell {
+        width: min(1480px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 28px 0 44px;
+      }
+
+      .crm-panel,
+      .crm-app {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--white);
+        box-shadow: var(--shadow);
+      }
+
+      .crm-login {
+        max-width: 760px;
+        margin: 12vh auto 0;
+        padding: 32px;
+      }
+
+      .crm-login h1,
+      .crm-header h1 {
+        margin-top: 10px;
+        color: var(--navy);
+      }
+
+      .crm-login p,
+      .crm-header p {
+        color: var(--muted);
+      }
+
+      .crm-login-form {
+        display: grid;
+        gap: 10px;
+        margin-top: 24px;
+      }
+
+      .crm-login-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .crm-login input,
+      .crm-filters input,
+      .crm-filters select {
+        width: 100%;
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--ink);
+        background: var(--white);
+      }
+
+      .crm-note {
+        margin-top: 22px;
+        border-left: 4px solid var(--accent);
+        border-radius: 8px;
+        padding: 14px;
+        background: #fff9ea;
+        color: var(--muted);
+      }
+
+      .crm-app {
+        padding: 22px;
+      }
+
+      .crm-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+      }
+
+      .crm-user-box {
+        display: grid;
+        gap: 10px;
+        justify-items: end;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .crm-metrics {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+        margin: 22px 0;
+      }
+
+      .crm-metrics article {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background: var(--paper);
+      }
+
+      .crm-metrics strong {
+        display: block;
+        color: var(--teal);
+        font-size: 1.7rem;
+        line-height: 1;
+      }
+
+      .crm-metrics span {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .crm-filters {
+        display: grid;
+        grid-template-columns: minmax(240px, 1.4fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(110px, 0.45fr) auto;
+        gap: 12px;
+        align-items: end;
+        padding: 14px;
+        margin-bottom: 16px;
+        box-shadow: none;
+      }
+
+      .crm-filters label {
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 850;
+      }
+
+      .crm-refresh {
+        color: var(--white);
+        background: var(--navy);
+      }
+
+      .crm-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .crm-table {
+        width: 100%;
+        min-width: 1180px;
+        border-collapse: collapse;
+      }
+
+      .crm-table th,
+      .crm-table td {
+        border-bottom: 1px solid var(--line);
+        padding: 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .crm-table th {
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+      }
+
+      .crm-table td > strong,
+      .crm-table td > span {
+        display: block;
+      }
+
+      .crm-table td > span,
+      .crm-table td span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .crm-tags,
+      .crm-row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .crm-tags span,
+      .crm-status {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: var(--ice);
+        color: var(--navy);
+        font-size: 0.78rem;
+        font-weight: 850;
+      }
+
+      .crm-row-actions button {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 7px 9px;
+        background: var(--white);
+        color: var(--navy);
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 850;
+      }
+
+      .crm-row-actions button:hover {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+
+      .crm-empty {
+        padding: 20px;
+        color: var(--muted);
+      }
+
+      .crm-message {
+        min-height: 24px;
+        color: var(--muted);
+      }
+
+      .crm-message[data-type="ok"] {
+        color: var(--teal);
+        font-weight: 850;
+      }
+
+      .crm-message[data-type="error"] {
+        color: #a33a22;
+        font-weight: 850;
+      }
+
+      @media (max-width: 900px) {
+        .crm-header,
+        .crm-login-row {
+          grid-template-columns: 1fr;
+        }
+
+        .crm-user-box {
+          justify-items: start;
+        }
+
+        .crm-metrics,
+        .crm-filters {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </body>
+</html>

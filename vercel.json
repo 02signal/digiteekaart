@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "crm.digiteekaart.ee"
+        }
+      ],
+      "destination": "/crm/"
+    }
+  ]
+}

@@ -19,6 +19,17 @@ create table if not exists sales_crm.prospect_lists (
   created_at timestamptz not null default now()
 );
 
+create table if not exists sales_crm.crm_users (
+  email text primary key,
+  role text not null default 'sales'
+    check (role in ('sales', 'admin')),
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+comment on table sales_crm.crm_users is
+  'Allowed users for the internal CRM. Insert Toomas and admins here before exposing CRM data.';
+
 create table if not exists sales_crm.prospect_companies (
   id uuid primary key default gen_random_uuid(),
   list_id uuid references sales_crm.prospect_lists(id) on delete set null,
@@ -238,7 +249,170 @@ from sales_crm.toomas_priority_board;
 comment on view sales_crm.toomas_call_sheet_export is
   'CSV/export-safe call sheet. Contact people and personal e-mails must be joined only in an authenticated restricted tool.';
 
+create or replace function sales_crm.current_crm_user_allowed()
+returns boolean
+language sql
+stable
+security definer
+set search_path = sales_crm, public
+as $$
+  select exists (
+    select 1
+    from sales_crm.crm_users u
+    where lower(u.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and u.active is true
+  );
+$$;
+
+create or replace function public.crm_get_toomas_priority_board()
+returns table (
+  prospect_id uuid,
+  registry_code text,
+  company_name text,
+  company_status text,
+  company_age_years integer,
+  primary_activity_code text,
+  primary_activity_name text,
+  latest_fiscal_year integer,
+  average_revenue_last_two numeric,
+  latest_employee_count integer,
+  de_minimis_left numeric,
+  de_minimis_checked_at timestamptz,
+  vta_signal text,
+  priority_score integer,
+  sales_signal text,
+  score_reason text[],
+  recommended_pitch text,
+  next_action text,
+  owner_name text,
+  crm_status text,
+  last_contacted_at timestamptz,
+  next_follow_up_at timestamptz,
+  vta_queue_status text,
+  vta_scheduled_for date,
+  why_now text[]
+)
+language sql
+stable
+security definer
+set search_path = sales_crm, support_assessment, public
+as $$
+  select
+    b.prospect_id,
+    b.registry_code,
+    b.company_name,
+    b.company_status,
+    b.company_age_years,
+    b.primary_activity_code,
+    b.primary_activity_name,
+    b.latest_fiscal_year,
+    b.average_revenue_last_two,
+    b.latest_employee_count,
+    b.de_minimis_left,
+    b.de_minimis_checked_at,
+    b.vta_signal,
+    b.priority_score,
+    b.sales_signal,
+    b.score_reason,
+    b.recommended_pitch,
+    b.next_action,
+    b.owner_name,
+    b.crm_status,
+    b.last_contacted_at,
+    b.next_follow_up_at,
+    b.vta_queue_status,
+    b.vta_scheduled_for,
+    b.why_now
+  from sales_crm.toomas_priority_board b
+  where sales_crm.current_crm_user_allowed()
+  order by
+    case b.crm_status
+      when 'call_next' then 0
+      when 'new' then 1
+      when 'to_review' then 2
+      else 3
+    end,
+    b.priority_score desc,
+    b.company_age_years desc nulls last,
+    b.company_name asc;
+$$;
+
+create or replace function public.crm_update_prospect_status(
+  p_prospect_id uuid,
+  p_crm_status text,
+  p_note text default null,
+  p_next_follow_up_at timestamptz default null
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = sales_crm, public
+as $$
+declare
+  v_activity_type text;
+begin
+  if not sales_crm.current_crm_user_allowed() then
+    raise exception 'CRM access denied';
+  end if;
+
+  if p_crm_status not in (
+    'new',
+    'to_review',
+    'call_next',
+    'called',
+    'not_relevant',
+    'meeting_booked',
+    'proposal_sent',
+    'won',
+    'lost',
+    'do_not_contact'
+  ) then
+    raise exception 'Invalid CRM status: %', p_crm_status;
+  end if;
+
+  update sales_crm.prospect_companies
+  set
+    crm_status = p_crm_status,
+    next_follow_up_at = p_next_follow_up_at,
+    last_contacted_at = case
+      when p_crm_status in ('called', 'meeting_booked', 'proposal_sent', 'won', 'lost', 'do_not_contact') then now()
+      else last_contacted_at
+    end,
+    updated_at = now()
+  where id = p_prospect_id;
+
+  if not found then
+    raise exception 'Prospect not found';
+  end if;
+
+  v_activity_type = case
+    when p_crm_status = 'called' then 'call_connected'
+    when p_crm_status = 'meeting_booked' then 'meeting_booked'
+    when p_crm_status = 'do_not_contact' then 'do_not_contact'
+    else 'note'
+  end;
+
+  insert into sales_crm.prospect_activities (
+    prospect_company_id,
+    activity_type,
+    activity_note,
+    created_by
+  ) values (
+    p_prospect_id,
+    v_activity_type,
+    nullif(p_note, ''),
+    lower(coalesce(auth.jwt() ->> 'email', 'unknown'))
+  );
+
+  return true;
+end;
+$$;
+
+grant execute on function public.crm_get_toomas_priority_board() to authenticated;
+grant execute on function public.crm_update_prospect_status(uuid, text, text, timestamptz) to authenticated;
+
 alter table sales_crm.prospect_lists enable row level security;
+alter table sales_crm.crm_users enable row level security;
 alter table sales_crm.prospect_companies enable row level security;
 alter table sales_crm.prospect_contacts_restricted enable row level security;
 alter table sales_crm.prospect_activities enable row level security;
