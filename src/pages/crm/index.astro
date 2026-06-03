@@ -142,8 +142,24 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             </select>
           </label>
           <label>
-            Min skoor
+            Min töötajaid
+            <input data-min-employees type="number" min="0" max="10000" placeholder="nt 25" />
+          </label>
+          <label>
+            Max juhatus
+            <input data-max-board type="number" min="1" max="10" placeholder="nt 1" />
+          </label>
+          <label>
+            Juht min vanus
+            <input data-min-board-age type="number" min="18" max="100" placeholder="nt 60" />
+          </label>
+          <label>
+            Skoor
             <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
+          </label>
+          <label class="checkbox-label" title="Ainult numbriga">
+            <input data-req-mobile type="checkbox" />
+            Mobiil
           </label>
           <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
           <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Käivita 10 VTA</button>
@@ -207,6 +223,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const statusFilter = document.querySelector("[data-status-filter]");
       const vtaFilter = document.querySelector("[data-vta-filter]");
       const scoreFilter = document.querySelector("[data-score-filter]");
+      const minEmployeesFilter = document.querySelector("[data-min-employees]");
+      const maxBoardFilter = document.querySelector("[data-max-board]");
+      const minBoardAgeFilter = document.querySelector("[data-min-board-age]");
+      const reqMobileFilter = document.querySelector("[data-req-mobile]");
 
       const statusLabels = {
         new: "Uus",
@@ -566,7 +586,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const search = safeText(searchInput.value).toLowerCase();
         const status = statusFilter.value;
         const vta = vtaFilter.value;
-        const minScore = Number(scoreFilter.value || 0);
 
         return state.rows.filter((row) => {
           if (state.view === "strong" && Number(row.priority_score || 0) < 75) return false;
@@ -583,7 +602,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           if (search && !text.includes(search)) return false;
           if (status && row.crm_status !== status) return false;
           if (vta && row.vta_signal !== vta) return false;
-          if (Number(row.priority_score || 0) < minScore) return false;
           return true;
         });
       };
@@ -619,6 +637,10 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const ageText = row.company_age_years === null || row.company_age_years === undefined
           ? "vanus ?"
           : `${row.company_age_years} a`;
+        const boardText = row.board_member_count === null || row.board_member_count === undefined
+          ? "juhatus ?"
+          : `${row.board_member_count} juht${row.board_member_count === 1 ? '' : 'ti'}`;
+        const mobileIcon = row.has_mobile_phone ? " 📱" : "";
         const firstReason = safeText((row.score_reason || []).find(Boolean)) || "vaata detaili";
         const vta = vtaSummary(row);
 
@@ -626,7 +648,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           <article class="crm-lead-card crm-signal-${signalTone(row)}${selected}" data-card-code="${escapeHtml(row.registry_code)}">
             <header>
               <div>
-                <strong class="crm-card-title">${escapeHtml(row.company_name)}</strong>
+                <strong class="crm-card-title">${escapeHtml(row.company_name)}${mobileIcon}</strong>
                 <span>${escapeHtml(row.registry_code)} · ${escapeHtml(statusLabels[row.crm_status] || row.crm_status)}</span>
               </div>
               <b>${row.priority_score ?? 0}</b>
@@ -638,6 +660,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <div class="crm-signal-chips">
               <span>${escapeHtml(ageText)}</span>
               <span>${escapeHtml(employeeText)}</span>
+              <span>${escapeHtml(boardText)}</span>
               <span>${formatCompactMoney(row.average_revenue_last_two)}</span>
             </div>
             <div class="crm-vta-mini" data-vta-state="${escapeHtml(vta.state)}">
@@ -672,6 +695,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           ["Viimane aruandeaasta", row.latest_fiscal_year || "-"],
           ["Keskmine müügitulu", formatMoney(row.average_revenue_last_two)],
           ["Töötajaid", row.latest_employee_count ?? "teadmata"],
+          ["Juhatuse suurus", row.board_member_count ?? "teadmata"],
+          ["Vanim juhatuse liige", row.oldest_board_member_age ? `${row.oldest_board_member_age} aastat` : "teadmata"],
+          ["Otsekontakt (mobiil)", row.has_mobile_phone ? "Jah" : "Ei ole teada"],
           ["Asukoht", row.address_summary || "-"],
           ["VTA seis", vtaStatusLabel(row)],
           ["VTA kontrollitud", formatDate(row.de_minimis_checked_at)],
@@ -802,7 +828,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         const { data, error } = await supabase.rpc("crm_get_company_lead_universe", {
           p_limit: 1000,
-          p_min_score: 0
+          p_min_score: Number(scoreFilter.value) || 0,
+          p_min_employees: minEmployeesFilter.value ? Number(minEmployeesFilter.value) : null,
+          p_max_board_members: maxBoardFilter.value ? Number(maxBoardFilter.value) : null,
+          p_min_board_age: minBoardAgeFilter.value ? Number(minBoardAgeFilter.value) : null,
+          p_requires_mobile: reqMobileFilter.checked
         });
 
         if (error) {
@@ -1022,9 +1052,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         event.preventDefault();
         await addUser(userForm);
       });
-      [searchInput, statusFilter, vtaFilter, scoreFilter].forEach((input) => {
+      [searchInput, statusFilter, vtaFilter].forEach((input) => {
         input.addEventListener("input", renderBoard);
         input.addEventListener("change", renderBoard);
+      });
+      [scoreFilter, minEmployeesFilter, maxBoardFilter, minBoardAgeFilter, reqMobileFilter].forEach((input) => {
+        input.addEventListener("change", loadBoard);
       });
 
       kanbanBoard.addEventListener("click", handleCrmAction);
@@ -1394,7 +1427,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       .crm-filters {
         display: grid;
-        grid-template-columns: minmax(240px, 1.4fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) minmax(110px, 0.45fr) auto auto;
+        grid-template-columns: minmax(240px, 1fr) minmax(130px, 0.6fr) minmax(130px, 0.6fr) minmax(100px, 0.4fr) minmax(90px, 0.4fr) minmax(100px, 0.4fr) minmax(110px, 0.4fr) minmax(80px, 0.3fr) auto;
         gap: 12px;
         align-items: end;
         padding: 14px;
@@ -1406,8 +1439,23 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         display: grid;
         gap: 6px;
         color: var(--muted);
-        font-size: 0.88rem;
+        font-size: 0.82rem;
         font-weight: 850;
+      }
+      
+      .crm-filters label.checkbox-label {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        min-height: 48px;
+        padding-bottom: 0;
+        cursor: pointer;
+      }
+      
+      .crm-filters label.checkbox-label input {
+        width: 18px;
+        min-height: 18px;
+        margin: 0;
       }
 
       .crm-refresh {

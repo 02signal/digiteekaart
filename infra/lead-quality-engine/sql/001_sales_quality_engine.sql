@@ -52,6 +52,9 @@ create table if not exists sales_crm.prospect_companies (
   average_revenue_last_two numeric(14, 2),
   latest_employee_count integer,
   latest_fiscal_year integer,
+  board_member_count integer,
+  oldest_board_member_age integer,
+  has_mobile_phone boolean not null default false,
   de_minimis_left numeric(14, 2),
   de_minimis_checked_at timestamptz,
   vta_signal text not null default 'not_checked'
@@ -204,10 +207,18 @@ insert into sales_crm.lead_scoring_criteria (
   (
     'employee_scale',
     'Ettevõttes on inimesi, kelle aega saab võita',
-    20,
-    'Kui töötajaid on rohkem, on korduva käsitöö ja info liigutamise valu tavaliselt suurem.',
-    '25+ töötajat annab 20 punkti, 10-24 töötajat 14 punkti, 3-9 töötajat 8 punkti.',
+    30,
+    'Mida rohkem töötajaid, seda suurem ajavõit automaatikast. 500+ töötajat annab maksimumi.',
+    '500+ töötajat annab 30 punkti, 250+ 25 punkti, 50+ 20 punkti, 20+ 15 punkti.',
     25
+  ),
+  (
+    'board_members',
+    'Juhatuse suurus näitab otsustuskiirust',
+    15,
+    'Mida vähem juhatuse liikmeid (ideaalis ainuomanik), seda kiirem on otsustamine.',
+    '1 juhatuse liige annab 15 punkti, 2 liiget 10 punkti, 3 liiget 5 punkti.',
+    28
   ),
   (
     'revenue_scale',
@@ -258,6 +269,9 @@ with base as (
     c.primary_activity_code,
     c.primary_activity_name,
     c.address_summary,
+    c.board_member_count,
+    c.oldest_board_member_age,
+    c.has_mobile_phone,
     r.latest_fiscal_year,
     r.average_revenue_last_two,
     r.latest_employee_count,
@@ -320,11 +334,18 @@ scored as (
       else 0
     end as age_points,
     case
-      when b.latest_employee_count >= 25 then 20
-      when b.latest_employee_count >= 10 then 14
-      when b.latest_employee_count >= 3 then 8
+      when b.latest_employee_count >= 500 then 30
+      when b.latest_employee_count >= 250 then 25
+      when b.latest_employee_count >= 50 then 20
+      when b.latest_employee_count >= 20 then 15
       else 0
     end as employee_points,
+    case
+      when b.board_member_count = 1 then 15
+      when b.board_member_count = 2 then 10
+      when b.board_member_count = 3 then 5
+      else 0
+    end as board_points,
     case
       when b.average_revenue_last_two >= 1000000 then 25
       when b.average_revenue_last_two >= 200000 then 20
@@ -353,6 +374,9 @@ select
   s.primary_activity_code,
   s.primary_activity_name,
   s.address_summary,
+  s.board_member_count,
+  s.oldest_board_member_age,
+  s.has_mobile_phone,
   s.latest_fiscal_year,
   s.average_revenue_last_two,
   s.latest_employee_count,
@@ -365,10 +389,10 @@ select
     when s.de_minimis_left > 0 then 'low_left'
     else 'used_up'
   end as vta_signal,
-  least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) as priority_score,
+  least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) as priority_score,
   case
-    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then 'good_first_call'
-    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then 'needs_review'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then 'good_first_call'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then 'needs_review'
     else 'weak_fit'
   end as sales_signal,
   array_remove(array[
@@ -377,35 +401,40 @@ select
     case when s.company_age_years >= 20 and s.company_age_years < 30 then 'ettevõte on tegutsenud vähemalt 20 aastat' end,
     case when s.company_age_years >= 10 and s.company_age_years < 20 then 'ettevõte on tegutsenud vähemalt 10 aastat' end,
     case when s.company_age_years >= 5 and s.company_age_years < 10 then 'ettevõte on tegutsenud üle 5 aasta' end,
-    case when s.employee_points = 20 then 'ettevõttes on vähemalt 25 töötajat' end,
-    case when s.employee_points = 14 then 'ettevõttes on vähemalt 10 töötajat' end,
-    case when s.employee_points = 8 then 'ettevõttes on mitu inimest tööl' end,
+    case when s.employee_points = 30 then 'ettevõttes on vähemalt 500 töötajat' end,
+    case when s.employee_points = 25 then 'ettevõttes on vähemalt 250 töötajat' end,
+    case when s.employee_points = 20 then 'ettevõttes on vähemalt 50 töötajat' end,
+    case when s.employee_points = 15 then 'ettevõttes on vähemalt 20 töötajat' end,
+    case when s.board_points = 15 then 'ainuomanik / 1 juhatuse liige' end,
+    case when s.board_points = 10 then '2 juhatuse liiget' end,
     case when s.revenue_points = 25 then 'müügitulu on tugev' end,
     case when s.revenue_points = 20 then 'müügitulu paistab piisav' end,
     case when s.revenue_points = 12 then 'müügitulu on kontrolli jaoks piisav' end,
     case when s.vta_points > 0 then 'VTA jääk paistab kasutatav' end,
     case when s.de_minimis_left is null then 'VTA vajab kontrolli' end,
+    case when s.has_mobile_phone is true then 'mobiiltelefon on teada' end,
     case when s.activity_points > 0 then 'tegevusala on tuvastatav' end
   ], null) as score_reason,
   jsonb_build_array(
     jsonb_build_object('criterion_id', 'active_status', 'label', 'Ettevõte on tegutsev', 'max_points', 15, 'points', s.active_points),
     jsonb_build_object('criterion_id', 'company_age', 'label', 'Ettevõttel on ajalugu', 'max_points', 25, 'points', s.age_points),
-    jsonb_build_object('criterion_id', 'employee_scale', 'label', 'Töötajate arv', 'max_points', 20, 'points', s.employee_points),
+    jsonb_build_object('criterion_id', 'employee_scale', 'label', 'Töötajate arv', 'max_points', 30, 'points', s.employee_points),
+    jsonb_build_object('criterion_id', 'board_members', 'label', 'Juhatuse suurus', 'max_points', 15, 'points', s.board_points),
     jsonb_build_object('criterion_id', 'revenue_scale', 'label', 'Müügitulu lubab projekti', 'max_points', 25, 'points', s.revenue_points),
     jsonb_build_object('criterion_id', 'vta_left', 'label', 'VTA jääk', 'max_points', 10, 'points', s.vta_points),
     jsonb_build_object('criterion_id', 'activity_known', 'label', 'Tegevusala teada', 'max_points', 5, 'points', s.activity_points)
   ) as score_breakdown,
   case
-    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+    when least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
       'Kontrolli VTA jääk ja võta ühendust: ettevõte on vana, seal on inimesi tööl ja andmete põhjal võib väike praktiline projekt olla mõistlik.'
-    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then
+    when least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) >= 50 then
       'Kontrolli puuduvad andmed enne kõnet.'
     else
       'Jäta madalamasse prioriteeti.'
   end as next_action,
   case
-    when least(100, s.active_points + s.age_points + s.employee_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
-      'Tere, vaatasin avalike andmete põhjal, et teie ettevõte on tegutsenud pikalt ja seal on inimesi tööl. Sellistes firmades on tihti mõni vana tarkvara, Exceli töö või käsitsi info liigutamine, mida saab toetuse abil korda teha. Kas teil on sel aastal mõni selline plaan?'
+    when least(100, s.active_points + s.age_points + s.employee_points + s.board_points + s.revenue_points + s.vta_points + s.activity_points) >= 75 then
+      'Tere, vaatasin avalike andmete põhjal, et teie ettevõte on tegutsenud pikalt ja seal on inimesi tööl. Sellistes firmades on tihti mõni vana tarkvara, Exceli töö või käsitsi info liigutamine, mida saab toetuse abil korda teha. Kas teil on sel aastal mõni selline plaan? (Vajadusel kontrolli: Kas tegelete ettevõttes ise ka igapäevase juhtimisega?)'
     else
       'Tere, kontrollime ettevõtte digitoetuse ja tööde korrastamise võimalust. Kas teil on mõni tarkvara või korduv töö, mille kohta soovite kiiret eelhinnangut?'
   end as recommended_pitch,
@@ -435,6 +464,9 @@ select
   coalesce(s.latest_fiscal_year, p.latest_fiscal_year) as latest_fiscal_year,
   coalesce(s.average_revenue_last_two, p.average_revenue_last_two) as average_revenue_last_two,
   coalesce(s.latest_employee_count, p.latest_employee_count) as latest_employee_count,
+  coalesce(s.board_member_count, p.board_member_count) as board_member_count,
+  coalesce(s.oldest_board_member_age, p.oldest_board_member_age) as oldest_board_member_age,
+  coalesce(s.has_mobile_phone, p.has_mobile_phone) as has_mobile_phone,
   coalesce(s.de_minimis_left, p.de_minimis_left) as de_minimis_left,
   coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) as de_minimis_checked_at,
   case
@@ -460,9 +492,11 @@ select
     case when p.company_age_years >= 20 and p.company_age_years < 30 then '20+ aastat tegutsenud ettevõte' end,
     case when coalesce(s.latest_employee_count, p.latest_employee_count) >= 25 then 'palju inimesi tööl' end,
     case when coalesce(s.latest_employee_count, p.latest_employee_count) >= 10 and coalesce(s.latest_employee_count, p.latest_employee_count) < 25 then 'mitu inimest tööl' end,
+    case when coalesce(s.board_member_count, p.board_member_count) = 1 then 'ainuomanik / 1 juhatuse liige' end,
     case when coalesce(s.average_revenue_last_two, p.average_revenue_last_two) >= 50000 then 'müügitulu paistab piisav' end,
     case when coalesce(s.de_minimis_left, p.de_minimis_left) >= 10000 then 'VTA jääk paistab kasutatav' end,
-    case when coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) is null then 'VTA vajab kontrolli' end
+    case when coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) is null then 'VTA vajab kontrolli' end,
+    case when coalesce(s.has_mobile_phone, p.has_mobile_phone) is true then 'mobiiltelefon on teada' end
   ], null) as why_now
 from sales_crm.prospect_companies p
 left join lateral (
@@ -474,6 +508,9 @@ left join lateral (
     latest_fiscal_year,
     average_revenue_last_two,
     latest_employee_count,
+    board_member_count,
+    oldest_board_member_age,
+    has_mobile_phone,
     de_minimis_left,
     de_minimis_checked_at
   from support_assessment.company_support_snapshots s
@@ -648,7 +685,11 @@ drop function if exists public.crm_get_company_lead_universe(integer, integer);
 
 create or replace function public.crm_get_company_lead_universe(
   p_limit integer default 500,
-  p_min_score integer default 0
+  p_min_score integer default 0,
+  p_min_employees integer default null,
+  p_max_board_members integer default null,
+  p_min_board_age integer default null,
+  p_requires_mobile boolean default false
 )
 returns table (
   prospect_id uuid,
@@ -661,6 +702,9 @@ returns table (
   primary_activity_code text,
   primary_activity_name text,
   address_summary text,
+  board_member_count integer,
+  oldest_board_member_age integer,
+  has_mobile_phone boolean,
   latest_fiscal_year integer,
   average_revenue_last_two numeric,
   latest_employee_count integer,
@@ -698,6 +742,9 @@ as $$
     u.primary_activity_code,
     u.primary_activity_name,
     u.address_summary,
+    u.board_member_count,
+    u.oldest_board_member_age,
+    u.has_mobile_phone,
     u.latest_fiscal_year,
     u.average_revenue_last_two,
     u.latest_employee_count,
@@ -721,6 +768,10 @@ as $$
   from sales_crm.company_lead_universe u
   where sales_crm.current_crm_user_allowed()
     and u.priority_score >= greatest(0, least(100, coalesce(p_min_score, 0)))
+    and (p_min_employees is null or coalesce(u.latest_employee_count, 0) >= p_min_employees)
+    and (p_max_board_members is null or (u.board_member_count is not null and u.board_member_count <= p_max_board_members))
+    and (p_min_board_age is null or (u.oldest_board_member_age is not null and u.oldest_board_member_age >= p_min_board_age))
+    and (p_requires_mobile = false or u.has_mobile_phone = true)
   order by
     u.is_prospect desc,
     u.priority_score desc,

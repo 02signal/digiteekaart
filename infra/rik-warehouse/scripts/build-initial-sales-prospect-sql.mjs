@@ -9,6 +9,8 @@ const defaults = {
   lihtandmedZip: "/private/tmp/digiteekaart-rik/lihtandmed.csv.zip",
   reportMetaZip: "/private/tmp/digiteekaart-rik/aruanded-yld.zip",
   reportElementsZip: "/private/tmp/digiteekaart-rik/aruanded2024.zip",
+  isikudZip: "/private/tmp/digiteekaart-rik/isikud.csv.zip",
+  sidevahendidZip: "/private/tmp/digiteekaart-rik/sidevahendid.csv.zip",
   out: "/private/tmp/digiteekaart-rik/initial-sales-prospects.sql",
   year: 2024,
   limit: 75,
@@ -28,7 +30,9 @@ const defaults = {
 const officialFiles = {
   lihtandmedZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/avaandmed/ettevotja_rekvisiidid__lihtandmed.csv.zip",
   reportMetaZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/1.aruannete_yldandmed_kuni_30042026_1.zip",
-  reportElementsZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/4.2024_aruannete_elemendid_kuni_30042026.zip"
+  reportElementsZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/4.2024_aruannete_elemendid_kuni_30042026.zip",
+  isikudZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/avaandmed/ettevotja_rekvisiidid__isikud.csv.zip",
+  sidevahendidZip: "https://avaandmed.ariregister.rik.ee/sites/default/files/avaandmed/ettevotja_rekvisiidid__sidevahendid.csv.zip"
 };
 
 const args = new Map();
@@ -42,6 +46,8 @@ const options = {
   lihtandmedZip: args.get("lihtandmed") || process.env.RIK_LIHTANDMED_ZIP || defaults.lihtandmedZip,
   reportMetaZip: args.get("reports-meta") || process.env.RIK_REPORT_META_ZIP || defaults.reportMetaZip,
   reportElementsZip: args.get("report-elements") || process.env.RIK_REPORT_ELEMENTS_ZIP || defaults.reportElementsZip,
+  isikudZip: args.get("isikud") || process.env.RIK_ISIKUD_ZIP || defaults.isikudZip,
+  sidevahendidZip: args.get("sidevahendid") || process.env.RIK_SIDEVAHENDID_ZIP || defaults.sidevahendidZip,
   out: args.get("out") || process.env.RIK_PROSPECT_SQL_OUT || defaults.out,
   year: Number(args.get("year") || process.env.RIK_REPORT_YEAR || defaults.year),
   limit: Number(args.get("limit") || process.env.RIK_PROSPECT_LIMIT || defaults.limit),
@@ -192,15 +198,32 @@ const scoreCandidate = (candidate) => {
     scoreReason.push("ettevõte on tegutsenud üle 5 aasta");
   }
 
-  if (candidate.employeeCount >= 25) {
+  if (candidate.employeeCount >= 500) {
+    score += 30;
+    scoreReason.push("ettevõttes on vähemalt 500 töötajat");
+  } else if (candidate.employeeCount >= 250) {
+    score += 25;
+    scoreReason.push("ettevõttes on vähemalt 250 töötajat");
+  } else if (candidate.employeeCount >= 50) {
     score += 20;
-    scoreReason.push("ettevõttes on vähemalt 25 töötajat");
-  } else if (candidate.employeeCount >= 10) {
-    score += 14;
-    scoreReason.push("ettevõttes on vähemalt 10 töötajat");
-  } else if (candidate.employeeCount >= 3) {
-    score += 8;
-    scoreReason.push("ettevõttes on mitu inimest tööl");
+    scoreReason.push("ettevõttes on vähemalt 50 töötajat");
+  } else if (candidate.employeeCount >= 20) {
+    score += 15;
+    scoreReason.push("ettevõttes on vähemalt 20 töötajat");
+  }
+
+  if (candidate.boardMemberCount === 1) {
+    score += 15;
+    scoreReason.push("ainuomanik / 1 juhatuse liige");
+  } else if (candidate.boardMemberCount === 2) {
+    score += 10;
+    scoreReason.push("2 juhatuse liiget");
+  } else if (candidate.boardMemberCount === 3) {
+    score += 5;
+  }
+
+  if (candidate.hasMobilePhone) {
+    scoreReason.push("mobiiltelefon on teada");
   }
 
   if (candidate.revenue >= 1000000) {
@@ -293,7 +316,98 @@ const loadReportFacts = async (reportMap) => {
   return facts;
 };
 
-const loadCompanies = async (facts) => {
+const getAgeFromIsikukood = (isikukood, sourceDate) => {
+  if (!isikukood || isikukood.length !== 11) return null;
+  const centuryDigit = parseInt(isikukood[0], 10);
+  if (centuryDigit < 1 || centuryDigit > 6) return null;
+
+  let year = parseInt(isikukood.substring(1, 3), 10);
+  const month = parseInt(isikukood.substring(3, 5), 10);
+  const day = parseInt(isikukood.substring(5, 7), 10);
+
+  if (centuryDigit === 1 || centuryDigit === 2) year += 1800;
+  else if (centuryDigit === 3 || centuryDigit === 4) year += 1900;
+  else if (centuryDigit === 5 || centuryDigit === 6) year += 2000;
+
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const birthDate = new Date(Date.UTC(year, month - 1, day));
+  const currentDate = new Date(`${sourceDate}T00:00:00.000Z`);
+  if (isNaN(birthDate.getTime()) || isNaN(currentDate.getTime())) return null;
+
+  let age = currentDate.getUTCFullYear() - birthDate.getUTCFullYear();
+  if (
+    currentDate.getUTCMonth() < birthDate.getUTCMonth() ||
+    (currentDate.getUTCMonth() === birthDate.getUTCMonth() && currentDate.getUTCDate() < birthDate.getUTCDate())
+  ) {
+    age--;
+  }
+
+  return age >= 18 && age <= 120 ? age : null;
+};
+
+const loadBoardMembers = async () => {
+  const boardData = new Map();
+  const { lines, done } = zipLines(options.isikudZip);
+  let header;
+
+  for await (const line of lines) {
+    const cells = parseCsvLine(line);
+    if (!header) {
+      header = cells;
+      continue;
+    }
+
+    const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
+    const registryCode = normalizeRegistryCode(row.ariregistri_kood);
+    if (!registryCode) continue;
+
+    const role = row.isiku_roll_tekstina || "";
+    if (role !== "Juhatuse liige") continue;
+
+    const current = boardData.get(registryCode) || { count: 0, oldestAge: null };
+    current.count += 1;
+
+    const isikukood = row.isikukood;
+    const age = getAgeFromIsikukood(isikukood, options.sourceDate);
+    if (age !== null && (current.oldestAge === null || age > current.oldestAge)) {
+      current.oldestAge = age;
+    }
+
+    boardData.set(registryCode, current);
+  }
+
+  await done;
+  return boardData;
+};
+
+const loadMobilePhones = async () => {
+  const mobilePhones = new Set();
+  const { lines, done } = zipLines(options.sidevahendidZip);
+  let header;
+
+  for await (const line of lines) {
+    const cells = parseCsvLine(line);
+    if (!header) {
+      header = cells;
+      continue;
+    }
+
+    const row = Object.fromEntries(header.map((key, index) => [key, cells[index]]));
+    const registryCode = normalizeRegistryCode(row.ariregistri_kood);
+    if (!registryCode) continue;
+
+    const type = row.sidevahendi_liik_tekstina || "";
+    if (type !== "mobiiltelefon") continue;
+
+    mobilePhones.add(registryCode);
+  }
+
+  await done;
+  return mobilePhones;
+};
+
+const loadCompanies = async (facts, boardData, mobilePhones) => {
   const candidates = [];
   const { lines, done } = zipLines(options.lihtandmedZip);
   let header;
@@ -332,6 +446,9 @@ const loadCompanies = async (facts) => {
       addressSummary: row.asukoha_ehak_tekstina || row.asukoht_ettevotja_aadressis || null,
       revenue: fact.revenue,
       employeeCount: fact.employeeCount,
+      boardMemberCount: boardData.get(registryCode)?.count || null,
+      oldestBoardMemberAge: boardData.get(registryCode)?.oldestAge || null,
+      hasMobilePhone: mobilePhones.has(registryCode),
       latestFiscalYear: options.year
     };
 
@@ -375,7 +492,7 @@ const buildSql = (candidates) => {
     const pitch = `Tere, vaatasin avalike andmete põhjal, et ${candidate.companyName} on tegutsenud ${candidate.companyAgeYears} aastat ja seal on inimesi tööl. Sellistes firmades on tihti mõni vana tarkvara, Exceli töö või käsitsi info liigutamine, mida saab toetuse abil korda teha. Kas teil on sel aastal mõni selline plaan?`;
 
     lines.push(
-      `insert into public_registry.rik_companies (registry_code, name, legal_form, status, registered_at, address_summary, source_updated_at, last_seen_at, last_import_batch_id, raw_source_kind) values (${toSql(candidate.registryCode)}, ${toSql(candidate.companyName)}, ${toSql(candidate.legalForm)}, ${toSql(candidate.statusText)}, ${toSql(candidate.registeredAt)}, ${toSql(candidate.addressSummary)}, ${toSql(nowIso)}, ${toSql(nowIso)}, ${toSql(batchId)}, 'rik_avaandmed_csv') on conflict (registry_code) do update set name = excluded.name, legal_form = excluded.legal_form, status = excluded.status, registered_at = excluded.registered_at, address_summary = excluded.address_summary, source_updated_at = excluded.source_updated_at, last_seen_at = excluded.last_seen_at, last_import_batch_id = excluded.last_import_batch_id;`,
+      `insert into public_registry.rik_companies (registry_code, name, legal_form, status, registered_at, address_summary, board_member_count, oldest_board_member_age, has_mobile_phone, source_updated_at, last_seen_at, last_import_batch_id, raw_source_kind) values (${toSql(candidate.registryCode)}, ${toSql(candidate.companyName)}, ${toSql(candidate.legalForm)}, ${toSql(candidate.statusText)}, ${toSql(candidate.registeredAt)}, ${toSql(candidate.addressSummary)}, ${toSqlNumber(candidate.boardMemberCount)}, ${toSqlNumber(candidate.oldestBoardMemberAge)}, ${candidate.hasMobilePhone}, ${toSql(nowIso)}, ${toSql(nowIso)}, ${toSql(batchId)}, 'rik_avaandmed_csv') on conflict (registry_code) do update set name = excluded.name, legal_form = excluded.legal_form, status = excluded.status, registered_at = excluded.registered_at, address_summary = excluded.address_summary, board_member_count = excluded.board_member_count, oldest_board_member_age = excluded.oldest_board_member_age, has_mobile_phone = excluded.has_mobile_phone, source_updated_at = excluded.source_updated_at, last_seen_at = excluded.last_seen_at, last_import_batch_id = excluded.last_import_batch_id;`,
       `insert into public_registry.rik_annual_reports (registry_code, fiscal_year, revenue, employee_count, report_status, source_updated_at, last_import_batch_id) values (${toSql(candidate.registryCode)}, ${candidate.latestFiscalYear}, ${toSqlNumber(candidate.revenue)}, ${toSqlNumber(candidate.employeeCount)}, 'avaandmed', ${toSql(nowIso)}, ${toSql(batchId)}) on conflict (registry_code, fiscal_year) do update set revenue = excluded.revenue, employee_count = excluded.employee_count, report_status = excluded.report_status, source_updated_at = excluded.source_updated_at, last_import_batch_id = excluded.last_import_batch_id, updated_at = now();`
     );
 
@@ -385,8 +502,8 @@ const buildSql = (candidates) => {
     ) {
       prospectCount += 1;
       lines.push(
-        `insert into sales_crm.prospect_companies (list_id, registry_code, company_name, legal_form, status, registered_at, company_age_years, address_summary, average_revenue_last_two, latest_employee_count, latest_fiscal_year, vta_signal, sales_signal, priority_score, score_reason, recommended_pitch, next_action, crm_status, source_system, source_observed_at) select ${toSql(listId)}, ${toSql(candidate.registryCode)}, ${toSql(candidate.companyName)}, ${toSql(candidate.legalForm)}, ${toSql(candidate.statusText)}, ${toSql(candidate.registeredAt)}, ${candidate.companyAgeYears}, ${toSql(candidate.addressSummary)}, ${toSqlNumber(candidate.revenue)}, ${toSqlNumber(candidate.employeeCount)}, ${candidate.latestFiscalYear}, 'not_checked', ${toSql(candidate.salesSignal)}, ${candidate.priorityScore}, ${toSqlArray(candidate.scoreReason)}, ${toSql(pitch)}, 'Kontrolli VTA jääk. Kui jääk sobib, tee esimene kõne.', 'call_next', 'rik_avaandmed_csv', ${toSql(nowIso)} where not exists (select 1 from sales_crm.prospect_companies where registry_code = ${toSql(candidate.registryCode)} and crm_status not in ('do_not_contact', 'won', 'lost'));`,
-        `update sales_crm.prospect_companies set address_summary = ${toSql(candidate.addressSummary)}, updated_at = now() where registry_code = ${toSql(candidate.registryCode)} and source_system in ('rik_warehouse', 'rik_avaandmed_csv');`
+        `insert into sales_crm.prospect_companies (list_id, registry_code, company_name, legal_form, status, registered_at, company_age_years, address_summary, average_revenue_last_two, latest_employee_count, latest_fiscal_year, board_member_count, oldest_board_member_age, has_mobile_phone, vta_signal, sales_signal, priority_score, score_reason, recommended_pitch, next_action, crm_status, source_system, source_observed_at) select ${toSql(listId)}, ${toSql(candidate.registryCode)}, ${toSql(candidate.companyName)}, ${toSql(candidate.legalForm)}, ${toSql(candidate.statusText)}, ${toSql(candidate.registeredAt)}, ${candidate.companyAgeYears}, ${toSql(candidate.addressSummary)}, ${toSqlNumber(candidate.revenue)}, ${toSqlNumber(candidate.employeeCount)}, ${candidate.latestFiscalYear}, ${toSqlNumber(candidate.boardMemberCount)}, ${toSqlNumber(candidate.oldestBoardMemberAge)}, ${candidate.hasMobilePhone}, 'not_checked', ${toSql(candidate.salesSignal)}, ${candidate.priorityScore}, ${toSqlArray(candidate.scoreReason)}, ${toSql(pitch)}, 'Kontrolli VTA jääk. Kui jääk sobib, tee esimene kõne.', 'call_next', 'rik_avaandmed_csv', ${toSql(nowIso)} where not exists (select 1 from sales_crm.prospect_companies where registry_code = ${toSql(candidate.registryCode)} and crm_status not in ('do_not_contact', 'won', 'lost'));`,
+        `update sales_crm.prospect_companies set address_summary = ${toSql(candidate.addressSummary)}, board_member_count = ${toSqlNumber(candidate.boardMemberCount)}, oldest_board_member_age = ${toSqlNumber(candidate.oldestBoardMemberAge)}, has_mobile_phone = ${candidate.hasMobilePhone}, updated_at = now() where registry_code = ${toSql(candidate.registryCode)} and source_system in ('rik_warehouse', 'rik_avaandmed_csv');`
       );
     }
 
@@ -410,8 +527,16 @@ console.error("Loading report facts...");
 const facts = await loadReportFacts(reportMap);
 console.error(`Loaded ${facts.size} company report fact rows.`);
 
+console.error("Loading board members (isikud)...");
+const boardData = await loadBoardMembers();
+console.error(`Loaded board members for ${boardData.size} companies.`);
+
+console.error("Loading mobile phones (sidevahendid)...");
+const mobilePhones = await loadMobilePhones();
+console.error(`Loaded mobile phones for ${mobilePhones.size} companies.`);
+
 console.error("Selecting companies...");
-const candidates = await loadCompanies(facts);
+const candidates = await loadCompanies(facts, boardData, mobilePhones);
 if (candidates.length === 0) {
   throw new Error("No candidates matched the current filters.");
 }
