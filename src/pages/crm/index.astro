@@ -263,6 +263,11 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         appView.hidden = false;
       };
 
+      const crmRedirectUrl = () => {
+        const url = new URL("/crm/", window.location.origin);
+        return url.toString();
+      };
+
       const renderUsers = () => {
         usersList.innerHTML = state.users.map((user) => {
           const isSelf = state.currentUser?.email === user.email;
@@ -498,7 +503,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
-            emailRedirectTo: window.location.origin
+            emailRedirectTo: crmRedirectUrl()
           }
         });
 

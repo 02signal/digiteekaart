@@ -1,14 +1,17 @@
 {
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
       "has": [
         {
           "type": "host",
-          "value": "crm.digiteekaart.ee"
+          "value": {
+            "eq": "crm.digiteekaart.ee"
+          }
         }
       ],
-      "destination": "/crm/"
+      "destination": "/crm/",
+      "permanent": false
     }
   ]
 }
