@@ -340,6 +340,9 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         if (row.vta_queue_status === "queued") return "VTA järjekorras";
         if (row.vta_queue_status === "checking") return "VTA kontrollis";
         if (row.vta_queue_status === "checked") return "VTA kontrollitud";
+        if (row.vta_queue_status === "manual_review") return "VTA vajab ülevaatust";
+        if (row.vta_queue_status === "failed") return "VTA tõrge";
+        if (row.vta_queue_status === "skipped") return "VTA vahele jäetud";
         return vtaLabels[row.vta_signal] || row.vta_signal || "-";
       };
 
@@ -356,6 +359,15 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             hint: row.de_minimis_left === null || row.de_minimis_left === undefined ? "jääk teadmata" : `${formatCompactMoney(row.de_minimis_left)} jääk`,
             state: "checked"
           };
+        }
+        if (row.vta_queue_status === "manual_review") {
+          return { label: "Kontrolli üle", hint: "vajab inimest", state: "risk" };
+        }
+        if (row.vta_queue_status === "failed") {
+          return { label: "VTA tõrge", hint: "proovi hiljem", state: "risk" };
+        }
+        if (row.vta_queue_status === "skipped") {
+          return { label: "VTA vahele", hint: "ei kontrollitud", state: "unknown" };
         }
         if (row.vta_signal === "high_left" || row.vta_signal === "some_left") {
           return {
@@ -374,6 +386,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         if (row.vta_queue_status === "queued") return "VTA taustal";
         if (row.vta_queue_status === "checking") return "Kontrollib";
         if (row.vta_queue_status === "checked") return "Uuenda VTA";
+        if (row.vta_queue_status === "failed") return "Proovi VTA uuesti";
+        if (row.vta_queue_status === "manual_review") return "Uuenda VTA";
         return "Käivita VTA";
       };
 

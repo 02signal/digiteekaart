@@ -36,7 +36,8 @@
 - Done: first bounded RIK public CSV import loaded 250 company rows and 75 strong-signal sales prospects into Supabase; no personal contacts were imported.
 - Done: CRM sales view now uses a Kanban-style board, compact lead cards, internal company work-sheets, visible score reasons, CRM history markers and a `VTA kontrolli` queue action.
 - Done: lead scoring now prioritises older companies and companies with more employees; CRM can batch-add the next 10 strongest unchecked firms to the VTA queue.
-- Next: add RAR/VTA lookup adapter that processes `sales_crm.vta_check_queue` in small batches, stores dated VTA snapshots and updates the company work-sheet.
+- Done: VTA worker RPC foundation added so AMOS/n8n-ops can claim small batches, store dated RAR/VTA snapshots and update CRM cards after a bounded lookup result.
+- Next: connect the official/approved RAR/VTA lookup adapter to the AMOS n8n-ops runner and run 2-3 supervised batches before daily automation.
 - Next: import multiple annual-report years so the company work-sheet can show revenue/employee trend, not only the latest 2024 signal.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
 - Next: add Toomas through CRM interface and smoke-test his magic-link login.
