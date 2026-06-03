@@ -58,7 +58,7 @@ create table if not exists sales_crm.prospect_companies (
   de_minimis_left numeric(14, 2),
   de_minimis_checked_at timestamptz,
   vta_signal text not null default 'not_checked'
-    check (vta_signal in ('not_checked', 'high_left', 'some_left', 'low_left', 'used_up', 'manual_review', 'source_unavailable')),
+    check (vta_signal in ('not_checked', 'high_left', 'some_left', 'low_left', 'used_up', 'manual_review', 'source_unavailable', 'sector_restricted')),
   sales_signal text not null default 'needs_review'
     check (sales_signal in ('good_first_call', 'needs_review', 'weak_fit', 'do_not_contact')),
   priority_score integer not null default 0 check (priority_score between 0 and 100),
@@ -385,6 +385,7 @@ select
   s.de_minimis_left,
   s.de_minimis_checked_at,
   case
+    when s.primary_activity_code ~ '^(01|02|03)' then 'sector_restricted'
     when s.de_minimis_left is null then 'not_checked'
     when s.de_minimis_left >= 50000 then 'high_left'
     when s.de_minimis_left >= 10000 then 'some_left'
@@ -412,8 +413,9 @@ select
     case when s.revenue_points = 25 then 'müügitulu on tugev' end,
     case when s.revenue_points = 20 then 'müügitulu paistab piisav' end,
     case when s.revenue_points = 12 then 'müügitulu on kontrolli jaoks piisav' end,
-    case when s.vta_points > 0 then 'VTA jääk paistab kasutatav' end,
-    case when s.de_minimis_left is null then 'VTA vajab kontrolli' end,
+    case when s.primary_activity_code ~ '^(01|02|03)' then 'VTA pole valdkonna (EMTAK) tõttu tõenäoliselt lubatud' end,
+    case when s.primary_activity_code !~ '^(01|02|03)' and s.vta_points > 0 then 'VTA jääk paistab kasutatav' end,
+    case when s.primary_activity_code !~ '^(01|02|03)' and s.de_minimis_left is null then 'VTA vajab kontrolli' end,
     case when s.has_mobile_phone is true then 'mobiiltelefon on teada' end,
     case when s.activity_points > 0 then 'tegevusala on tuvastatav' end
   ], null) as score_reason,
@@ -473,6 +475,7 @@ select
   coalesce(s.de_minimis_left, p.de_minimis_left) as de_minimis_left,
   coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) as de_minimis_checked_at,
   case
+    when coalesce(s.primary_activity_code, p.primary_activity_code) ~ '^(01|02|03)' then 'sector_restricted'
     when coalesce(s.de_minimis_left, p.de_minimis_left) is null then p.vta_signal
     when coalesce(s.de_minimis_left, p.de_minimis_left) >= 50000 then 'high_left'
     when coalesce(s.de_minimis_left, p.de_minimis_left) >= 10000 then 'some_left'
@@ -498,8 +501,9 @@ select
     case when coalesce(s.latest_employee_count, p.latest_employee_count) >= 10 and coalesce(s.latest_employee_count, p.latest_employee_count) < 25 then 'mitu inimest tööl' end,
     case when coalesce(s.board_member_count, p.board_member_count) = 1 then 'ainuomanik / 1 juhatuse liige' end,
     case when coalesce(s.average_revenue_last_two, p.average_revenue_last_two) >= 50000 then 'müügitulu paistab piisav' end,
-    case when coalesce(s.de_minimis_left, p.de_minimis_left) >= 10000 then 'VTA jääk paistab kasutatav' end,
-    case when coalesce(s.de_minimis_checked_at, p.de_minimis_checked_at) is null then 'VTA vajab kontrolli' end,
+    case when coalesce(s.primary_activity_code, p.primary_activity_code) ~ '^(01|02|03)' then 'VTA pole valdkonna tõttu lubatud' end,
+    case when coalesce(s.primary_activity_code, p.primary_activity_code) !~ '^(01|02|03)' and coalesce(s.de_minimis_left, p.de_minimis_left) >= 10000 then 'VTA jääk paistab kasutatav' end,
+    case when coalesce(s.primary_activity_code, p.primary_activity_code) !~ '^(01|02|03)' and coalesce(s.de_minimis_left, p.de_minimis_left) is null then 'VTA vajab kontrolli' end,
     case when coalesce(s.has_mobile_phone, p.has_mobile_phone) is true then 'mobiiltelefon on teada' end
   ], null) as why_now
 from sales_crm.prospect_companies p
