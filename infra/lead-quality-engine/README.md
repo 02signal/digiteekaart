@@ -40,7 +40,7 @@ This avoids random cold calling. The call starts from a concrete business reason
 2. Support and VTA snapshots are stored in `support_assessment`.
 3. Candidate companies are copied or projected into `sales_crm.prospect_companies`.
 4. `sales_crm.vta_check_queue` schedules 20-30 VTA checks per day while official RAR/X-tee integration is pending.
-5. `sales_crm.toomas_priority_board` gives the working view.
+5. `sales_crm.sales_priority_board` gives the working view.
 6. `sales_crm.prospect_activities` stores calls, notes and follow-ups.
 7. `sales_crm.prospect_contacts_restricted` stores people/contact data only for authenticated internal use.
 
@@ -49,7 +49,7 @@ This avoids random cold calling. The call starts from a concrete business reason
 Fastest safe path:
 
 1. Run SQL migrations in Supabase.
-2. Show `sales_crm.company_lead_universe` or `sales_crm.toomas_priority_board` in Supabase table editor or the CRM page.
+2. Show `sales_crm.company_lead_universe` or `sales_crm.sales_priority_board` in Supabase table editor or the CRM page.
 3. Use n8n once per day to:
    - pick 20-30 queued companies;
    - run the VTA check;
@@ -80,7 +80,7 @@ Vercel rewrites `https://crm.digiteekaart.ee/` to that page through `vercel.json
 
 The page uses Supabase magic-link login and public RPC wrappers:
 
-- `public.crm_get_toomas_priority_board()`
+- `public.crm_get_sales_priority_board()`
 - `public.crm_get_company_lead_universe(...)`
 - `public.crm_get_lead_scoring_criteria()`
 - `public.crm_get_warehouse_stats()`
@@ -137,7 +137,7 @@ or paste `sql/001_sales_quality_engine.sql` into Supabase SQL Editor.
 
 ```sql
 insert into sales_crm.crm_users (email, role, active)
-values ('toomas@example.ee', 'sales', true)
+values ('sales@example.ee', 'sales', true)
 on conflict (email) do update
 set active = excluded.active,
     role = excluded.role;
@@ -216,8 +216,8 @@ Before a paid recommendation or application-preparation proposal, refresh VTA ag
 - `sales_crm.prospect_contacts_restricted`
 - `sales_crm.prospect_activities`
 - `sales_crm.vta_check_queue`
-- `sales_crm.toomas_priority_board`
-- `sales_crm.toomas_call_sheet_export`
+- `sales_crm.sales_priority_board`
+- `sales_crm.sales_call_sheet_export`
 
 The sales views exclude restricted contact fields.
 
@@ -226,7 +226,7 @@ The sales views exclude restricted contact fields.
 Run:
 
 ```bash
-node infra/lead-quality-engine/scripts/build-toomas-prospect-fixture.mjs
+node infra/lead-quality-engine/scripts/build-sales-prospect-fixture.mjs
 ```
 
 Expected outcome: a public-safe prospect score and call signal are printed for the fixture company.

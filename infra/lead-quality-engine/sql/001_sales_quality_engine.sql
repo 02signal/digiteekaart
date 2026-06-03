@@ -455,7 +455,7 @@ where coalesce(s.crm_status, 'not_in_sales') not in ('do_not_contact', 'won', 'l
 comment on view sales_crm.company_lead_universe is
   'All imported public-company facts scored for sales prioritisation. Excludes restricted personal contact fields.';
 
-create or replace view sales_crm.toomas_priority_board as
+create or replace view sales_crm.sales_priority_board as
 select
   p.id as prospect_id,
   p.registry_code,
@@ -535,10 +535,10 @@ left join lateral (
 ) q on true
 where p.crm_status not in ('do_not_contact', 'won', 'lost');
 
-comment on view sales_crm.toomas_priority_board is
+comment on view sales_crm.sales_priority_board is
   'Public-company-fact CRM board for sales work. Excludes restricted personal contact fields.';
 
-create or replace view sales_crm.toomas_call_sheet_export as
+create or replace view sales_crm.sales_call_sheet_export as
 select
   prospect_id,
   registry_code,
@@ -558,9 +558,9 @@ select
   owner_name,
   crm_status,
   next_follow_up_at
-from sales_crm.toomas_priority_board;
+from sales_crm.sales_priority_board;
 
-comment on view sales_crm.toomas_call_sheet_export is
+comment on view sales_crm.sales_call_sheet_export is
   'CSV/export-safe call sheet. Contact people and personal e-mails must be joined only in an authenticated restricted tool.';
 
 create or replace function sales_crm.current_crm_user_allowed()
@@ -788,7 +788,7 @@ as $$
   limit greatest(1, least(1000, coalesce(p_limit, 500)));
 $$;
 
-create or replace function public.crm_get_toomas_priority_board()
+create or replace function public.crm_get_sales_priority_board()
 returns table (
   prospect_id uuid,
   registry_code text,
@@ -847,7 +847,7 @@ as $$
     b.vta_queue_status,
     b.vta_scheduled_for,
     b.why_now
-  from sales_crm.toomas_priority_board b
+  from sales_crm.sales_priority_board b
   where sales_crm.current_crm_user_allowed()
   order by
     case b.crm_status
@@ -1424,7 +1424,7 @@ begin
 end;
 $$;
 
-grant execute on function public.crm_get_toomas_priority_board() to authenticated;
+grant execute on function public.crm_get_sales_priority_board() to authenticated;
 grant execute on function public.crm_update_prospect_status(uuid, text, text, timestamptz) to authenticated;
 grant execute on function public.crm_add_activity(uuid, text, text, text, timestamptz) to authenticated;
 grant execute on function public.crm_toggle_star(uuid, boolean) to authenticated;

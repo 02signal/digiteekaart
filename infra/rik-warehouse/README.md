@@ -67,7 +67,7 @@ It is for the sales workflow, not for the public landing page:
 
 - `sales_crm.prospect_companies` stores candidate companies and their priority score;
 - `sales_crm.vta_check_queue` schedules low-volume VTA checks before sales calls, starting from older companies with more employees;
-- `sales_crm.toomas_priority_board` shows the public-safe call-priority board;
+- `sales_crm.sales_priority_board` shows the public-safe call-priority board;
 - `sales_crm.prospect_contacts_restricted` stores owner/board/contact data only behind access control.
 
 Keep the public funding pre-assessment and the internal sales CRM separate. A company can be visible in the internal priority board without exposing personal contact data in the public site.

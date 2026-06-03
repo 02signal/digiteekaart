@@ -30,7 +30,7 @@
 - Done: homepage registry-code field now runs live RIK lookup, shows company status on-page and sends bounded RIK facts with the lead.
 - Done: homepage company-name autocomplete lets owners start by typing the company name, select the right company and auto-fill the registry code before the RIK check.
 - Done: sample digitalisation roadmap page added to show owners what a practical roadmap should contain and why it can be useful.
-- Done: internal lead quality engine foundation added for Toomas: prospect scoring, public-safe priority board, VTA check queue and restricted contact layer.
+- Done: internal lead quality engine foundation added for the sales team: prospect scoring, public-safe priority board, VTA check queue and restricted contact layer.
 - Done: first internal CRM page added for `crm.digiteekaart.ee` with Supabase magic-link login, public-safe priority board, status update actions and admin-managed CRM users.
 - Done: CRM now shows the full imported company universe, strong-signal leads, scoring criteria/weights, warehouse counts and a `Lisa müüki` action for database-only companies.
 - Done: first bounded RIK public CSV import loaded 250 company rows and 75 strong-signal sales prospects into Supabase; no personal contacts were imported.
@@ -42,7 +42,7 @@
 - Next: connect the official/approved RAR/VTA lookup adapter to the AMOS n8n-ops runner and run 2-3 supervised batches before daily automation.
 - Next: import multiple annual-report years so the company work-sheet can show revenue/employee trend, not only the latest 2024 signal.
 - Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
-- Next: add Toomas through CRM interface and smoke-test his magic-link login.
+- Next: add sales users through CRM interface and smoke-test his magic-link login.
 - Next: add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.
 - Keep official funding facts checked against official sources before publishing.
