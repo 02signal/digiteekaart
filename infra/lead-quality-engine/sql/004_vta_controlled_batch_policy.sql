@@ -55,7 +55,7 @@ begin
     'queued',
     current_date
   )
-  on conflict (registry_code, scheduled_for, check_method) do update
+  on conflict on constraint vta_check_queue_registry_code_scheduled_for_check_method_key do update
   set
     prospect_company_id = excluded.prospect_company_id,
     company_name = excluded.company_name,
@@ -127,7 +127,7 @@ begin
     limit v_limit
   ),
   inserted as (
-    insert into sales_crm.vta_check_queue (
+    insert into sales_crm.vta_check_queue as q (
       prospect_company_id,
       registry_code,
       company_name,
@@ -145,23 +145,23 @@ begin
       'queued',
       current_date
     from candidates c
-    on conflict (registry_code, scheduled_for, check_method) do update
+    on conflict on constraint vta_check_queue_registry_code_scheduled_for_check_method_key do update
     set
       prospect_company_id = excluded.prospect_company_id,
       company_name = excluded.company_name,
-      priority_score = greatest(excluded.priority_score, sales_crm.vta_check_queue.priority_score),
+      priority_score = greatest(excluded.priority_score, q.priority_score),
       queue_status = case
-        when sales_crm.vta_check_queue.queue_status in ('checked', 'manual_review') then sales_crm.vta_check_queue.queue_status
-        when sales_crm.vta_check_queue.queue_status = 'checking' then 'checking'
+        when q.queue_status in ('checked', 'manual_review') then q.queue_status
+        when q.queue_status = 'checking' then 'checking'
         else 'queued'
       end,
       error_summary = null,
       updated_at = now()
     returning
-      id,
-      registry_code,
-      company_name,
-      priority_score
+      q.id,
+      q.registry_code,
+      q.company_name,
+      q.priority_score
   )
   select
     i.id,
@@ -224,7 +224,7 @@ begin
     limit v_limit
   ),
   inserted as (
-    insert into sales_crm.vta_check_queue (
+    insert into sales_crm.vta_check_queue as q (
       prospect_company_id,
       registry_code,
       company_name,
@@ -242,23 +242,23 @@ begin
       'queued',
       current_date
     from candidates c
-    on conflict (registry_code, scheduled_for, check_method) do update
+    on conflict on constraint vta_check_queue_registry_code_scheduled_for_check_method_key do update
     set
       prospect_company_id = excluded.prospect_company_id,
       company_name = excluded.company_name,
-      priority_score = greatest(excluded.priority_score, sales_crm.vta_check_queue.priority_score),
+      priority_score = greatest(excluded.priority_score, q.priority_score),
       queue_status = case
-        when sales_crm.vta_check_queue.queue_status in ('checked', 'manual_review') then sales_crm.vta_check_queue.queue_status
-        when sales_crm.vta_check_queue.queue_status = 'checking' then 'checking'
+        when q.queue_status in ('checked', 'manual_review') then q.queue_status
+        when q.queue_status = 'checking' then 'checking'
         else 'queued'
       end,
       error_summary = null,
       updated_at = now()
     returning
-      id,
-      registry_code,
-      company_name,
-      priority_score
+      q.id,
+      q.registry_code,
+      q.company_name,
+      q.priority_score
   )
   select
     i.id,
