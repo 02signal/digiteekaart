@@ -106,8 +106,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         </section>
 
         <div class="crm-view-tabs" data-view-filter>
-          <button class="is-active" type="button" data-view="focus">Fookus (1 ettevõte korraga)</button>
-          <button type="button" data-view="list">Nimekiri</button>
+          <button class="is-active" type="button" data-view="list">Nimekiri (Master-Detail)</button>
           <button type="button" data-view="starred">⭐ Märgistatud lemmikud</button>
           <button type="button" data-view="strong">Kõik tugevad signaalid</button>
           <button type="button" data-view="all">Kogu andmebaas</button>
@@ -175,8 +174,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           </aside>
 
           <section class="crm-workspace" aria-label="Müügi töölaud">
-            <div class="crm-focus-mode" data-focus-board></div>
-            <div class="crm-list-pane" data-list-board hidden></div>
+            <div class="crm-list-pane" data-list-board></div>
             <div class="crm-kanban" data-kanban-board hidden></div>
 
             <main class="crm-panel crm-company-sheet" data-detail-panel hidden>
@@ -216,7 +214,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const loginMessage = document.querySelector("[data-login-message]");
       const boardMessage = document.querySelector("[data-board-message]");
       const kanbanBoard = document.querySelector("[data-kanban-board]");
-      const focusBoard = document.querySelector("[data-focus-board]");
       const listBoard = document.querySelector("[data-list-board]");
       const filtersPanel = document.querySelector("[data-filters-panel]");
       const detailPanel = document.querySelector("[data-detail-panel]");
@@ -305,7 +302,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         users: [],
         criteria: [],
         stats: null,
-        view: "focus",
+        view: "list",
         selectedRegistryCode: null
       };
 
@@ -599,7 +596,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         return state.rows.filter((row) => {
           if (state.view === "strong" && Number(row.priority_score || 0) < 75) return false;
-          if (state.view === "focus" && (Number(row.priority_score || 0) < 75 || ["called", "meeting_booked", "proposal_sent", "not_relevant", "do_not_contact", "won", "lost"].includes(row.crm_status))) return false;
+          if (state.view === "list" && (Number(row.priority_score || 0) < 75 || ["called", "meeting_booked", "proposal_sent", "not_relevant", "do_not_contact", "won", "lost"].includes(row.crm_status))) return false;
           if (state.view === "starred" && !row.is_starred) return false;
           if (state.view === "prospects" && !row.is_prospect) return false;
 
@@ -818,112 +815,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         }
       };
 
-      const renderFocusBoard = (rows) => {
-        if (!rows.length) {
-          focusBoard.innerHTML = `<div class="crm-focus-empty">
-            <h2>Kõik tehtud.</h2>
-            <p>Hetkel ei ole ühtegi uut tugevat kontakti. Vali nimekirja vaade või muuda filtreid.</p>
-          </div>`;
-          if (!state.selectedRegistryCode) closeDetail();
-          return;
-        }
-
-        const topRow = rows[0];
-        const ageText = topRow.company_age_years === null || topRow.company_age_years === undefined ? "?" : `${topRow.company_age_years} a`;
-        const employeeText = topRow.latest_employee_count === null || topRow.latest_employee_count === undefined ? "?" : `${topRow.latest_employee_count} töötajat`;
-        const boardText = topRow.board_member_count === null || topRow.board_member_count === undefined ? "?" : `${topRow.board_member_count} juht${topRow.board_member_count === 1 ? "" : "i"}`;
-        const mobileIcon = topRow.has_mobile_phone ? " 📱" : "";
-        const vta = vtaSummary(topRow);
-
-        if (state.selectedRegistryCode !== topRow.registry_code) {
-          openDetail(topRow.registry_code, false);
-        }
-
-        focusBoard.innerHTML = `
-          <div class="crm-focus-card">
-            <header>
-              <div>
-                <span class="kicker">Sinu järgmine samm</span>
-                <h1>${escapeHtml(topRow.company_name)}${mobileIcon}</h1>
-                <p>${escapeHtml(topRow.registry_code)} · ${escapeHtml(topRow.primary_activity_name || "Tegevusala teadmata")}</p>
-              </div>
-              <div class="crm-focus-score">
-                <b>${topRow.priority_score ?? 0}</b>
-                <span>Skoor</span>
-              </div>
-            </header>
-
-            <div class="crm-focus-stats">
-              <div>
-                <strong>${escapeHtml(ageText)}</strong>
-                <span>Vanus</span>
-              </div>
-              <div>
-                <strong>${escapeHtml(employeeText)}</strong>
-                <span>Suurus</span>
-              </div>
-              <div>
-                <strong>${escapeHtml(boardText)}</strong>
-                <span>Juhatus</span>
-              </div>
-              <div>
-                <strong>${formatCompactMoney(topRow.average_revenue_last_two)}</strong>
-                <span>Müügitulu</span>
-              </div>
-            </div>
-
-            <details class="crm-focus-score-details">
-              <summary>Kuidas skoor kujunes?</summary>
-              <div class="crm-focus-score-list">
-                ${(topRow.score_breakdown || []).map((b) => `
-                  <div>
-                    <span>${escapeHtml(b.label)}</span>
-                    <strong>${b.points > 0 ? "+" : ""}${b.points} p <em>/ ${b.max_points}</em></strong>
-                  </div>
-                `).join("")}
-              </div>
-            </details>
-
-            <div class="crm-focus-vta" data-vta-state="${escapeHtml(vta.state)}">
-              <div class="crm-focus-vta-text">
-                <strong>VTA: ${escapeHtml(vta.label)}</strong>
-                <span>${escapeHtml(vta.hint)}</span>
-              </div>
-              <button class="btn btn-secondary" type="button" data-vta-code="${escapeHtml(topRow.registry_code)}">${vtaActionLabel(topRow)}</button>
-            </div>
-
-            <div class="crm-focus-pitch">
-              <h3>Telefonikõne spikker</h3>
-              <p>${escapeHtml(topRow.recommended_pitch)}</p>
-            </div>
-
-            <div class="crm-focus-actions">
-              <button class="btn btn-primary" type="button" data-status-action="called" data-prospect-id="${topRow.prospect_id}">Märgi: Helistasin</button>
-              <button class="btn btn-light" type="button" data-status-action="not_relevant" data-prospect-id="${topRow.prospect_id}">Ei sobi meile</button>
-              <button class="btn btn-light" type="button" data-status-action="do_not_contact" data-prospect-id="${topRow.prospect_id}">Keelas ühendust võtta</button>
-              ${!topRow.is_prospect ? `<button class="btn btn-secondary" type="button" data-promote-code="${escapeHtml(topRow.registry_code)}">Lisa müüki</button>` : ""}
-            </div>
-
-            <div class="crm-focus-activity-box">
-              <button type="button" class="crm-star-btn ${topRow.is_starred ? "is-starred" : ""}" data-star-prospect="${topRow.prospect_id}" data-next-star="${!topRow.is_starred}">
-                ${topRow.is_starred ? "⭐ Märgistatud" : "☆ Märgista tärniga"}
-              </button>
-
-              <form class="crm-quick-note" data-quick-note="${topRow.prospect_id}">
-                <input type="text" name="note" placeholder="Kirjuta kiire märkus või tegevus..." required />
-                <select name="new_status">
-                  <option value="">Jäta samaks</option>
-                  <option value="call_next">Helista varsti uuesti</option>
-                  <option value="meeting_booked">Kohtumine kokku lepitud</option>
-                  <option value="proposal_sent">Pakkumine saadetud</option>
-                </select>
-                <button class="btn btn-secondary" type="submit">Salvesta märkus</button>
-              </form>
-            </div>
-          </div>
-        `;
-      };
-
       const renderListBoard = (rows) => {
         if (!rows.length) {
           listBoard.innerHTML = `<div class="crm-column-empty">Nimekiri on tühi. Muuda filtreid.</div>`;
@@ -949,20 +840,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         filtersPanel.hidden = false;
 
-        if (state.view === "focus") {
-          filtersPanel.hidden = true;
+        if (state.view === "list" || state.view === "starred") {
           kanbanBoard.hidden = true;
-          listBoard.hidden = true;
-          focusBoard.hidden = false;
-          renderFocusBoard(rows);
-        } else if (state.view === "list" || state.view === "starred") {
-          kanbanBoard.hidden = true;
-          focusBoard.hidden = true;
           listBoard.hidden = false;
           renderListBoard(rows);
         } else {
           kanbanBoard.hidden = false;
-          focusBoard.hidden = true;
           listBoard.hidden = true;
 
           kanbanBoard.innerHTML = kanbanColumns.map((column) => {
@@ -1292,8 +1175,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       });
 
       kanbanBoard.addEventListener("click", handleCrmAction);
-      focusBoard.addEventListener("click", handleCrmAction);
-      focusBoard.addEventListener("submit", handleNoteSubmit);
+      listBoard.addEventListener("click", handleCrmAction);
       detailPanel.addEventListener("click", handleCrmAction);
       detailPanel.addEventListener("submit", handleNoteSubmit);
 
