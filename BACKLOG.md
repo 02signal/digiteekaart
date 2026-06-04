@@ -34,8 +34,9 @@
 - Done: first internal CRM page added for `crm.digiteekaart.ee` with Supabase magic-link login, public-safe priority board, status update actions and admin-managed CRM users.
 - Done: CRM now shows the full imported company universe, strong-signal leads, scoring criteria/weights, warehouse counts and a `Lisa müüki` action for database-only companies.
 - Done: first bounded RIK public CSV import loaded 250 company rows and 75 strong-signal sales prospects into Supabase; no personal contacts were imported.
-- Done: CRM sales view now uses a Kanban-style board, compact lead cards, internal company work-sheets, visible score reasons, CRM history markers and a `VTA kontrolli` queue action.
-- Done: lead scoring now prioritises older companies, companies with 500+ employees and single-member boards; CRM has dynamic UI filters for employee count, board size, age, and mobile phone presence.
+- Done: CRM sales view uses a 3-pane Master-Detail layout, natural language activity notes, star-bookmarking, and an on-demand scoring breakdown UI.
+- Done: lead scoring now prioritises older companies, companies with 500+ employees and single-member boards; CRM has dynamic UI filters for employee count, board size, age, mobile phone presence, and EMTAK industry.
+- Done: VTA check logic automatically restricts funding for primary EMTAK sectors starting with 01, 02, or 03.
 - Done: RIK warehouse importer extended to download and parse `isikud.csv` and `sidevahendid.csv`, extracting board sizes, calculating oldest board member ages via Estonian personal ID codes, and matching official mobile numbers.
 - Done: CRM can batch-add the next 10 strongest unchecked firms to the VTA queue.
 - Done: VTA worker RPC foundation added so AMOS/n8n-ops can claim small batches, store dated RAR/VTA snapshots and update CRM cards after a bounded lookup result.
