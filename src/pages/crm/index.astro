@@ -107,78 +107,86 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         <div class="crm-view-tabs" data-view-filter>
           <button class="is-active" type="button" data-view="focus">Fookus (1 ettevõte korraga)</button>
+          <button type="button" data-view="list">Nimekiri</button>
           <button type="button" data-view="starred">⭐ Märgistatud lemmikud</button>
           <button type="button" data-view="strong">Kõik tugevad signaalid</button>
           <button type="button" data-view="all">Kogu andmebaas</button>
           <button type="button" data-view="prospects">Müüki lisatud</button>
         </div>
 
-        <section class="crm-panel crm-filters" aria-label="Filtrid" data-filters-panel hidden>
-          <label>
-            Otsi
-            <input data-search type="search" placeholder="Firma nimi, registrikood või tegevusala" />
-          </label>
-          <label>
-            Staatus
-            <select data-status-filter>
-              <option value="">Kõik</option>
-              <option value="not_in_sales">Ainult andmebaasis</option>
-              <option value="new">Uus</option>
-              <option value="call_next">Helista järgmisena</option>
-              <option value="to_review">Vajab ülevaatust</option>
-              <option value="called">Helistatud</option>
-              <option value="meeting_booked">Kohtumine kokku lepitud</option>
-              <option value="proposal_sent">Pakkumine saadetud</option>
-              <option value="not_relevant">Ei sobi</option>
-            </select>
-          </label>
-          <label>
-            VTA
-            <select data-vta-filter>
-              <option value="">Kõik</option>
-              <option value="high_left">Suur jääk</option>
-              <option value="some_left">Jääk olemas</option>
-              <option value="not_checked">Kontrollimata</option>
-              <option value="sector_restricted">Sektor välistatud (EMTAK)</option>
-              <option value="low_left">Väike jääk</option>
-              <option value="used_up">Kasutatud</option>
-            </select>
-          </label>
-          <label>
-            Min töötajaid
-            <input data-min-employees type="number" min="0" max="10000" placeholder="nt 25" />
-          </label>
-          <label>
-            Max juhatus
-            <input data-max-board type="number" min="1" max="10" placeholder="nt 1" />
-          </label>
-          <label>
-            Juht min vanus
-            <input data-min-board-age type="number" min="18" max="100" placeholder="nt 60" />
-          </label>
-          <label>
-            Skoor
-            <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
-          </label>
-          <label class="checkbox-label" title="Ainult numbriga">
-            <input data-req-mobile type="checkbox" />
-            Mobiil
-          </label>
-          <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
-          <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Pane 5 VTA järjekorda</button>
-        </section>
-
-        <section class="crm-workspace" aria-label="Müügi töölaud">
-          <div class="crm-focus-mode" data-focus-board></div>
-          <div class="crm-kanban" data-kanban-board hidden></div>
-
-          <aside class="crm-panel crm-company-sheet" data-detail-panel hidden>
-            <div class="crm-sheet-empty">
-              Vali ettevõte, et näha lühikest töölehte, kõnespikkerit ja andmete ajalugu.
-            </div>
-            <div data-detail-content></div>
+        <div class="crm-layout-grid">
+          <aside class="crm-sidebar crm-filters" aria-label="Filtrid" data-filters-panel>
+            <label>
+              Otsi
+              <input data-search type="search" placeholder="Firma nimi või registrikood" />
+            </label>
+            <label>
+              Tegevusala (EMTAK)
+              <input data-activity-filter type="search" placeholder="nt Tarkvara" />
+            </label>
+            <label>
+              Staatus
+              <select data-status-filter>
+                <option value="">Kõik</option>
+                <option value="not_in_sales">Ainult andmebaasis</option>
+                <option value="new">Uus</option>
+                <option value="call_next">Helista järgmisena</option>
+                <option value="to_review">Vajab ülevaatust</option>
+                <option value="called">Helistatud</option>
+                <option value="meeting_booked">Kohtumine kokku lepitud</option>
+                <option value="proposal_sent">Pakkumine saadetud</option>
+                <option value="not_relevant">Ei sobi</option>
+              </select>
+            </label>
+            <label>
+              VTA
+              <select data-vta-filter>
+                <option value="">Kõik</option>
+                <option value="high_left">Suur jääk</option>
+                <option value="some_left">Jääk olemas</option>
+                <option value="not_checked">Kontrollimata</option>
+                <option value="sector_restricted">Sektor välistatud (EMTAK)</option>
+                <option value="low_left">Väike jääk</option>
+                <option value="used_up">Kasutatud</option>
+              </select>
+            </label>
+            <label>
+              Min töötajaid
+              <input data-min-employees type="number" min="0" max="10000" placeholder="nt 25" />
+            </label>
+            <label>
+              Max juhatus
+              <input data-max-board type="number" min="1" max="10" placeholder="nt 1" />
+            </label>
+            <label>
+              Juht min vanus
+              <input data-min-board-age type="number" min="18" max="100" placeholder="nt 60" />
+            </label>
+            <label>
+              Skoor
+              <input data-score-filter type="number" min="0" max="100" step="5" value="0" />
+            </label>
+            <label class="checkbox-label" title="Ainult numbriga">
+              <input data-req-mobile type="checkbox" />
+              Mobiil
+            </label>
+            <button class="btn btn-secondary crm-refresh" type="button" data-refresh>Värskenda</button>
+            <button class="btn btn-primary crm-refresh" type="button" data-queue-top-vta>Pane 5 VTA järjekorda</button>
           </aside>
-        </section>
+
+          <section class="crm-workspace" aria-label="Müügi töölaud">
+            <div class="crm-focus-mode" data-focus-board></div>
+            <div class="crm-list-pane" data-list-board hidden></div>
+            <div class="crm-kanban" data-kanban-board hidden></div>
+
+            <main class="crm-panel crm-company-sheet" data-detail-panel hidden>
+              <div class="crm-sheet-empty">
+                Vali ettevõte, et näha lühikest töölehte, kõnespikkerit ja andmete ajalugu.
+              </div>
+              <div data-detail-content></div>
+            </main>
+          </section>
+        </div>
 
         <section class="crm-panel crm-board-status">
           <div class="crm-empty" data-empty-state hidden>
@@ -209,6 +217,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const boardMessage = document.querySelector("[data-board-message]");
       const kanbanBoard = document.querySelector("[data-kanban-board]");
       const focusBoard = document.querySelector("[data-focus-board]");
+      const listBoard = document.querySelector("[data-list-board]");
       const filtersPanel = document.querySelector("[data-filters-panel]");
       const detailPanel = document.querySelector("[data-detail-panel]");
       const detailContent = document.querySelector("[data-detail-content]");
@@ -226,6 +235,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const usersList = document.querySelector("[data-users-list]");
       const usersMessage = document.querySelector("[data-users-message]");
       const searchInput = document.querySelector("[data-search]");
+      const activityFilter = document.querySelector("[data-activity-filter]");
       const statusFilter = document.querySelector("[data-status-filter]");
       const vtaFilter = document.querySelector("[data-vta-filter]");
       const scoreFilter = document.querySelector("[data-score-filter]");
@@ -418,15 +428,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         if (row.vta_queue_status === "failed") return "Proovi uuesti";
         if (row.vta_queue_status === "manual_review") return "Kontrolli uuesti";
         return "Kontrolli VTA";
-      };
-
-      const scoreParts = (row) => {
-        if (!Array.isArray(row.score_breakdown)) return [];
-        return row.score_breakdown.map((part) => ({
-          label: safeText(part.label),
-          points: Number(part.points || 0),
-          maxPoints: Number(part.max_points || 0)
-        }));
       };
 
       const findRow = (registryCode) =>
@@ -694,13 +695,6 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
         detailPanel.hidden = false;
 
-        const scoreRows = scoreParts(row).map((part) => `
-          <li>
-            <span>${escapeHtml(part.label)}</span>
-            <strong>${part.points}/${part.maxPoints}</strong>
-          </li>
-        `).join("");
-
         const historyRows = [
           ["Registrisse kantud", formatDate(row.registered_at)],
           ["Vanus", `${row.company_age_years ?? "-"} aastat`],
@@ -722,57 +716,82 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           </li>
         `).join("");
 
-        const reasons = [...(row.score_reason || [])]
-          .filter(Boolean)
-          .map((reason) => `<span>${escapeHtml(reason)}</span>`)
-          .join("");
-
+        const starIcon = row.is_starred ? " ⭐" : "";
         const sheetUrl = `${window.location.origin}/crm/#firma=${encodeURIComponent(row.registry_code)}`;
 
         detailContent.innerHTML = `
           <div class="crm-sheet-head">
             <div>
               <span class="kicker">Firma tööleht</span>
-              <h2>${escapeHtml(row.company_name)}</h2>
+              <h2>${escapeHtml(row.company_name)}${starIcon}</h2>
               <p>${escapeHtml(row.registry_code)} · ${escapeHtml(row.company_status) || "staatus teadmata"}</p>
             </div>
-            <button class="crm-sheet-close" type="button" data-close-detail aria-label="Sulge">×</button>
+            <button class="crm-sheet-close" type="button" data-close-detail title="Sulge">×</button>
           </div>
 
           <div class="crm-sheet-score">
-            <strong>${row.priority_score ?? 0}/100</strong>
-            <span>${signalLabel(row)}</span>
+            <strong>${row.priority_score ?? 0}</strong>
+            <span>müügiskoor</span>
           </div>
 
-          <section>
-            <h3>Miks see on huvitav</h3>
-            <div class="crm-tags">${reasons || "<span>Vajab ülevaatust</span>"}</div>
-          </section>
-
-          <details class="crm-sheet-section">
-            <summary>Skoori põhimõte</summary>
-            <ul class="crm-sheet-list">${scoreRows}</ul>
+          <details class="crm-focus-score-details">
+            <summary>Kuidas skoor kujunes?</summary>
+            <div class="crm-focus-score-list">
+              ${(row.score_breakdown || []).map(b => `
+                <div>
+                  <span>${escapeHtml(b.label)}</span>
+                  <strong>${b.points > 0 ? '+' : ''}${b.points} p <em>/ ${b.max_points}</em></strong>
+                </div>
+              `).join('')}
+            </div>
           </details>
 
+          <div class="crm-sheet-section">
+            <h3>Soovituslik kõnespikker</h3>
+            <p class="crm-pitch">${escapeHtml(row.recommended_pitch)}</p>
+          </div>
+
+          <div class="crm-focus-actions">
+             <button class="btn btn-outline" type="button" data-status-action="called" data-prospect-id="${row.prospect_id}">Märgi: Helistatud</button>
+             <button class="btn btn-outline" type="button" data-status-action="not_relevant" data-prospect-id="${row.prospect_id}">Märgi: Ei sobi meile</button>
+             <button class="btn btn-outline" type="button" data-status-action="do_not_contact" data-prospect-id="${row.prospect_id}">Märgi: Keelas ühendust võtta</button>
+             ${!row.is_prospect ? `<button class="btn btn-secondary" type="button" data-promote-code="${escapeHtml(row.registry_code)}">Lisa müüki</button>` : ''}
+          </div>
+
+          <div class="crm-focus-activity-box">
+            <button type="button" class="crm-star-btn ${row.is_starred ? 'is-starred' : ''}" data-star-prospect="${row.prospect_id}" data-next-star="${!row.is_starred}">
+              ${row.is_starred ? '⭐ Märgistatud' : '☆ Märgista tärniga'}
+            </button>
+            
+            <form class="crm-quick-note" data-quick-note="${row.prospect_id}">
+              <input type="text" name="note" placeholder="Kirjuta kiire märkus või tegevus..." required />
+              <select name="new_status">
+                <option value="">Jäta samaks</option>
+                <option value="call_next">Helista varsti uuesti</option>
+                <option value="meeting_booked">Kohtumine kokku lepitud</option>
+                <option value="proposal_sent">Pakkumine saadetud</option>
+              </select>
+              <button class="btn btn-secondary" type="submit">Salvesta</button>
+            </form>
+          </div>
+
+          <div class="crm-sheet-actions">
+             ${renderCardActions(row, false)}
+          </div>
+
           <details class="crm-sheet-section">
-            <summary>Ajaloolised märgid</summary>
-            <ul class="crm-sheet-list">${historyRows}</ul>
+            <summary>Põhiandmed ja ajalugu</summary>
+            <ul class="crm-sheet-list">
+              ${historyRows}
+            </ul>
             <p class="crm-sheet-note">VTA jääk ei ole püsiv hinnang. Enne pakkumist tuleb see päringu hetkel üle kontrollida ja tulemus andmebaasi salvestada.</p>
           </details>
 
-          <section>
-            <h3>Esimese kõne mõte</h3>
-            <p class="crm-pitch">${escapeHtml(row.recommended_pitch)}</p>
-            <button class="btn btn-light" type="button" data-copy-pitch="${escapeHtml(row.registry_code)}">Kopeeri kõnespikker</button>
-          </section>
-
           <details class="crm-sheet-section">
             <summary>Sisemine link</summary>
-            <p class="crm-sheet-note">See on sisemine firma tööleht CRM-is. Avaliku personaalse maandumislehe teeme hiljem ainult siis, kui andmed ja pakkumine on kontrollitud.</p>
+            <p class="crm-sheet-note">Selle ettevõtte otselink. Jaga tiimiga või salvesta märkmetesse.</p>
             <code>${escapeHtml(sheetUrl)}</code>
           </details>
-
-          <div class="crm-row-actions crm-sheet-actions">${renderCardActions(row, false)}</div>
         `;
       };
 
@@ -802,8 +821,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
       const renderFocusBoard = (rows) => {
         if (!rows.length) {
           focusBoard.innerHTML = `<div class="crm-focus-empty">
-            <h2>Kõik tehtud! 🎉</h2>
-            <p>Hetkel ei ole ühtegi uut tugevat (75+) kontakti, millele helistada. Proovi värskendada või muuda filtreid "Kogu andmebaas" vaates.</p>
+            <h2>Kõik tehtud.</h2>
+            <p>Hetkel ei ole ühtegi uut tugevat kontakti. Vali nimekirja vaade või muuda filtreid.</p>
           </div>`;
           if (!state.selectedRegistryCode) closeDetail();
           return;
@@ -812,12 +831,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         const topRow = rows[0];
         const ageText = topRow.company_age_years === null || topRow.company_age_years === undefined ? "?" : `${topRow.company_age_years} a`;
         const employeeText = topRow.latest_employee_count === null || topRow.latest_employee_count === undefined ? "?" : `${topRow.latest_employee_count} töötajat`;
-        const boardText = topRow.board_member_count === null || topRow.board_member_count === undefined ? "?" : `${topRow.board_member_count} juht${topRow.board_member_count === 1 ? '' : 'ti'}`;
+        const boardText = topRow.board_member_count === null || topRow.board_member_count === undefined ? "?" : `${topRow.board_member_count} juht${topRow.board_member_count === 1 ? "" : "i"}`;
         const mobileIcon = topRow.has_mobile_phone ? " 📱" : "";
         const vta = vtaSummary(topRow);
-        
+
         if (state.selectedRegistryCode !== topRow.registry_code) {
-           openDetail(topRow.registry_code, false);
+          openDetail(topRow.registry_code, false);
         }
 
         focusBoard.innerHTML = `
@@ -833,7 +852,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
                 <span>Skoor</span>
               </div>
             </header>
-            
+
             <div class="crm-focus-stats">
               <div>
                 <strong>${escapeHtml(ageText)}</strong>
@@ -856,12 +875,12 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
             <details class="crm-focus-score-details">
               <summary>Kuidas skoor kujunes?</summary>
               <div class="crm-focus-score-list">
-                ${(topRow.score_breakdown || []).map(b => `
+                ${(topRow.score_breakdown || []).map((b) => `
                   <div>
                     <span>${escapeHtml(b.label)}</span>
-                    <strong>${b.points > 0 ? '+' : ''}${b.points} p <em>/ ${b.max_points}</em></strong>
+                    <strong>${b.points > 0 ? "+" : ""}${b.points} p <em>/ ${b.max_points}</em></strong>
                   </div>
-                `).join('')}
+                `).join("")}
               </div>
             </details>
 
@@ -872,24 +891,24 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
               </div>
               <button class="btn btn-secondary" type="button" data-vta-code="${escapeHtml(topRow.registry_code)}">${vtaActionLabel(topRow)}</button>
             </div>
-            
+
             <div class="crm-focus-pitch">
               <h3>Telefonikõne spikker</h3>
               <p>${escapeHtml(topRow.recommended_pitch)}</p>
             </div>
 
             <div class="crm-focus-actions">
-               <button class="btn btn-primary" type="button" data-status-action="called" data-prospect-id="${topRow.prospect_id}">✅ Tehtud: Helistasin</button>
-               <button class="btn btn-light" type="button" data-status-action="not_relevant" data-prospect-id="${topRow.prospect_id}">❌ Ei sobi meile</button>
-               <button class="btn btn-light" type="button" data-status-action="do_not_contact" data-prospect-id="${topRow.prospect_id}">Keelas ühendust võtta</button>
-               ${!topRow.is_prospect ? `<button class="btn btn-secondary" type="button" data-promote-code="${escapeHtml(topRow.registry_code)}">Lisa müüki</button>` : ''}
+              <button class="btn btn-primary" type="button" data-status-action="called" data-prospect-id="${topRow.prospect_id}">Märgi: Helistasin</button>
+              <button class="btn btn-light" type="button" data-status-action="not_relevant" data-prospect-id="${topRow.prospect_id}">Ei sobi meile</button>
+              <button class="btn btn-light" type="button" data-status-action="do_not_contact" data-prospect-id="${topRow.prospect_id}">Keelas ühendust võtta</button>
+              ${!topRow.is_prospect ? `<button class="btn btn-secondary" type="button" data-promote-code="${escapeHtml(topRow.registry_code)}">Lisa müüki</button>` : ""}
             </div>
 
             <div class="crm-focus-activity-box">
-              <button type="button" class="crm-star-btn ${topRow.is_starred ? 'is-starred' : ''}" data-star-prospect="${topRow.prospect_id}" data-next-star="${!topRow.is_starred}">
-                ${topRow.is_starred ? '⭐ Märgistatud' : '☆ Märgista tärniga'}
+              <button type="button" class="crm-star-btn ${topRow.is_starred ? "is-starred" : ""}" data-star-prospect="${topRow.prospect_id}" data-next-star="${!topRow.is_starred}">
+                ${topRow.is_starred ? "⭐ Märgistatud" : "☆ Märgista tärniga"}
               </button>
-              
+
               <form class="crm-quick-note" data-quick-note="${topRow.prospect_id}">
                 <input type="text" name="note" placeholder="Kirjuta kiire märkus või tegevus..." required />
                 <select name="new_status">
@@ -905,44 +924,73 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         `;
       };
 
+      const renderListBoard = (rows) => {
+        if (!rows.length) {
+          listBoard.innerHTML = `<div class="crm-column-empty">Nimekiri on tühi. Muuda filtreid.</div>`;
+          if (!state.selectedRegistryCode) closeDetail();
+          return;
+        }
+
+        if (!state.selectedRegistryCode) {
+           openDetail(rows[0].registry_code, false);
+        }
+
+        listBoard.innerHTML = `
+          <div class="crm-kanban-cards">
+            ${rows.slice(0, 30).map(renderCompanyCard).join("")}
+          </div>
+        `;
+      };
+
       const renderBoard = () => {
         const rows = filteredRows();
         renderMetrics();
         emptyState.hidden = rows.length > 0;
 
+        filtersPanel.hidden = false;
+
         if (state.view === "focus") {
-           filtersPanel.hidden = true;
-           kanbanBoard.hidden = true;
-           focusBoard.hidden = false;
-           renderFocusBoard(rows);
+          filtersPanel.hidden = true;
+          kanbanBoard.hidden = true;
+          listBoard.hidden = true;
+          focusBoard.hidden = false;
+          renderFocusBoard(rows);
+        } else if (state.view === "list" || state.view === "starred") {
+          kanbanBoard.hidden = true;
+          focusBoard.hidden = true;
+          listBoard.hidden = false;
+          renderListBoard(rows);
         } else {
-           filtersPanel.hidden = false;
-           kanbanBoard.hidden = false;
-           focusBoard.hidden = true;
-           
-           kanbanBoard.innerHTML = kanbanColumns.map((column) => {
-             const columnRows = rows.filter(column.matches);
-             const cards = columnRows.length
-               ? columnRows.map(renderCompanyCard).join("")
-               : `<div class="crm-column-empty">Praegu tühi.</div>`;
+          kanbanBoard.hidden = false;
+          focusBoard.hidden = true;
+          listBoard.hidden = true;
 
-             return `
-               <section class="crm-kanban-column" data-column="${column.id}">
-                 <header>
-                   <div>
-                     <h2>${escapeHtml(column.title)}</h2>
-                     <p>${escapeHtml(column.hint)}</p>
-                   </div>
-                   <b>${columnRows.length}</b>
-                 </header>
-                 <div class="crm-kanban-cards">${cards}</div>
-               </section>
-             `;
-           }).join("");
+          kanbanBoard.innerHTML = kanbanColumns.map((column) => {
+            const columnRows = rows.filter(column.matches);
+            const cards = columnRows.length
+              ? columnRows.map(renderCompanyCard).join("")
+              : `<div class="crm-column-empty">Praegu tühi.</div>`;
 
-           if (state.selectedRegistryCode) {
-             renderDetail(state.selectedRegistryCode);
-           }
+            return `
+              <section class="crm-kanban-column" data-column="${column.id}">
+                <header>
+                  <div>
+                    <h2>${escapeHtml(column.title)}</h2>
+                    <p>${escapeHtml(column.hint)}</p>
+                  </div>
+                  <b>${columnRows.length}</b>
+                </header>
+                <div class="crm-kanban-cards">${cards}</div>
+              </section>
+            `;
+          }).join("");
+        }
+        
+        if (state.selectedRegistryCode) {
+           renderDetail(state.selectedRegistryCode);
+        } else {
+           detailPanel.hidden = true;
+           detailContent.innerHTML = "";
         }
       };
 
@@ -961,7 +1009,8 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
           p_min_employees: minEmployeesFilter.value ? Number(minEmployeesFilter.value) : null,
           p_max_board_members: maxBoardFilter.value ? Number(maxBoardFilter.value) : null,
           p_min_board_age: minBoardAgeFilter.value ? Number(minBoardAgeFilter.value) : null,
-          p_requires_mobile: reqMobileFilter.checked
+          p_requires_mobile: reqMobileFilter.checked,
+          p_activity_name: activityFilter.value || null
         });
 
         if (error) {
@@ -1238,7 +1287,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         input.addEventListener("input", renderBoard);
         input.addEventListener("change", renderBoard);
       });
-      [scoreFilter, minEmployeesFilter, maxBoardFilter, minBoardAgeFilter, reqMobileFilter].forEach((input) => {
+      [scoreFilter, minEmployeesFilter, maxBoardFilter, minBoardAgeFilter, reqMobileFilter, activityFilter].forEach((input) => {
         input.addEventListener("change", loadBoard);
       });
 
@@ -1610,24 +1659,38 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         color: var(--white);
       }
 
+      .crm-layout-grid {
+        display: grid;
+        grid-template-columns: 240px minmax(320px, 1fr) minmax(360px, 1.2fr);
+        gap: 16px;
+        align-items: start;
+        margin-bottom: 20px;
+      }
+
+      .crm-sidebar {
+        display: grid;
+        gap: 12px;
+        align-items: start;
+        align-content: start;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fdfdfd;
+      }
+
       .crm-filters {
         display: grid;
-        grid-template-columns: minmax(240px, 1fr) minmax(130px, 0.6fr) minmax(130px, 0.6fr) minmax(100px, 0.4fr) minmax(90px, 0.4fr) minmax(100px, 0.4fr) minmax(110px, 0.4fr) minmax(80px, 0.3fr) auto;
         gap: 12px;
-        align-items: end;
-        padding: 14px;
-        margin-bottom: 16px;
-        box-shadow: none;
       }
 
       .crm-filters label {
         display: grid;
         gap: 6px;
-        color: var(--muted);
-        font-size: 0.82rem;
+        color: var(--navy);
+        font-size: 0.85rem;
         font-weight: 850;
       }
-      
+
       .crm-filters label.checkbox-label {
         display: flex;
         flex-direction: row;
@@ -1636,7 +1699,7 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         padding-bottom: 0;
         cursor: pointer;
       }
-      
+
       .crm-filters label.checkbox-label input {
         width: 18px;
         min-height: 18px;
@@ -1650,9 +1713,23 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
 
       .crm-workspace {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.42fr);
+        grid-column: 2 / -1;
+        grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.2fr);
         gap: 16px;
         align-items: start;
+      }
+
+      .crm-sidebar[hidden] + .crm-workspace {
+        grid-column: 1 / -1;
+      }
+
+      .crm-list-pane {
+        display: grid;
+        gap: 10px;
+        align-content: start;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+        padding-right: 4px;
       }
 
       .crm-kanban {
@@ -1939,6 +2016,17 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         background: var(--teal);
         color: white;
         border-color: var(--teal);
+      }
+      
+      .crm-focus-actions .btn-outline {
+        background: transparent;
+        color: var(--navy);
+        border: 1px solid var(--line);
+      }
+      
+      .crm-focus-actions .btn-outline:hover {
+        border-color: var(--teal);
+        color: var(--teal);
       }
 
       .crm-focus-activity-box {
@@ -2413,26 +2501,29 @@ const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
         font-weight: 850;
       }
 
-      @media (max-width: 900px) {
+      @media (max-width: 1024px) {
+        .crm-layout-grid {
+          grid-template-columns: 1fr;
+        }
+        .crm-workspace {
+          grid-column: 1 / -1;
+          grid-template-columns: 1fr;
+        }
         .crm-header,
         .crm-login-row {
           grid-template-columns: 1fr;
         }
-
         .crm-user-box {
           justify-items: start;
         }
-
         .crm-metrics,
         .crm-criteria-grid,
         .crm-admin-head,
         .crm-user-form,
         .crm-filters,
-        .crm-workspace,
         .crm-kanban {
           grid-template-columns: 1fr;
         }
-
         .crm-company-sheet {
           position: static;
         }

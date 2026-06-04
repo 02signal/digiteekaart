@@ -99,6 +99,12 @@ create index if not exists prospect_companies_name_idx
   on sales_crm.prospect_companies using gin (to_tsvector('simple', coalesce(company_name, '')));
 
 alter table sales_crm.prospect_companies
+  add column if not exists board_member_count integer,
+  add column if not exists oldest_board_member_age integer,
+  add column if not exists has_mobile_phone boolean not null default false,
+  add column if not exists is_starred boolean not null default false;
+
+alter table sales_crm.prospect_companies
   alter column owner_name set default 'Müük';
 
 create table if not exists sales_crm.prospect_contacts_restricted (
@@ -255,6 +261,10 @@ set
   active = true,
   updated_at = now();
 
+drop view if exists sales_crm.sales_call_sheet_export cascade;
+drop view if exists sales_crm.sales_priority_board cascade;
+drop view if exists sales_crm.company_lead_universe cascade;
+
 create or replace view sales_crm.company_lead_universe as
 with base as (
   select
@@ -304,6 +314,7 @@ with base as (
       crm_status,
       last_contacted_at,
       next_follow_up_at,
+      is_starred,
       owner_name
     from sales_crm.prospect_companies p
     where p.registry_code = c.registry_code
@@ -690,6 +701,8 @@ as $$
 $$;
 
 drop function if exists public.crm_get_company_lead_universe(integer, integer);
+drop function if exists public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean);
+drop function if exists public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean, text);
 
 create or replace function public.crm_get_company_lead_universe(
   p_limit integer default 500,
@@ -697,7 +710,8 @@ create or replace function public.crm_get_company_lead_universe(
   p_min_employees integer default null,
   p_max_board_members integer default null,
   p_min_board_age integer default null,
-  p_requires_mobile boolean default false
+  p_requires_mobile boolean default false,
+  p_activity_name text default null
 )
 returns table (
   prospect_id uuid,
@@ -782,6 +796,7 @@ as $$
     and (p_max_board_members is null or (u.board_member_count is not null and u.board_member_count <= p_max_board_members))
     and (p_min_board_age is null or (u.oldest_board_member_age is not null and u.oldest_board_member_age >= p_min_board_age))
     and (p_requires_mobile = false or u.has_mobile_phone = true)
+    and (p_activity_name is null or p_activity_name = '' or u.primary_activity_name ilike '%' || p_activity_name || '%')
   order by
     u.is_prospect desc,
     u.priority_score desc,
@@ -791,6 +806,8 @@ as $$
     u.company_name asc
   limit greatest(1, least(1000, coalesce(p_limit, 500)));
 $$;
+
+drop function if exists public.crm_get_sales_priority_board();
 
 create or replace function public.crm_get_sales_priority_board()
 returns table (
@@ -1438,7 +1455,7 @@ grant execute on function public.crm_upsert_user(text, text, boolean) to authent
 grant execute on function public.crm_set_user_active(text, boolean) to authenticated;
 grant execute on function public.crm_get_lead_scoring_criteria() to authenticated;
 grant execute on function public.crm_get_warehouse_stats() to authenticated;
-grant execute on function public.crm_get_company_lead_universe(integer, integer) to authenticated;
+grant execute on function public.crm_get_company_lead_universe(integer, integer, integer, integer, integer, boolean, text) to authenticated;
 grant execute on function public.crm_promote_company_to_prospect(text) to authenticated;
 grant execute on function public.crm_queue_vta_check(text) to authenticated;
 grant execute on function public.crm_queue_next_vta_checks(integer, integer) to authenticated;
