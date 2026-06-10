@@ -1,7 +1,8 @@
 {
   "site": "Digiteekaart.ee",
   "reviewedAt": "2026-06-01",
-  "importantCaveat": "See on eelhindamise reeglite register, mitte ametlik EIS/RTK otsus. Tingimused tuleb enne päris taotlust ametlikust allikast üle kontrollida.",
+  "roundsCheckedAt": "2026-06-10",
+  "importantCaveat": "See on eelhindamise reeglite register, mitte ametlik EIS/RTK otsus. Tingimused ja voorude seis tuleb enne päris taotlust ametlikust allikast üle kontrollida.",
   "dataSources": [
     {
       "name": "EIS toetuste avalikud tingimused",
@@ -16,7 +17,7 @@
     {
       "name": "VTA/RAR kontroll",
       "status": "vajab kasutaja kinnitust või käsitsi kontrolli",
-      "note": "VTA jääk on otsust mõjutav kontroll, kuid eelhinnang ei tee selle põhjal lõplikku otsust."
+      "note": "VTA (vähese tähtsusega abi) jääk on otsust mõjutav kontroll, kuid eelhinnang ei tee selle põhjal lõplikku otsust."
     }
   ],
   "programs": [
@@ -28,6 +29,9 @@
       "ownContributionText": "50%",
       "minAverageRevenue": 50000,
       "roadmapRequired": false,
+      "roundStatus": "open",
+      "roundStatusText": "Avatud. Taotleda saab jooksvalt, kuni eelarvet jätkub.",
+      "roundCheckedAt": "2026-06-10",
       "sourceUrl": "https://eis.ee/teenused/rte_tarkvara_toetus/"
     },
     {
@@ -38,6 +42,9 @@
       "ownContributionText": "30-50%",
       "minAverageRevenue": 200000,
       "roadmapRequired": false,
+      "roundStatus": "open_limited",
+      "roundStatusText": "Avatud, aga eelarvet on vähe järel. EIS-i lehe järgi oli 10.06.2026 seisuga alles umbes 183 000 €.",
+      "roundCheckedAt": "2026-06-10",
       "sourceUrl": "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/"
     },
     {
@@ -48,6 +55,9 @@
       "ownContributionText": "30-50%",
       "minAverageRevenue": 200000,
       "roadmapRequired": true,
+      "roundStatus": "open",
+      "roundStatusText": "Avatud. Projekti elluviimise lõpptähtaeg on EIS-i lehe järgi 31.10.2029.",
+      "roundCheckedAt": "2026-06-10",
       "sourceUrl": "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/"
     },
     {
@@ -58,6 +68,9 @@
       "ownContributionText": "50%",
       "minAverageRevenue": 0,
       "roadmapRequired": false,
+      "roundStatus": "open",
+      "roundStatusText": "Avatud. Taotleda saab jooksvalt, kuni eelarvet jätkub. EIS-i lehe järgi oli 10.06.2026 seisuga eelarvest alles umbes 573 000 €.",
+      "roundCheckedAt": "2026-06-10",
       "sourceUrl": "https://eis.ee/teenused/rte_automatiseerimise_toetus/"
     }
   ]

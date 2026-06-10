@@ -1,4 +1,5 @@
 export const fundingRulesReviewedAt = "2026-06-01";
+export const fundingRoundsCheckedAt = "2026-06-10";
 
 export const supportPrograms = [
   {
@@ -15,7 +16,11 @@ export const supportPrograms = [
     roadmapRequired: false,
     ownerAnswer: "Digiteekaart ei ole eeltingimus, kui töö on konkreetne.",
     sourceUrl: "https://eis.ee/teenused/rte_tarkvara_toetus/",
-    sourceCheckedAt: fundingRulesReviewedAt
+    sourceCheckedAt: fundingRulesReviewedAt,
+    roundStatus: "open",
+    roundStatusText: "Avatud. Taotleda saab jooksvalt, kuni eelarvet jätkub.",
+    budgetRemainingText: null,
+    roundCheckedAt: fundingRoundsCheckedAt
   },
   {
     id: "digital_roadmap",
@@ -31,7 +36,11 @@ export const supportPrograms = [
     roadmapRequired: false,
     ownerAnswer: "Sobib siis, kui enne arendust on vaja otsustada, mida teha esimesena.",
     sourceUrl: "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/",
-    sourceCheckedAt: fundingRulesReviewedAt
+    sourceCheckedAt: fundingRulesReviewedAt,
+    roundStatus: "open_limited",
+    roundStatusText: "Avatud, aga eelarvet on vähe järel. Taotleda saab jooksvalt, kuni eelarvet jätkub.",
+    budgetRemainingText: "EIS-i lehe järgi oli 10.06.2026 seisuga eelarvest alles umbes 183 000 €.",
+    roundCheckedAt: fundingRoundsCheckedAt
   },
   {
     id: "roadmap_development",
@@ -47,7 +56,11 @@ export const supportPrograms = [
     roadmapRequired: true,
     ownerAnswer: "See on tavaliselt järgmine samm pärast ajakohast digiteekaarti.",
     sourceUrl: "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/",
-    sourceCheckedAt: fundingRulesReviewedAt
+    sourceCheckedAt: fundingRulesReviewedAt,
+    roundStatus: "open",
+    roundStatusText: "Avatud. Projekti elluviimise lõpptähtaeg on EIS-i lehe järgi 31.10.2029.",
+    budgetRemainingText: null,
+    roundCheckedAt: fundingRoundsCheckedAt
   },
   {
     id: "rte_automation",
@@ -63,6 +76,10 @@ export const supportPrograms = [
     roadmapRequired: false,
     ownerAnswer: "Võib sobida suuremale liidestusele, aga seda ei tohi lubada ilma lisakontrollita.",
     sourceUrl: "https://eis.ee/teenused/rte_automatiseerimise_toetus/",
-    sourceCheckedAt: fundingRulesReviewedAt
+    sourceCheckedAt: fundingRulesReviewedAt,
+    roundStatus: "open",
+    roundStatusText: "Avatud. Taotleda saab jooksvalt, kuni eelarvet jätkub.",
+    budgetRemainingText: "EIS-i lehe järgi oli 10.06.2026 seisuga eelarvest alles umbes 573 000 €.",
+    roundCheckedAt: fundingRoundsCheckedAt
   }
 ] as const;

@@ -155,11 +155,26 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
     });
 
     const startedForms = new WeakSet();
+    const startedTools = new WeakSet();
     document.addEventListener("focusin", (event) => {
-      const form = event.target instanceof Element
-        ? event.target.closest("[data-site-lead-form]")
-        : null;
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+
+      const toolSection = target.closest("[data-tool-section]");
+      if (toolSection && !startedTools.has(toolSection)) {
+        startedTools.add(toolSection);
+        track("tool_start", {
+          tool_name: toolSection.getAttribute("data-tool-section") || "tool",
+          source_site: "digiteekaart.ee"
+        });
+      }
+
+      const form = target.closest("[data-site-lead-form]");
       if (!form || startedForms.has(form)) return;
+      // Kui vormil on eraldi kontaktisektsioon, loeb leadi alguseks alles selle puudutamine,
+      // mitte toetusfiltri kasutamine.
+      const contactSection = form.querySelector("[data-lead-contact-section]");
+      if (contactSection && !target.closest("[data-lead-contact-section]")) return;
       startedForms.add(form);
       track("lead_form_start", {
         form_name: "digiteekaart_eelhindamine",

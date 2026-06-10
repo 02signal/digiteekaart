@@ -1,0 +1,205 @@
+---
+import Analytics from "../components/Analytics.astro";
+import Footer from "../components/Footer.astro";
+import "../styles/global.css";
+import { supportPrograms, fundingRoundsCheckedAt } from "../data/supportPrograms";
+
+const checkedAtText = "10.06.2026";
+const emailHref = "mailto:info@02signal.ai?subject=Avatud%20toetuste%20eelhindamine";
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://digiteekaart.ee/#organization",
+      name: "Digiteekaart.ee",
+      legalName: "Ettevõtluskeskus OÜ",
+      url: "https://digiteekaart.ee/",
+      email: "info@02signal.ai",
+      telephone: "+37258180435"
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Avaleht", item: "https://digiteekaart.ee/" },
+        { "@type": "ListItem", position: 2, name: "Avatud toetused", item: "https://digiteekaart.ee/avatud-toetused/" }
+      ]
+    },
+    {
+      "@type": "Article",
+      headline: "Millised EIS digitoetused on praegu avatud?",
+      description: "Ülevaade EIS digitaliseerimise toetustest, mis on praegu avatud: summad, omafinantseering, eelarve seis ja kellele need sobivad.",
+      inLanguage: "et",
+      dateModified: fundingRoundsCheckedAt,
+      author: { "@id": "https://digiteekaart.ee/#organization" },
+      publisher: { "@id": "https://digiteekaart.ee/#organization" },
+      mainEntityOfPage: "https://digiteekaart.ee/avatud-toetused/"
+    },
+    {
+      "@type": "ItemList",
+      name: "Avatud EIS digitaliseerimise toetused",
+      itemListElement: supportPrograms.map((program, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: program.name,
+        url: program.sourceUrl
+      }))
+    }
+  ]
+};
+---
+
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avatud toetused 2026 | Millised EIS digitoetused on praegu avatud?</title>
+    <meta
+      name="description"
+      content="Kõik neli EIS digitaliseerimise toetust on praegu avatud. Vaadake summad, omafinantseering, eelarve seis ja kellele iga toetus sobib. Seis kontrollitud 10.06.2026."
+    />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://digiteekaart.ee/avatud-toetused/" />
+    <meta property="og:title" content="Avatud EIS digitoetused 2026 — seis ühel lehel" />
+    <meta
+      property="og:description"
+      content="Millised digitaliseerimise toetused on praegu avatud, kui palju raha on alles ja milline võiks teie ettevõttele sobida."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://digiteekaart.ee/avatud-toetused/" />
+    <meta property="og:image" content="https://digiteekaart.ee/hero-digiteekaart.png" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <Analytics />
+  </head>
+  <body>
+    <header class="topbar">
+      <nav class="nav" aria-label="Põhinavigeerimine">
+        <a class="brand" href="/">Digiteekaart.ee</a>
+        <div class="navlinks">
+          <a href="/">Avaleht</a>
+          <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/#eelhindamine">Eelhindamine</a>
+          <a href="tel:+37258180435" data-track-event="phone_click" data-track-label="open_funding_nav_phone">+372 5818 0435</a>
+        </div>
+      </nav>
+    </header>
+
+    <main class="report-page simple-report">
+      <section class="report-hero simple-report-hero">
+        <div class="section-inner">
+          <span class="eyebrow">Toetuste seis ühel lehel</span>
+          <h1>Millised digitoetused on praegu avatud?</h1>
+          <p>
+            Praegu on avatud kõik neli EIS-i digitaliseerimise toetust. Üks asi on aga oluline:
+            taotleda saab ainult seni, kuni eelarves raha jätkub, ja teekaardi toetuse eelarvest
+            on suur osa juba kasutatud.
+          </p>
+          <div class="actions">
+            <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="open_funding_hero_eelhindamine">Kontrolli, mis teile sobib</a>
+            <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="open_funding_hero_phone">Helista +372 5818 0435</a>
+          </div>
+          <p class="report-date">Voorude seis kontrollitud EIS-i lehtedelt: {checkedAtText}</p>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Neli toetust, neli eri olukorda</span>
+            <h2>Valige rida, mis kõlab nagu teie ettevõte.</h2>
+          </div>
+          <div class="measure-list">
+            {supportPrograms.map((program) => (
+              <article class="measure-card">
+                <div>
+                  <span class={`status-tag ${program.roundStatus === "open_limited" ? "status-amber" : "status-green"}`}>
+                    {program.roundStatus === "open_limited" ? "Avatud — eelarvet vähe järel" : "Avatud"}
+                  </span>
+                  <h3>{program.shortName}</h3>
+                  <p>{program.plainUse}</p>
+                  {program.budgetRemainingText && <p><strong>{program.budgetRemainingText}</strong></p>}
+                </div>
+                <dl>
+                  <div><dt>Toetus</dt><dd>{program.supportText}</dd></div>
+                  <div><dt>Teie oma raha</dt><dd>{program.ownContributionText}</dd></div>
+                  {program.minAverageRevenue > 0 && (
+                    <div><dt>Müügitulu vähemalt</dt><dd>{program.minAverageRevenue.toLocaleString("et-EE")} € aastas</dd></div>
+                  )}
+                </dl>
+                <p class="report-date">{program.roundStatusText}</p>
+                <a href={program.sourceUrl} target="_blank" rel="noreferrer" data-track-event="official_source_click" data-track-label={`open_funding_${program.id}`}>Ametlik EIS leht</a>
+              </article>
+            ))}
+          </div>
+          <p class="notice">
+            "Teie oma raha" tähendab omafinantseeringut: riik ei maksa kogu tööd kinni.
+            Näiteks kui toetus katab 50%, maksab 8 000 € projektist riik 4 000 € ja teie 4 000 €.
+          </p>
+        </div>
+      </section>
+
+      <section class="ice">
+        <div class="section-inner">
+          <div class="section-head compact-head">
+            <span class="kicker">Mida "avatud" päriselt tähendab</span>
+            <h2>Avatud voor ei tähenda, et raha jätkub kõigile.</h2>
+          </div>
+          <div class="simple-cards">
+            <article>
+              <strong>1</strong>
+              <h3>Taotlemine käib jooksvalt</h3>
+              <p>Tähtaega ei ole. Taotlusi võetakse vastu seni, kuni eelarves raha jätkub. Kes ees, see mees.</p>
+            </article>
+            <article>
+              <strong>2</strong>
+              <h3>Eelarve võib lõppeda enne otsust</h3>
+              <p>Teekaardi toetuse eelarvest oli {checkedAtText} seisuga alles umbes 183 000 €. Kui see on plaanis, tasub liikuda pigem varem kui hiljem.</p>
+            </article>
+            <article>
+              <strong>3</strong>
+              <h3>Teie varasem toetus loeb</h3>
+              <p>Need toetused on vähese tähtsusega abi (lühend VTA): ühel ettevõttel on riigiabi lagi. Kui olete varem toetusi saanud, kontrollime jäägi enne taotlust üle.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="white">
+        <div class="section-inner narrow">
+          <div class="plain-warning">
+            <h2>Mida me ei luba?</h2>
+            <p>
+              See leht näitab voorude seisu EIS-i avaliku info järgi ja kuupäevaga. Eelarve jäägid
+              muutuvad iga nädal ja ametliku otsuse teeb EIS/RTK. Enne päris taotlust kontrollime
+              tingimused, VTA jäägi ja maksuvõla alati üle.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="navy">
+        <div class="section-inner contact">
+          <div>
+            <span class="kicker">Järgmine samm</span>
+            <h2>Kahe minutiga selgeks: milline neist neljast on teie ettevõtte jaoks loogiline?</h2>
+            <p>Sisestage eelhindamisse ettevõtte nimi ja müügitulu suurusjärk — leht näitab kohe, milline toetus võib sobida.</p>
+            <div class="inline-actions">
+              <a class="btn btn-primary" href="/#eelhindamine" data-track-event="cta_click" data-track-label="open_funding_bottom_eelhindamine">Tee eelhindamine</a>
+              <a class="btn btn-secondary" href="tel:+37258180435" data-track-event="phone_click" data-track-label="open_funding_bottom_phone">Helista +372 5818 0435</a>
+            </div>
+          </div>
+          <aside class="contact-card">
+            <h3>Kontakt</h3>
+            <p>Ettevõtluskeskus OÜ / 02Signal</p>
+            <p><a href={emailHref} data-track-event="email_click" data-track-label="open_funding_email">info@02signal.ai</a></p>
+            <p><a href="tel:+37258180435" data-track-event="phone_click" data-track-label="open_funding_contact_phone">+372 5818 0435</a></p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <Footer label="Avatud toetuste seis" />
+  </body>
+</html>

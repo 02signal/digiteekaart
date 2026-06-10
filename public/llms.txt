@@ -37,6 +37,7 @@ The rule set is available at https://digiteekaart.ee/funding-programs.json. It i
 ## Key Pages
 
 - Homepage and pre-assessment form: https://digiteekaart.ee/
+- Currently open funding rounds and their status: https://digiteekaart.ee/avatud-toetused/
 - Digitalisation roadmap explanation: https://digiteekaart.ee/digitaliseerimise-teekaart/
 - Sample digitalisation roadmap: https://digiteekaart.ee/musterteekaart/
 - RTE software/integration grant explanation: https://digiteekaart.ee/rte-tarkvara-liidestus/
@@ -67,6 +68,9 @@ A: Yes. The sample roadmap at https://digiteekaart.ee/musterteekaart/ shows a fi
 
 Q: Does the site give an immediate answer before contacting a consultant?
 A: Yes. The homepage funding filter can immediately show a likely first route, possible support amount and missing checks based on the user's own inputs. The result is a pre-assessment, not an official funding decision.
+
+Q: Which EIS digitalisation grants are currently open?
+A: As of 2026-06-10 all four tracked EIS measures were open with rolling application (until the budget runs out): digitalisation roadmap support (up to 10 000 €, limited budget remaining, roughly 183 000 € left per the EIS page), roadmap advisory/development support (up to 35 000 €), RTE software/integration support (2 000-5 000 €), and RTE business-process automation support (up to 150 000 €, roughly 573 000 € left). Current status with dates: https://digiteekaart.ee/avatud-toetused/ and https://digiteekaart.ee/funding-programs.json. Budgets change weekly; the official source is EIS.
 
 Q: Can Digiteekaart.ee automatically read RIK/Business Register data now?
 A: Yes for a bounded public-facing lookup. The owner can start typing the company name, choose the right company from RIK autocomplete, and the registry code is filled automatically. When an 8-digit registry code is checked, the site can show the company name, registry status, legal form and address summary from RIK. Revenue, VTA/de minimis and final funding eligibility still require user input or later manual/official checks.

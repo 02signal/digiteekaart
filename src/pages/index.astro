@@ -94,12 +94,12 @@ const schema = {
       <nav class="nav" aria-label="Põhinavigeerimine">
         <a class="brand" href="/">Digiteekaart.ee</a>
         <div class="navlinks">
-          <a href="#toetus">Toetus</a>
+          <a href="/avatud-toetused/">Avatud toetused</a>
           <a href="#sobivus">Sobivus</a>
           <a href="#naidis">Näidis</a>
           <a href="/digitaliseerimise-teekaart/">Digiteekaart</a>
           <a href="/musterteekaart/">Musterteekaart</a>
-          <a href="/rte-tarkvara-liidestus/">RTE</a>
+          <a href="/rte-tarkvara-liidestus/">Tarkvara toetus</a>
           <a href="/faq/">FAQ</a>
           <a href="#eelhindamine">Eelhindamine</a>
         </div>
@@ -159,6 +159,7 @@ const schema = {
             Ametlik info: <a href={eisRoadmapUrl}>EIS digitaliseerimise teekaardi toetus</a>.
             Kui teekaart on olemas, võib järgmiseks teemaks olla
             <a href={eisDevelopmentUrl}>digitaliseerimise teekaardi nõustamis- ja arendustegevuste toetus</a>.
+            Kõigi nelja toetuse tänane seis on koos lehel <a href="/avatud-toetused/">Avatud toetused</a>.
           </p>
         </div>
       </section>
@@ -240,7 +241,7 @@ const schema = {
             </p>
             <ul class="check">
               <li>eelhinnang sobivusele ja riskidele</li>
-              <li>2-3 võimalikku teed: ise edasi, digiteekaart või väiksem tarkvara/liidestus</li>
+              <li>2-3 võimalikku teed: ise edasi, digiteekaart või väiksem tarkvara ja liidestus ehk programmide ühendamine</li>
               <li>meie ettepanek: mida teha, kui kaua see võtab ja mis hinnaraamis liikuda</li>
             </ul>
             <div class="inline-actions">
@@ -327,8 +328,8 @@ const schema = {
             <div class="form-step">
               <span>1</span>
               <div>
-                <h3>Ettevõte ja kontakt</h3>
-                <p>Kontakt on vajalik, sest toetuse vastus peab minema päris inimesele, mitte anonüümseks testiks.</p>
+                <h3>Ettevõte</h3>
+                <p>Vastuse näete kohe siinsamas lehel. Kontakti küsime alles lõpus, kui soovite kontrollitud vastust.</p>
               </div>
             </div>
             <div class="form-grid">
@@ -357,22 +358,6 @@ const schema = {
                 <p data-rik-company-detail>Kui registrikood on õige, täidame ettevõtte andmed automaatselt.</p>
               </div>
               <div class="field">
-                <label for="person">Teie nimi *</label>
-                <input id="person" name="person" required autocomplete="name" />
-              </div>
-              <div class="field">
-                <label for="role">Roll ettevõttes</label>
-                <input id="role" name="role" placeholder="Omanik / juhatuse liige / juht" />
-              </div>
-              <div class="field">
-                <label for="email">E-mail *</label>
-                <input id="email" name="email" type="email" required autocomplete="email" />
-              </div>
-              <div class="field">
-                <label for="phone">Telefon</label>
-                <input id="phone" name="phone" autocomplete="tel" />
-              </div>
-              <div class="field">
                 <label for="companySize">Ettevõtte suurus</label>
                 <select id="companySize" name="companySize">
                   <option value="">Valige, kui teate</option>
@@ -382,22 +367,13 @@ const schema = {
                   <option>50+ inimest</option>
                 </select>
               </div>
-              <div class="field">
-                <label for="topic">Mis teid praegu huvitab? *</label>
-                <select id="topic" name="topic" required>
-                  <option>Kas EIS digiteekaardi toetus sobib?</option>
-                  <option>Soovin teekaardi koostamise pakkumist</option>
-                  <option>Soovin teada, mis infot on vaja</option>
-                  <option>Soovin rääkida toetustest ja rahastusest</option>
-                </select>
-              </div>
             </div>
 
-            <div class="assessment-tool" data-funding-assessment>
+            <div class="assessment-tool" data-funding-assessment data-tool-section="toetusfilter">
               <div class="form-step">
                 <span>2</span>
                 <div>
-                  <h3>10 minuti toetusfilter</h3>
+                  <h3>Toetusfilter: vastus tuleb kohe</h3>
                   <p>Kui täpseid numbreid ei tea, pange ligikaudne suurusjärk. Hiljem kontrollime üle.</p>
                 </div>
               </div>
@@ -412,8 +388,9 @@ const schema = {
                   <input id="revenueYear2" name="revenueYear2" inputmode="numeric" placeholder="Näiteks 240000" data-assessment-input />
                 </div>
                 <div class="field">
-                  <label for="deMinimisUsed">VTA kasutatud summa, kui teate</label>
+                  <label for="deMinimisUsed">Varem saadud toetused kokku (VTA), kui teate</label>
                   <input id="deMinimisUsed" name="deMinimisUsed" inputmode="numeric" placeholder="Kui ei tea, jätke tühjaks" data-assessment-input />
+                  <p class="field-help">VTA ehk vähese tähtsusega abi: riigil on ühe ettevõtte toetustel ühine lagi. Kui ei tea, kontrollime ise.</p>
                 </div>
                 <div class="field">
                   <label for="hasRoadmap">Kas ajakohane digiteekaart on olemas?</label>
@@ -439,7 +416,7 @@ const schema = {
                 </div>
               </div>
 
-              <button class="btn btn-light assessment-button" type="button" data-assessment-button>Näita esmast vastust</button>
+              <button class="btn btn-primary assessment-button" type="button" data-assessment-button>Näita kohe esmast vastust</button>
               <div class="assessment-result" data-assessment-result hidden>
                 <div>
                   <span class="status-tag status-blue" data-assessment-status>Esialgne vastus</span>
@@ -454,6 +431,43 @@ const schema = {
                 <div class="assessment-checks">
                   <strong>Enne päris otsust kontrollime</strong>
                   <ul data-assessment-checks></ul>
+                </div>
+              </div>
+            </div>
+
+            <div data-lead-contact-section>
+              <div class="form-step">
+                <span>3</span>
+                <div>
+                  <h3>Kuhu saadame kontrollitud vastuse?</h3>
+                  <p>Vaatame andmed inimesena üle ja saadame ühe tööpäeva jooksul vastuse, mida masin ei oska lubada.</p>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="person">Teie nimi *</label>
+                  <input id="person" name="person" required autocomplete="name" />
+                </div>
+                <div class="field">
+                  <label for="role">Roll ettevõttes</label>
+                  <input id="role" name="role" placeholder="Omanik / juhatuse liige / juht" />
+                </div>
+                <div class="field">
+                  <label for="email">E-mail *</label>
+                  <input id="email" name="email" type="email" required autocomplete="email" />
+                </div>
+                <div class="field">
+                  <label for="phone">Telefon</label>
+                  <input id="phone" name="phone" autocomplete="tel" />
+                </div>
+                <div class="field full">
+                  <label for="topic">Mis teid praegu huvitab? *</label>
+                  <select id="topic" name="topic" required>
+                    <option>Kas EIS digiteekaardi toetus sobib?</option>
+                    <option>Soovin teekaardi koostamise pakkumist</option>
+                    <option>Soovin teada, mis infot on vaja</option>
+                    <option>Soovin rääkida toetustest ja rahastusest</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -601,7 +615,7 @@ const schema = {
 
         const missing = [];
         if (!averageRevenue) missing.push("kahe viimase aasta müügitulu");
-        if (!deMinimisUsed) missing.push("VTA jääk / vähese tähtsusega abi kasutus");
+        if (!deMinimisUsed) missing.push("varasemate toetuste jääk (VTA ehk vähese tähtsusega abi)");
         missing.push("maksuvõla ja varasemate toetuste kontroll");
 
         let programId = "digital_roadmap";
@@ -719,6 +733,12 @@ const schema = {
           recommended_program: assessment.program?.id || "",
           possible_support: assessment.money || "",
           average_revenue: assessment.averageRevenue || 0
+        });
+        (window as any).digiteekaartTrack?.("tool_completed", {
+          tool_name: "toetusfilter",
+          result_tier: assessment.status,
+          result_route: assessment.program?.id || "",
+          possible_support: assessment.money || ""
         });
       };
 
