@@ -58,6 +58,15 @@ Do not expose raw personal data, secrets, tokens, signed URLs, or private payloa
 
 ## Internal CRM Rules
 
+**CONSOLIDATION FREEZE (2026-06-10).** The internal CRM (`/crm`) and the sales warehouse in this repo are being consolidated into the AMOS/REV stack (02S-AMOS repo: B2B revenue engine ADR, REV/CRM frontend ADR, restricted person-data zone ADR, task board `agent-prompts/2026-06-10-rik-beneficial-owners-and-rev-crm-task-board.md`, Track B). Consequences for this repo:
+
+- Do NOT build new CRM features, scoring logic, or warehouse extensions here. New sales/CRM work goes to AMOS (brain), Twenty (operational CRM), and rev-web (worklist surface). Bug fixes that keep the existing `/crm` usable until sunset (Track B6) are fine.
+- Digiteekaart Supabase is demoting to a thin public digidiagnostika cache (company status, bounded revenue facts, VTA snapshot). Never load person data (board members, beneficial owners, isikukood) into it; the master store is the AMOS restricted zone.
+- The VTA check worker is orchestrated by AMOS n8n-ops; the queue location decision (Track B4) is pending with the owner. Keep the deterministic batch policy; do not add new VTA automation here.
+- The public pre-assessment site stays untouched and actively developed.
+
+Rules that still apply while `/crm` exists:
+
 - Do not expose restricted contacts (`sales_crm.prospect_contacts_restricted`) or any personal ID numbers (isikukood) in public views or Astro static pages.
 - Lead scoring must run in SQL (e.g. `001_sales_quality_engine.sql`), outputting reasons via arrays (`score_reason`); Astro only displays the result.
 - **Layout:** The default CRM view is a 3-pane Master-Detail layout (Filters -> List -> Detail Worksheet). Do not modify the CRM to default to a single-card "Focus Mode" or a wide table view. Keep action buttons visually neutral (outline style) so they don't look "already completed".

@@ -1,5 +1,7 @@
 # RIK Warehouse Foundation
 
+> **STATUS: FROZEN — superseded by AMOS (2026-06-10).** The shared RIK warehouse now lives in the 02S-AMOS repo (restricted person-data zone ADR + B2B revenue engine ADR). Digiteekaart Supabase demotes to a thin public digidiagnostika cache; person data never loads here. Do not extend this foundation — the applied schema stays in place only until the Track B migration completes.
+
 This folder defines the first reusable data foundation for Digiteekaart.ee and future 02Signal sales tools.
 
 ## Goal

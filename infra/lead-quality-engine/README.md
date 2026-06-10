@@ -1,5 +1,7 @@
 # Lead Quality Engine
 
+> **STATUS: FROZEN — consolidating into AMOS/REV (2026-06-10).** Scoring, enrichment, and the sales worklist move to the AMOS brain + Twenty + rev-web (02S-AMOS repo, 2026-06-10 task board, Track B). The business principles carry forward via `docs/architecture/amos-rev-crm-sales-worklist-business-vision.md` in 02S-AMOS; the first scoring weights here are a placeholder, not a model to extend. Keep-the-lights-on fixes only until sunset (B6); the restricted contacts table needs a one-time export to the AMOS restricted zone before any drop.
+
 Internal foundation for finding useful B2B sales signals for Digiteekaart.ee, digitaliseerimine.ee and related 02Signal sales pages.
 
 This is not a public website feature. It is the first warehouse and CRM layer for the sales team so they can see which companies are worth calling first.

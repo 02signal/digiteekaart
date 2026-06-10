@@ -40,13 +40,12 @@
 - Done: RIK warehouse importer extended to download and parse `isikud.csv` and `sidevahendid.csv`, extracting board sizes, calculating oldest board member ages via Estonian personal ID codes, and matching official mobile numbers.
 - Done: CRM can batch-add the next 10 strongest unchecked firms to the VTA queue.
 - Done: VTA worker RPC foundation added so AMOS/n8n-ops can claim small batches, store dated RAR/VTA snapshots and update CRM cards after a bounded lookup result.
-- Next: connect the official/approved RAR/VTA lookup adapter to the AMOS n8n-ops runner and run 2-3 supervised batches before daily automation.
-- Next: import multiple annual-report years so the company work-sheet can show revenue/employee trend, not only the latest 2024 signal.
-- Next: after RIK contract is active, implement bulk importer from avaandmed files and API refresh for a single registry code.
-- Next: add sales users through CRM interface and smoke-test his magic-link login.
-- Next: add email verification before showing a more detailed generated report.
+- Consolidation (2026-06-10): the internal CRM and sales warehouse are moving to the AMOS/REV stack (02S-AMOS repo, task board `agent-prompts/2026-06-10-rik-beneficial-owners-and-rev-crm-task-board.md`, Track B). This repo keeps only the public pre-assessment site and a thin Supabase cache. See `CLAUDE.md` "Internal CRM Rules".
+- Superseded by AMOS (do not build here): RAR/VTA adapter wiring and supervised batches (AMOS n8n-ops owns the worker; queue location is owner decision B4); multi-year annual-report import and revenue trends (AMOS warehouse); bulk avaandmed importer and single-code API refresh (AMOS restricted person-data zone); adding sales users / magic-link hardening (auth moves to Authentik with rev-web).
+- Next (still this repo, public site): add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.
 - Keep official funding facts checked against official sources before publishing.
+- Sunset (Track B6, sequenced — do not start early): after Twenty + rev-web worklist are live and the one-time restricted-contacts export to the AMOS restricted zone is verified, freeze `/crm` to read-only, then remove it and drop the unused `sales_crm` objects.
 
 ## Teekaart.ee
 
