@@ -165,12 +165,54 @@ const brand = "digiteekaart";
     window.digiteekaartGetAttribution = getAttribution;
     window.digiteekaartGetLastCta = getLastCta;
 
+    // Shared across all five 02Signal family sites - keep this map identical
+    // in every Analytics.astro so a cross-brand handoff resolves to the same
+    // brand name no matter which site logs it. Add a line here (in all five
+    // files) when a new family domain ships.
+    const BRAND_HOSTS = {
+      "digiteekaart.ee": "digiteekaart",
+      "automatiseerimine.ee": "automatiseerimine",
+      "digitaliseerimine.ee": "digitaliseerimine",
+      "teekaart.ee": "teekaart",
+      "mikrokvalifikatsioon.ee": "mikrokvalifikatsioon"
+    };
+
+    // Derives target_brand from the clicked link's own href, so an author
+    // adding a cross-brand link never has to remember to hand-annotate it.
+    // `data-target-brand` is an escape hatch for the rare link whose href
+    // doesn't tell the truth (e.g. a tracked redirect). A hostname outside
+    // the family (including 02signal.ai) resolves to "external" rather than
+    // an empty string, so outbound traffic is still visible. A same-brand
+    // link (this site's own domain) is not a handoff and resolves to "" -
+    // only stamp target_brand when it actually differs from `brand`.
+    const resolveTargetBrand = (target) => {
+      const explicit = target.getAttribute("data-target-brand");
+      if (explicit) return explicit === brand ? "" : explicit;
+      if (!(target instanceof HTMLAnchorElement) || !target.href) return "";
+      let hostname = "";
+      try {
+        hostname = new URL(target.href, window.location.href).hostname.toLowerCase();
+      } catch {
+        return "";
+      }
+      if (!hostname) return "";
+      const bareHost = hostname.replace(/^www\./, "");
+      const matchedApex = Object.keys(BRAND_HOSTS).find(
+        (apex) => bareHost === apex || bareHost.endsWith(`.${apex}`)
+      );
+      const resolvedBrand = matchedApex ? BRAND_HOSTS[matchedApex] : "external";
+      return resolvedBrand === brand ? "" : resolvedBrand;
+    };
+
     document.addEventListener("click", (event) => {
       const target = event.target instanceof Element
         ? event.target.closest("[data-track-event]")
         : null;
       if (!target) return;
       const eventName = target.getAttribute("data-track-event") || "cta_click";
+      // Only a real cross-brand (or fully external) handoff gets stamped -
+      // same-brand internal navigation should not claim to be one.
+      const targetBrand = resolveTargetBrand(target);
       const cta = {
         event_name: eventName,
         cta_label: target.getAttribute("data-track-label") || target.textContent?.trim() || "",
@@ -182,7 +224,8 @@ const brand = "digiteekaart";
       track(eventName, {
         cta_label: cta.cta_label,
         cta_href: cta.cta_href,
-        page_title: document.title
+        page_title: document.title,
+        ...(targetBrand ? { target_brand: targetBrand } : {})
       });
     });
 
