@@ -1,5 +1,15 @@
 ---
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
+// Cookieless self-hosted analytics (Umami CE, stats.amos.02signal.com).
+// Runs ALONGSIDE GA4 on purpose: GA4 keeps the history and Google hides
+// small numbers, Umami is exact and — being ONE instance for every brand —
+// is the only place a cross-brand journey is a single row. Both are fed
+// from the same track() call below, so the vocabulary can never drift.
+const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID ?? "";
+const umamiHost = import.meta.env.PUBLIC_UMAMI_HOST ?? "https://stats.amos.02signal.com";
+// Stamped onto EVERY event as `brand`. Analysing five sites in one Umami
+// instance is only possible if every row says which brand it came from.
+const brand = "digiteekaart";
 ---
 
 <link rel="alternate" type="text/plain" href="/llms.txt" title="Digiteekaart.ee LLM summary" />
@@ -18,7 +28,16 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
   </>
 ) : null}
 
-<script is:inline>
+{umamiWebsiteId ? (
+  <script
+    is:inline
+    defer
+    src={`${umamiHost}/script.js`}
+    data-website-id={umamiWebsiteId}
+  ></script>
+) : null}
+
+<script is:inline define:vars={{ brand }}>
   (() => {
     const attributionKey = "digiteekaart:attribution";
     const lastCtaKey = "digiteekaart:last_cta";
@@ -119,10 +138,23 @@ const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID ?? "";
       const detail = {
         source_path: window.location.pathname,
         ...compactAttribution(),
-        ...params
+        ...params,
+        // Last on purpose: a caller must not be able to mislabel the brand.
+        // Cross-brand handoffs use `target_brand` in params instead.
+        brand
       };
       if (typeof window.gtag === "function") {
         window.gtag("event", eventName, detail);
+      }
+      // Same name, same properties, second sink. If Umami is not configured
+      // for this site the call is simply absent - never a thrown error on a
+      // visitor's page.
+      if (window.umami && typeof window.umami.track === "function") {
+        try {
+          window.umami.track(eventName, detail);
+        } catch (error) {
+          /* analytics must never break the page */
+        }
       }
       window.dispatchEvent(new CustomEvent("digiteekaart:event", {
         detail: { eventName, params: detail }

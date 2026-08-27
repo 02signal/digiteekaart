@@ -46,6 +46,7 @@
 - Done (2026-06-10): new `/avatud-toetused/` page shows the live status of all four EIS rounds with checked-date, budget-remaining facts and plain-language own-contribution example; round status fields added to `supportPrograms.ts` and `funding-programs.json`; linked from nav, footer and llms.txt.
 - Done (2026-06-10): VTA, "liidestus" and the bare "RTE" nav label are now explained in plain language at first use on every public page.
 - Next (recurring): re-check EIS round status and budget-remaining figures (digital roadmap ~183k €, RTE automation ~573k € as of 2026-06-10) and refresh `/avatud-toetused/`, `supportPrograms.ts`, `funding-programs.json` and `llms.txt` roughly weekly — budgets drain and the roadmap measure may close.
+- Next (still this repo, public site): adopt the family cookie-consent standard (Consent Mode v2, consent-gated GA — reference implementation + checklist in mikrokvalifikatsioon repo `docs/cookie-consent-standard.md`); this site loads GA unconditionally today.
 - Next (still this repo, public site): add email verification before showing a more detailed generated report.
 - After Google Ads data arrives, refine the result/CTA section around phone calls and owner-level next steps.
 - Keep official funding facts checked against official sources before publishing.
