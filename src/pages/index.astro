@@ -740,6 +740,18 @@ const schema = {
           result_route: assessment.program?.id || "",
           possible_support: assessment.money || ""
         });
+        // result_high_intent means "võib_sobida" here: the filter found a
+        // support program the owner plausibly qualifies for right now, not
+        // just a program that exists. That is the one result tier worth a
+        // human looking at before the rest of the queue.
+        if (assessment.status === "võib_sobida") {
+          (window as any).digiteekaartTrack?.("result_high_intent", {
+            tool_name: "toetusfilter",
+            result_tier: assessment.status,
+            result_route: assessment.program?.id || "",
+            possible_support: assessment.money || ""
+          });
+        }
       };
 
       const normalizeRegistryCode = (value: string): string => value.replace(/\D/g, "").slice(0, 8);
@@ -1214,11 +1226,12 @@ const schema = {
 
           window.location.href = fallbackHref;
           if (note) note.textContent = "Kui e-kiri ei avanenud, kirjutage info@02signal.ai või helistage +372 5818 0435.";
-          (window as any).digiteekaartTrack?.("lead_form_submit", {
-            form_name: "digiteekaart_eelhindamine",
-            status: "mailto_fallback",
-            source_site: payload.sourceSite
-          });
+          // No lead_form_submit here: mailto is a fallback, not a confirmed
+          // submission - the endpoint never returned response.ok. Counting it
+          // as a submit would make every failed webhook look like a conversion.
+          // lead_form_submit_attempt (fired above) already marks that the
+          // visitor tried; the funnel reads the attempt/submit gap as
+          // "endpoint failed, visitor fell back to mailto".
           submitButton?.removeAttribute("disabled");
         });
       });
