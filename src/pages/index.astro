@@ -1240,6 +1240,15 @@ const schema = {
               })
             });
             const responseBody = await response.json().catch(() => null);
+            if (response.status === 429) {
+              // The rate limiter working as designed, not a failure - do not
+              // fall through to the mailto fallback below (that would tell
+              // the visitor "automatic sending failed" and ask them to email
+              // instead, when actually retrying shortly would succeed).
+              if (note) note.textContent = "Korraga tuli liiga palju päringuid. Palun proovi mõne minuti pärast uuesti.";
+              submitButton?.removeAttribute("disabled");
+              return;
+            }
             if (response.ok && responseBody && (responseBody as any).ok) {
               currentForm.reset();
               setRikStatus(currentForm, "idle");
