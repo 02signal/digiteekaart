@@ -7,9 +7,9 @@ import "../styles/global.css";
 const eisRoadmapUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-toetus/";
 const eisDevelopmentUrl = "https://eis.ee/teenused/digitaliseerimise-teekaardi-arendustegevused-toetus/";
 const emailHref = "mailto:info@02signal.ai?subject=Digiteekaart.ee%20-%20EIS%20teekaardi%20eelhindamine";
-const leadWebhookUrl = import.meta.env.PUBLIC_SITE_LEAD_WEBHOOK_URL ?? "";
-const rikLookupUrl = import.meta.env.PUBLIC_RIK_LOOKUP_URL ?? "https://miwpctshbcmkpwvdokne.supabase.co/functions/v1/rik-company-lookup";
-const rikLookupKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+// AMOS lead capture (28.08.2026 migration off the dead Supabase project) —
+// same-origin Vercel function, no client-supplied key needed.
+const rikLookupUrl = "/api/rik-lookup";
 const supportProgramJsonUrl = "https://digiteekaart.ee/funding-programs.json";
 const schema = {
   "@context": "https://schema.org",
@@ -307,12 +307,10 @@ const schema = {
           <form
             class="lead-form"
             data-site-lead-form
-            data-webhook-url={leadWebhookUrl}
             data-source-site="digiteekaart.ee"
             data-mail-subject="Digiteekaart.ee - eelhindamine"
             data-support-programs={JSON.stringify(supportPrograms)}
             data-rik-lookup-url={rikLookupUrl}
-            data-rik-lookup-key={rikLookupKey}
           >
             <input class="hidden-field" type="text" name="website" tabindex="-1" autocomplete="off" />
             <input type="hidden" name="assessmentSummary" data-assessment-field="summary" />
@@ -821,16 +819,11 @@ const schema = {
 
       const lookupRikCompany = async (form: HTMLFormElement, registryCode: string, signal?: AbortSignal): Promise<RikLookupResult | null> => {
         const lookupUrl = form.dataset.rikLookupUrl?.trim();
-        const lookupKey = form.dataset.rikLookupKey?.trim();
-        if (!lookupUrl || !lookupKey) return null;
+        if (!lookupUrl) return null;
 
         const response = await fetch(lookupUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${lookupKey}`,
-            "apikey": lookupKey
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ registryCode }),
           signal
         });
@@ -844,16 +837,11 @@ const schema = {
 
       const searchRikCompanies = async (form: HTMLFormElement, query: string, signal?: AbortSignal): Promise<CompanySuggestion[]> => {
         const lookupUrl = form.dataset.rikLookupUrl?.trim();
-        const lookupKey = form.dataset.rikLookupKey?.trim();
-        if (!lookupUrl || !lookupKey) return [];
+        if (!lookupUrl) return [];
 
         const response = await fetch(lookupUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${lookupKey}`,
-            "apikey": lookupKey
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query }),
           signal
         });
@@ -1101,6 +1089,24 @@ const schema = {
           });
         });
 
+        // Carry the meaningful part of the rich pre-assessment form into the
+        // AMOS lead capture (context.field / context.outcomes on the
+        // envelope) — lossy versus the full structured data (registry code,
+        // exact revenue figures) but workable, same tradeoff every other
+        // ported site made. `field` is clipped to 64 chars server-side;
+        // each outcome to 240.
+        const toAmosOutcomes = (payload: Record<string, unknown>): string[] => [
+          payload.companySize ? `Ettevõtte suurus: ${payload.companySize}` : null,
+          payload.revenueYear1 ? `Müügitulu 1: ${payload.revenueYear1}` : null,
+          payload.revenueYear2 ? `Müügitulu 2: ${payload.revenueYear2}` : null,
+          payload.deMinimisUsed ? `VTA kasutatud: ${payload.deMinimisUsed}` : null,
+          payload.hasRoadmap ? `Digiteekaart olemas: ${payload.hasRoadmap}` : null,
+          payload.fundingNeed ? `Soov: ${payload.fundingNeed}` : null,
+          payload.recommendedProgram ? `Soovitatud tee: ${payload.recommendedProgram}` : null,
+          payload.possibleSupport ? `Võimalik toetus: ${payload.possibleSupport}` : null,
+          payload.assessmentSummary ? `Esialgne vastus: ${payload.assessmentSummary}` : null
+        ].filter((v): v is string => Boolean(v));
+
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
           const currentForm = event.currentTarget;
@@ -1199,29 +1205,36 @@ const schema = {
             source_site: payload.sourceSite
           });
 
-          const webhookUrl = currentForm.dataset.webhookUrl?.trim();
-          if (webhookUrl) {
-            try {
-              const response = await fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+          try {
+            const response = await fetch("/api/subscribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kind: "topic_subscribe",
+                email: payload.email,
+                topic: "digiteekaart",
+                field: payload.topic.slice(0, 64) || null,
+                outcomes: toAmosOutcomes(payload),
+                consentContact: payload.consentContact,
+                consentFundingUpdates: payload.consentFundingUpdates,
+                source_site: "funnel_digiteekaart"
+              })
+            });
+            const responseBody = await response.json().catch(() => null);
+            if (response.ok && responseBody && (responseBody as any).ok) {
+              currentForm.reset();
+              setRikStatus(currentForm, "idle");
+              if (note) note.textContent = "Aitäh. Päring on salvestatud ja jõudis meieni. Võtame ühendust ühe tööpäeva jooksul.";
+              (window as any).digiteekaartTrack?.("lead_form_submit", {
+                form_name: "digiteekaart_eelhindamine",
+                status: "saved",
+                source_site: payload.sourceSite
               });
-              if (response.ok) {
-                currentForm.reset();
-                setRikStatus(currentForm, "idle");
-                if (note) note.textContent = "Aitäh. Päring on salvestatud ja jõudis meieni. Võtame ühendust ühe tööpäeva jooksul.";
-                (window as any).digiteekaartTrack?.("lead_form_submit", {
-                  form_name: "digiteekaart_eelhindamine",
-                  status: "saved",
-                  source_site: payload.sourceSite
-                });
-                submitButton?.removeAttribute("disabled");
-                return;
-              }
-            } catch {
-              // Fallback opens the prepared e-mail below.
+              submitButton?.removeAttribute("disabled");
+              return;
             }
+          } catch {
+            // Fallback opens the prepared e-mail below.
           }
 
           window.location.href = fallbackHref;
