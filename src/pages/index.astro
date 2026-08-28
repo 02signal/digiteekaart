@@ -554,6 +554,11 @@ const schema = {
       type RikLookupResponse = {
         result?: RikLookupResult;
         error?: string;
+        // The full lookup by registry code has no credentials configured
+        // (owner decision: RIK X-Road membership not pursued) - a permanent,
+        // known state, not a request failure. The endpoint answers 200 with
+        // this flag rather than an error status.
+        notConfigured?: boolean;
       };
 
       type CompanySuggestion = {
@@ -817,9 +822,14 @@ const schema = {
         if (detail) detail.textContent = "Võite vormi siiski saata. Kontrollime andmed käsitsi üle.";
       };
 
-      const lookupRikCompany = async (form: HTMLFormElement, registryCode: string, signal?: AbortSignal): Promise<RikLookupResult | null> => {
+      type RikLookupOutcome = { result: RikLookupResult | null; notConfigured: boolean };
+
+      const lookupRikCompany = async (form: HTMLFormElement, registryCode: string, signal?: AbortSignal): Promise<RikLookupOutcome> => {
         const lookupUrl = form.dataset.rikLookupUrl?.trim();
-        if (!lookupUrl) return null;
+        // No lookup URL at all behaves the same as the server telling us the
+        // full lookup isn't configured - both mean "no automatic check
+        // available," not "not found," so both share the one flag below.
+        if (!lookupUrl) return { result: null, notConfigured: true };
 
         const response = await fetch(lookupUrl, {
           method: "POST",
@@ -832,7 +842,7 @@ const schema = {
         if (!response.ok || body.error) {
           throw new Error(body.error || "rik_lookup_failed");
         }
-        return body.result || null;
+        return { result: body.result || null, notConfigured: Boolean(body.notConfigured) };
       };
 
       const searchRikCompanies = async (form: HTMLFormElement, query: string, signal?: AbortSignal): Promise<CompanySuggestion[]> => {
@@ -895,8 +905,17 @@ const schema = {
           setRikStatus(form, "loading");
 
           try {
-            const result = await lookupRikCompany(form, normalizedCode, rikAbortController.signal);
+            const { result, notConfigured } = await lookupRikCompany(form, normalizedCode, rikAbortController.signal);
             lastRikLookupCode = normalizedCode;
+            if (notConfigured) {
+              // Full lookup by registry code is permanently unavailable
+              // (owner decision: RIK X-Road membership not pursued). Treat
+              // it exactly like no lookup was configured at all - no card,
+              // no error message, the form still submits normally. This is
+              // not a search that came back empty, so it must not say so.
+              setRikStatus(form, "idle");
+              return;
+            }
             if (result?.companyName && Number(result.foundCount || 0) !== 0) {
               setRikStatus(form, "success", result);
               if (companyInput instanceof HTMLInputElement && !companyInput.value.trim()) {

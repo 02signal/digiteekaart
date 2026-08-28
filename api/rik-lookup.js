@@ -19,20 +19,18 @@
 //   2. Full lookup by registry code (`registryCode`) — RIK's X-Road SOAP/XML
 //      API (lihtandmed_v2), which DOES require X-Road member credentials.
 //
-// Required env (Vercel project settings):
+// Required env for the full registry-code lookup (Vercel project settings):
 //   RIK_API_USERNAME    X-Road member username for the lihtandmed_v2 lookup
 //   RIK_API_PASSWORD    X-Road member password
 //   RIK_API_ENDPOINT     optional; defaults to https://ariregxmlv6.rik.ee/
 //
-// IMPORTANT — could not be verified by this change: these three env vars
-// previously lived in the (now-dead) Supabase project's function settings,
-// never in this Vercel project (this route did not exist here before). No
-// Vercel API access was available while writing this port, so whether
-// RIK_API_USERNAME/RIK_API_PASSWORD need to be newly added to Vercel, or
-// already exist from some other integration, is NOT something this change
-// can confirm — check the Vercel dashboard before relying on the
-// registry-code lookup path. The autocomplete path needs no credentials and
-// works either way.
+// UPDATE (owner decision, 2026-08-28): RIK X-Road membership is NOT being
+// pursued. RIK_API_USERNAME/RIK_API_PASSWORD are not expected to ever be
+// set on this project, and that is now a permanent, known state rather
+// than a temporary gap — see the notConfigured branch below, which
+// answers 200 rather than 500 for exactly that reason. The public
+// autocomplete path (no credentials needed) is the feature going
+// forward and is unaffected either way.
 //
 // No CORS layer: unlike the Supabase edge function (a genuinely different
 // origin the browser called cross-origin), this is a same-origin Vercel
@@ -180,8 +178,17 @@ export default async function handler(req, res) {
   const endpoint = process.env.RIK_API_ENDPOINT || 'https://ariregxmlv6.rik.ee/';
 
   if (!username || !password) {
-    console.error('rik-lookup: RIK_API_USERNAME/RIK_API_PASSWORD not configured');
-    res.status(500).json({ error: 'rik_credentials_missing' });
+    // RIK X-Road membership was evaluated and is not being pursued (owner
+    // decision, 2026-08-28) - the credentialed full lookup stays permanently
+    // dark; the public autocomplete above is the feature going forward. A
+    // 500 was right while this was a temporary gap; it is wrong now that
+    // it is a known, permanent state - it would keep logging as a server
+    // error and keep training whoever watches logs to ignore it, forever.
+    // 200 + notConfigured is the honest shape: the request itself succeeded,
+    // there is simply no automatic full lookup - same as a form that never
+    // had a lookup URL configured at all (see the client's own early return
+    // for that case).
+    res.status(200).json({ result: null, notConfigured: true, checkedAt: new Date().toISOString() });
     return;
   }
 
