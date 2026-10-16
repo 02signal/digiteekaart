@@ -11,7 +11,7 @@ Kehtib igale sessioonile ja agendile (Claude Code, Codex, pilv) selles repos. T�
 - **Merge klassi järgi** (autor ≠ kontrollija):
   - **A** (docs, logid, mälu): ise, kui CI on roheline;
   - **B** (õppijale/kliendile minev sisu): ise pärast valideerija GO-d (silt `valideerija-go`), tarne merge'itud sha-st;
-  - **C** (tootmiskood ja juurutus, host, õigused, raha, kustutamine, www release): PO.
+  - **C** (tootmiskood ja juurutus, host, õigused, raha, kustutamine, www release): merge ise pärast VM GO-d; juurutus hostis teeb PO live'i aknas 10:00/16:00. **≤ 1 avatud C-PR ala kohta.**
   - Kahtluse korral vali kõrgem klass.
 - **Sõnumid ainult üleandmiseks**, alati issue lingiga. Kui avastus puudutab teist ala, tee issue sinna sildiga `teise-ala`.
 - Saladusi ega isikuandmeid ei kirjutata repodesse ega sõnumitesse. Kasuta ainult nimesid ja rolle.
