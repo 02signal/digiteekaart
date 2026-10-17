@@ -11,8 +11,9 @@ Kehtib igale sessioonile ja agendile (Claude Code, Codex, pilv) selles repos. T�
 - **Merge klassi järgi** (autor ≠ kontrollija):
   - **A** (docs, logid, mälu): ise, kui CI on roheline. **Agentide reeglid (CLAUDE.md, AGENTS.md, `.claude/`) on B.**
   - **B** (õppijale/kliendile minev sisu): ise pärast valideerija GO-d (silt `valideerija-go`), tarne merge'itud sha-st;
-  - **C** (tootmiskood ja juurutus, host, õigused, raha, kustutamine, www release): merge ise pärast VM GO-d; juurutus hostis teeb PO live'i aknas 10:00/16:00. **≤ 1 avatud C-PR ala kohta.**
+  - **C** (tootmiskood ja juurutus, host, õigused, raha, kustutamine, www release): merge ise pärast VM GO-d; juurutus hostis teeb PO live'i aknas 10:00/16:00. **≤ 1 avatud C-PR ala kohta** (tööriistade PR-id, kaart amos-ops#224, on erand); valmis tööriist läheb erireleasena.
   - Kahtluse korral vali kõrgem klass. **GO: C → `valideerija` (VM), B → `valideerija - mac` (Maci enda PR-id → VM).**
+- **Õppematerjalid** (kõik programmid): kaanon `arthunt/amos-ops` → `docs/kaanon/oppematerjalide-puu.md` (juur → tüvi → oks, `variant_of`).
 - **Sõnumid ainult üleandmiseks**, alati issue lingiga. Kui avastus puudutab teist ala, tee issue sinna sildiga `teise-ala`.
 - Saladusi ega isikuandmeid ei kirjutata repodesse ega sõnumitesse. Kasuta ainult nimesid ja rolle.
 <!-- AMOS-TÖÖKORD:LÕPP -->
