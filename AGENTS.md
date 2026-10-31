@@ -15,7 +15,7 @@ Kehtib igale sessioonile ja agendile (Claude Code, Codex, pilv) selles repos. T�
   - Kahtluse korral vali kõrgem klass. **GO: C → `valideerija` (VM), B → `valideerija - mac` (Maci enda PR-id → VM).**
 - **Õppematerjalid** (kõik programmid): kaanon `arthunt/amos-ops` → `docs/kaanon/oppematerjalide-puu.md` (juur → tüvi → oks, `variant_of`).
 - **Sõnumid ainult üleandmiseks**, alati issue lingiga. Kui avastus puudutab teist ala, tee issue sinna sildiga `teise-ala`.
-- Saladusi ega isikuandmeid ei kirjutata repodesse ega sõnumitesse. Kasuta ainult nimesid ja rolle.
+- **Andmed AMOS-i sees on avatud** (omanik 31.10, `state/omaniku-otsused.md` r589): kasuta otsuseks vajalikke andmeid, ka nimesid, – *just enough*, mitte rohkem. Privaatne AMOS-i repo, issue ja sessioonide sõnum on AMOS-i sees (GitHub on usaldatud). **Keelatud:** saladused (paroolid, võtmed, tokenid) kuskil; isikuandmed avalikku repo'sse, avalikku veebi või kolmandale osapoolele. **Avalik AMOS-i repo** (nt `02signal/*`, `credential-commons`) on AMOS-ist väljas: selle issue'desse, PR-idesse ja commit'idesse isikuandmeid ei panda.
 <!-- AMOS-TÖÖKORD:LÕPP -->
 
 Read `CLAUDE.md` first. It is the single source of truth for this repository.
