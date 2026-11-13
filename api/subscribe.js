@@ -71,7 +71,12 @@
 
 const ALLOWED_TOPICS = new Set(['digiteekaart']);
 const ALLOWED_SITES = new Set(['funnel_digiteekaart']);
-const ALLOWED_KINDS = new Set(['topic_subscribe']);
+const ALLOWED_KINDS = new Set(['topic_subscribe', 'b2b_inquiry']);
+// amos-ops#1944 (omanik 12.–13.11): eelhindamise päring läheb AMOS-i lepingueelse päringuna (kind b2b_inquiry):
+// CS saab kohe teate ettevõtte, vajaduse ja e-postiga; DOI kirja ega uudiskirja ei tule. Toetuste uudiskiri ainult
+// eraldi, vaikimisi märkimata linnukesega (consent_purpose_secondary → AMOS-i eraldi DOI kaasümbrik).
+const MAX_COMPANY_LEN = 120;
+const MAX_SUMMARY_LEN = 600;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Bounded per the shared envelope contract (infra/contracts/outreach/
@@ -219,13 +224,21 @@ export default async function handler(req, res) {
         kind,
         email,
         interest_topic: topic,
-        ...(field ? { field } : {}),
-        ...(outcomes.length ? { outcomes } : {}),
+        ...(kind === 'b2b_inquiry'
+          ? {
+              // Lepingueelne päring: nõusolekueesmärki ei saadeta (AMOS keelab field/outcomes'i sellel kind'il).
+              ...(cleanText(body.company_name, MAX_COMPANY_LEN) ? { company_name: cleanText(body.company_name, MAX_COMPANY_LEN) } : {}),
+              ...(cleanText(body.request_summary, MAX_SUMMARY_LEN) ? { request_summary: cleanText(body.request_summary, MAX_SUMMARY_LEN) } : {}),
+            }
+          : {
+              ...(field ? { field } : {}),
+              ...(outcomes.length ? { outcomes } : {}),
+              consent_purpose: 'b2b_outreach',
+            }),
         // Digiteekaart sells EIS teekaardi/funding pre-assessment advisory
         // work, not a course — b2b_outreach is the correct ratified consent
         // purpose (amos.outreach.lead_capture/v1), distinct from
         // course_offers, same choice every other ported site made.
-        consent_purpose: 'b2b_outreach',
         // Second, OPTIONAL consent: only when the funding-updates checkbox
         // was actually checked. "newsletter" is the ongoing informational
         // subscription purpose — see the header comment above for why this
