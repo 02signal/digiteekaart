@@ -1229,11 +1229,20 @@ const schema = {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                kind: "topic_subscribe",
+                // amos-ops#1944: lepingueelne päring → CS saab kohe teate (ettevõte, vajadus, e-post).
+                kind: "b2b_inquiry",
                 email: payload.email,
                 topic: "digiteekaart",
-                field: payload.topic.slice(0, 64) || null,
-                outcomes: toAmosOutcomes(payload),
+                company_name: payload.company || payload.rikCompanyName || "",
+                request_summary: [
+                  payload.topic && `Teema: ${payload.topic}`,
+                  payload.fundingNeed && `Soov: ${payload.fundingNeed}`,
+                  payload.companySize && `Suurus: ${payload.companySize}`,
+                  payload.hasRoadmap && `Teekaart olemas: ${payload.hasRoadmap}`,
+                  payload.recommendedProgram && `Soovitatud tee: ${payload.recommendedProgram}`,
+                  payload.possibleSupport && `Võimalik toetus: ${payload.possibleSupport}`,
+                  payload.message && `Sõnum: ${payload.message}`,
+                ].filter(Boolean).join(" · ").slice(0, 600),
                 consentContact: payload.consentContact,
                 consentFundingUpdates: payload.consentFundingUpdates,
                 source_site: "funnel_digiteekaart"
