@@ -71,7 +71,7 @@ Do not expose raw personal data, secrets, tokens, signed URLs, or private payloa
 
 ## Internal CRM Rules
 
-**CONSOLIDATION FREEZE (2026-06-10).** The internal CRM (`/crm`) and the sales warehouse in this repo are being consolidated into the AMOS/REV stack (02S-AMOS repo: B2B revenue engine ADR, REV/CRM frontend ADR, restricted person-data zone ADR, task board `agent-prompts/2026-06-10-rik-beneficial-owners-and-rev-crm-task-board.md`, Track B). Consequences for this repo:
+**CONSOLIDATION FREEZE (2026-06-10).** The internal CRM (`/crm`) and the sales warehouse in this repo are being consolidated into the AMOS/REV stack (internal AMOS platform; the design records and task board are kept internally). Consequences for this repo:
 
 - Do NOT build new CRM features, scoring logic, or warehouse extensions here. New sales/CRM work goes to AMOS (brain), Twenty (operational CRM), and rev-web (worklist surface). Bug fixes that keep the existing `/crm` usable until sunset (Track B6) are fine.
 - Digiteekaart Supabase is demoting to a thin public digidiagnostika cache (company status, bounded revenue facts, VTA snapshot). Never load person data (board members, beneficial owners, isikukood) into it; the master store is the AMOS restricted zone.
